@@ -10,7 +10,7 @@ import Control.DeepSeq (NFData)
 import Control.Exception (Exception (displayException), throwIO)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
-import Data.Csv (FromField (..), FromRecord, ToField (..), ToRecord)
+import Data.Csv (FromField, FromRecord, ToField, ToRecord)
 import Data.Csv qualified as Csv
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
