@@ -56,17 +56,27 @@ common common-exts
 
 library
   import:           common-exts
-  exposed-modules:  Lib
-  build-depends:    base >=4.14.0.0 && <4.17
+  exposed-modules:  Del
+  build-depends:
+    , base        >=4.14.0.0  && <4.17
+    , bytestring  >=0.10.10.0 && <0.12
+    , cassava     ^>=0.5
+    , deepseq     ^>=1.4.4.0
+    , directory   ^>=1.3.5.0
+    , filepath    ^>=1.4.2.1
+    , text        >=1.2.3.2   && <2.1
+
   hs-source-dirs:   src
   default-language: Haskell2010
 
 executable del
   import:           common-exts
   main-is:          Main.hs
+  other-modules:    Args
   build-depends:
     , base
     , del
+    , optparse-applicative  >=0.15 && <0.18
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N
