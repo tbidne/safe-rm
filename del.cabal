@@ -1,0 +1,73 @@
+cabal-version:      2.4
+name:               del
+version:            0.1
+license:            MIT
+license-file:       LICENSE
+tested-with:        GHC ==8.10.7 || ==9.0.2 || ==9.2.3
+copyright:          2022 Thomas Bidne
+author:             Thomas Bidne
+maintainer:         tbidne@protonmail.com
+homepage:           https://github.com/tbidne/del/
+bug-reports:        https://github.com/tbidne/del/issues
+synopsis:           Template
+description:        Template
+category:           Template
+extra-source-files:
+  CHANGELOG.md
+  README.md
+
+source-repository head
+  type:     git
+  location: https://github.com/tbidne/del
+
+common common-exts
+  default-extensions:
+    BangPatterns
+    ConstraintKinds
+    DataKinds
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DeriveTraversable
+    DerivingStrategies
+    DerivingVia
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    InstanceSigs
+    LambdaCase
+    MultiParamTypeClasses
+    MultiWayIf
+    NamedFieldPuns
+    NumericUnderscores
+    OverloadedStrings
+    PatternSynonyms
+    RankNTypes
+    ScopedTypeVariables
+    StandaloneDeriving
+    StandaloneKindSignatures
+    TupleSections
+    TypeApplications
+    TypeFamilyDependencies
+    TypeOperators
+
+library
+  import:           common-exts
+  exposed-modules:  Lib
+  build-depends:    base >=4.14.0.0 && <4.17
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+executable del
+  import:           common-exts
+  main-is:          Main.hs
+  build-depends:
+    , base
+    , del
+
+  hs-source-dirs:   app
+  ghc-options:      -threaded -with-rtsopts=-N
+  default-language: Haskell2010
