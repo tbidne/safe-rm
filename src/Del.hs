@@ -10,6 +10,7 @@ import Control.DeepSeq (NFData)
 import Control.Exception (Exception (displayException), throwIO)
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
+import Data.ByteString.Lazy qualified as BSL
 import Data.Csv (FromField, FromRecord, ToField, ToRecord)
 import Data.Csv qualified as Csv
 import Data.Text qualified as T
@@ -110,7 +111,7 @@ newtype PathNotFoundError = MkPathNotFoundError FilePath
 
 -- | @since 0.1
 instance Exception PathNotFoundError where
-  displayException (MkPathNotFoundError fp) = "File not found: " <> fp
+  displayException (MkPathNotFoundError fp) = "Path not found: " <> fp
 
 -- | Error when attempting to rename a duplicate path.
 --
@@ -172,8 +173,7 @@ toPathData trashHome fp = do
           then pure PathTypeDirectory
           else throwIO $ MkPathNotFoundError cp
 
-  let newPath = trashHome </> fp
-  uniqPath <- uniqName newPath
+  uniqPath <- uniqName (trashHome </> fp)
   pure $
     MkPathData
       { trashPath = uniqPath,
@@ -219,24 +219,17 @@ mvToTrash :: PathData -> IO ()
 mvToTrash MkPathData {trashPath, originalPath, pathType} = renameFn originalPath trashPath
   where
     renameFn = pathTypeToRenameFn pathType
+    pathTypeToRenameFn PathTypeFile = Dir.renameFile
+    pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 
 -- | Writes the path data to the trash index. This is intended to be used
 -- after a successful move to the trash.
 --
 -- @since 0.1
 writeIndex :: FilePath -> PathData -> IO ()
--- writeIndex pd = getIndex >>= \index -> BS.appendFile index (BS.toStrict $ Csv.encode [pd])
-writeIndex trashHome pd =
-  BS.appendFile index (BS.toStrict $ Csv.encode [pd])
+writeIndex trashHome pd = BS.appendFile index (BSL.toStrict $ Csv.encode [pd])
   where
     index = getIndex trashHome
-
--- | Renames a file or directory.
---
--- @since 0.1
-pathTypeToRenameFn :: PathType -> FilePath -> FilePath -> IO ()
-pathTypeToRenameFn PathTypeFile = Dir.renameFile
-pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 
 -- | Retrieves the trash directory.
 --
