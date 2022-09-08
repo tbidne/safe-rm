@@ -3,7 +3,10 @@
 -- @since 0.1
 module Main (main) where
 
-import Args (Args (MkArgs, paths), getArgs)
+import Args
+  ( Args (MkArgs, paths, restore),
+    getArgs,
+  )
 import Control.Exception
   ( Exception (displayException, fromException, toException),
     SomeAsyncException (SomeAsyncException),
@@ -19,8 +22,12 @@ import Del qualified
 -- @since 0.1
 main :: IO ()
 main = do
-  MkArgs {paths} <- getArgs
-  traverse_ Del.del paths `catchSync` handleEx
+  MkArgs {paths, restore} <- getArgs
+  let fn
+        | restore = Del.restore
+        | otherwise = Del.del
+
+  traverse_ fn paths `catchSync` handleEx
   where
     handleEx :: SomeException -> IO ()
     handleEx = putStrLn . displayException
