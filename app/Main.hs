@@ -4,7 +4,8 @@
 module Main (main) where
 
 import Args
-  ( Args (MkArgs, paths, restore),
+  ( Args (MkArgs, command),
+    DelCommand (DelCommandDelete, DelCommandRestore),
     getArgs,
   )
 import Control.Exception
@@ -22,12 +23,12 @@ import Del qualified
 -- @since 0.1
 main :: IO ()
 main = do
-  MkArgs {paths, restore} <- getArgs
-  let fn
-        | restore = Del.restore
-        | otherwise = Del.del
+  MkArgs {command} <- getArgs
+  let action = case command of
+        DelCommandDelete paths -> traverse_ Del.del paths
+        DelCommandRestore paths -> traverse_ Del.restore paths
 
-  traverse_ fn paths `catchSync` handleEx
+  action `catchSync` handleEx
   where
     handleEx :: SomeException -> IO ()
     handleEx = putStrLn . displayException
