@@ -304,7 +304,7 @@ pathTypeToExistFn PathTypeDirectory = Dir.doesDirectoryExist
 --
 -- @since 0.1
 getTrashHome :: IO FilePath
-getTrashHome = (</> ".Trash") <$> Dir.getHomeDirectory
+getTrashHome = (</> ".trash") <$> Dir.getHomeDirectory
 
 -- | Retrieves the trash index path based on the given directory path.
 --
