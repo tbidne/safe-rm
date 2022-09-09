@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
 
 -- | Provides functionality for moving a file to a trash location.
@@ -5,6 +6,7 @@
 -- @since 0.1
 module Del
   ( del,
+    getIndex,
     restore,
   )
 where
@@ -19,6 +21,13 @@ import Data.Csv qualified as Csv
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+#if !MIN_VERSION_prettyprinter(1, 7, 1)
+import Data.Text.Prettyprint.Doc (Pretty (pretty), (<+>))
+import Data.Text.Prettyprint.Doc qualified as Pretty
+#else
+import Prettyprinter (Pretty (pretty), (<+>))
+import Prettyprinter qualified as Pretty
+#endif
 import Data.Vector (Vector)
 import Data.Vector qualified as V
 import Data.Word (Word16)
@@ -97,6 +106,42 @@ data PathData = MkPathData
       ToRecord
     )
 
+-- | @since 0.1
+instance Pretty PathData where
+  pretty MkPathData {trashPath, originalPath} = Pretty.vsep strs
+    where
+      strs =
+        [ "-" <+> pretty trashPath,
+          Pretty.indent 2 (pretty originalPath)
+        ]
+
+-- | Index that stores the trash data.
+--
+-- @since 0.1
+newtype Index = MkIndex
+  { unIndex :: (Vector PathData)
+  }
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Generic,
+      -- | @since 0.1
+      Show
+    )
+  deriving anyclass
+    ( -- | @since 0.1
+      NFData
+    )
+
+-- | @since 0.1
+instance Pretty Index where
+  pretty (MkIndex index) =
+    Pretty.vsep
+      . fmap pretty
+      . V.toList
+      $ index
+
 -- | @del trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
 -- defaults to @~\/.trash@.
@@ -110,15 +155,20 @@ data PathData = MkPathData
 -- @since 0.1
 del :: Maybe FilePath -> FilePath -> IO ()
 del mtrash fp = do
-  trashHome <-
-    maybe
-      getTrashHome
-      pure
-      mtrash
+  trashHome <- trashOrDefault mtrash
   Dir.createDirectoryIfMissing False trashHome
   pd <- toPathData trashHome fp
   mvToTrash pd
   appendIndex trashHome pd
+
+-- | Reads the index at either the specified or default location.
+--
+-- @since 0.1
+getIndex :: Maybe FilePath -> IO Index
+getIndex mtrash = do
+  trashHome <- trashOrDefault mtrash
+  let indexPath = getIndexPath trashHome
+  readIndex indexPath
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location
@@ -135,11 +185,7 @@ del mtrash fp = do
 -- @since 0.1
 restore :: Maybe FilePath -> FilePath -> IO ()
 restore mtrash fp = do
-  trashHome <-
-    maybe
-      getTrashHome
-      pure
-      mtrash
+  trashHome <- trashOrDefault mtrash
   let indexPath = getIndexPath trashHome
   index <- readIndex indexPath
   (MkPathData {trashPath, originalPath, pathType}, newIndex) <- searchIndex trashHome fp index
@@ -153,7 +199,7 @@ restore mtrash fp = do
   pathTypeToRenameFn pathType trashPath originalPath
 
   -- override old index
-  writeIndex indexPath (V.toList newIndex)
+  writeIndex indexPath newIndex
 
 -- | Attempts to read the trash index file.
 --
@@ -162,12 +208,12 @@ restore mtrash fp = do
 -- * 'ReadIndexError': If there is an error reading the trash index.
 --
 -- @since 0.1
-readIndex :: FilePath -> IO (Vector PathData)
+readIndex :: FilePath -> IO Index
 readIndex indexPath =
   BS.readFile indexPath
     >>= ( \case
             Left err -> throwIO $ MkReadIndexError err
-            Right xs -> pure xs
+            Right xs -> pure $ MkIndex xs
         )
       . Csv.decode NoHeader
       . BSL.fromStrict
@@ -188,11 +234,11 @@ searchIndex ::
   -- | The top-level trash key to restore e.g. @~\/.Trash\/foo@.
   FilePath ->
   -- | The trash index.
-  Vector PathData ->
+  Index ->
   -- | The trash data matching the input key and the index with the key
   -- removed.
-  IO (PathData, Vector PathData)
-searchIndex trashHome key index = do
+  IO (PathData, Index)
+searchIndex trashHome key (MkIndex index) = do
   -- search index for key
   (pd@MkPathData {pathType}, nonMatches) <- do
     case V.partition isMatch index of
@@ -203,7 +249,7 @@ searchIndex trashHome key index = do
   -- verify contents actually exist in trash
   pathTypeToExistFn pathType trashKey >>= \case
     False -> throwIO $ MkTrashPathNotFoundError trashKey
-    True -> pure (pd, nonMatches)
+    True -> pure (pd, MkIndex nonMatches)
   where
     trashKey = trashHome </> key
     isMatch MkPathData {trashPath} = trashPath == trashKey
@@ -294,8 +340,13 @@ appendIndex trashHome = BS.appendFile index . BSL.toStrict . Csv.encode . (: [])
 -- after a successful move to the trash.
 --
 -- @since 0.1
-writeIndex :: FilePath -> [PathData] -> IO ()
-writeIndex indexPath = BS.writeFile indexPath . BSL.toStrict . Csv.encode
+writeIndex :: FilePath -> Index -> IO ()
+writeIndex indexPath =
+  BS.writeFile indexPath
+    . BSL.toStrict
+    . Csv.encode
+    . V.toList
+    . unIndex
 
 -- | Renames a path based on its type.
 --
@@ -310,6 +361,13 @@ pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 pathTypeToExistFn :: PathType -> FilePath -> IO Bool
 pathTypeToExistFn PathTypeFile = Dir.doesFileExist
 pathTypeToExistFn PathTypeDirectory = Dir.doesDirectoryExist
+
+-- | If the argument is given, returns it. Otherwise searches for the default
+-- trash location.
+--
+-- @since 0.1
+trashOrDefault :: Maybe FilePath -> IO FilePath
+trashOrDefault = maybe getTrashHome pure
 
 -- | Retrieves the trash directory.
 --

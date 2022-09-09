@@ -56,6 +56,10 @@ data DelCommand
     --
     -- @since 0.1
     DelCommandRestore !(Maybe FilePath) !(NonEmpty FilePath)
+  | -- | List all trash contents.
+    --
+    -- @since 0.1
+    DelCommandList !(Maybe FilePath)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -128,11 +132,13 @@ commandParser =
   OA.hsubparser $
     mconcat
       [ mkCommand "d" delParser delTxt,
-        mkCommand "r" restoreParser restoreTxt
+        mkCommand "r" restoreParser restoreTxt,
+        mkCommand "l" listParser listTxt
       ]
   where
     delTxt = OA.progDesc "Moves the path to the trash."
     restoreTxt = OA.progDesc "Restores the trash path to its original location."
+    listTxt = OA.progDesc "Lists all trash contents."
 
     delParser =
       DelCommandDelete
@@ -142,6 +148,7 @@ commandParser =
       DelCommandRestore
         <$> trashParser
         <*> pathsParser
+    listParser = DelCommandList <$> trashParser
 
 trashParser :: Parser (Maybe FilePath)
 trashParser =
