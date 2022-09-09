@@ -10,6 +10,7 @@ module Args
   )
 where
 
+import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.String (IsString (fromString))
@@ -50,11 +51,11 @@ data DelCommand
   = -- | Deletes a path.
     --
     -- @since 0.1
-    DelCommandDelete !(NonEmpty FilePath)
+    DelCommandDelete !(Maybe FilePath) !(NonEmpty FilePath)
   | -- | Restores a path.
     --
     -- @since 0.1
-    DelCommandRestore !(NonEmpty FilePath)
+    DelCommandRestore !(Maybe FilePath) !(NonEmpty FilePath)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -126,12 +127,39 @@ commandParser :: Parser DelCommand
 commandParser =
   OA.hsubparser $
     mconcat
-      [ mkCommand "d" (DelCommandDelete <$> pathsParser) delTxt,
-        mkCommand "r" (DelCommandRestore <$> pathsParser) restoreTxt
+      [ mkCommand "d" delParser delTxt,
+        mkCommand "r" restoreParser restoreTxt
       ]
   where
     delTxt = OA.progDesc "Moves the path to the trash."
     restoreTxt = OA.progDesc "Restores the trash path to its original location."
+
+    delParser =
+      DelCommandDelete
+        <$> trashParser
+        <*> pathsParser
+    restoreParser =
+      DelCommandRestore
+        <$> trashParser
+        <*> pathsParser
+
+trashParser :: Parser (Maybe FilePath)
+trashParser =
+  A.optional
+    $ OA.option
+      OA.str
+    $ mconcat
+      [ OA.long "trash",
+        OA.short 't',
+        OA.metavar "PATH",
+        OA.help helpTxt
+      ]
+  where
+    helpTxt =
+      mconcat
+        [ "Path to the trash directory. If none is given we default to ",
+          "XDG/.trash e.g. ~/.trash."
+        ]
 
 pathsParser :: Parser (NonEmpty FilePath)
 pathsParser =
@@ -144,6 +172,6 @@ pathsParser =
 mkCommand :: String -> Parser a -> InfoMod a -> Mod CommandFields a
 mkCommand cmdTxt parser helpTxt = OA.command cmdTxt (OA.info parser helpTxt)
 
-unsafeNE :: HasCallStack => [a] -> (NonEmpty a)
+unsafeNE :: HasCallStack => [a] -> NonEmpty a
 unsafeNE [] = error "Args: Empty list given to unsafeNE"
 unsafeNE (x : xs) = x :| xs

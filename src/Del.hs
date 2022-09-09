@@ -97,8 +97,9 @@ data PathData = MkPathData
       ToRecord
     )
 
--- | Attempts to move the given filepath to @~\/.Trash@ and write an entry in
--- @~\/.Trash\/.index@.
+-- | @del trash p@ moves path @p@ to the given trash location @trash@ and
+-- writes an entry in the trash index. If the trash location is not given,
+-- defaults to @~\/.trash@.
 --
 -- __Throws:__
 --
@@ -107,15 +108,21 @@ data PathData = MkPathData
 --   is reached).
 --
 -- @since 0.1
-del :: FilePath -> IO ()
-del fp = do
-  trashHome <- getTrashHome
+del :: Maybe FilePath -> FilePath -> IO ()
+del mtrash fp = do
+  trashHome <-
+    maybe
+      getTrashHome
+      pure
+      mtrash
   Dir.createDirectoryIfMissing False trashHome
   pd <- toPathData trashHome fp
   mvToTrash pd
   appendIndex trashHome pd
 
--- | Attempts to restore the given filepath.
+-- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
+-- location. If @trash@ is not given then we look in the default location
+-- e.g. @~\/.trash@.
 --
 -- __Throws:__
 --
@@ -126,9 +133,13 @@ del fp = do
 -- * 'PathExistsError': Filepath's original path already exists.
 --
 -- @since 0.1
-restore :: FilePath -> IO ()
-restore fp = do
-  trashHome <- getTrashHome
+restore :: Maybe FilePath -> FilePath -> IO ()
+restore mtrash fp = do
+  trashHome <-
+    maybe
+      getTrashHome
+      pure
+      mtrash
   let indexPath = getIndexPath trashHome
   index <- readIndex indexPath
   (MkPathData {trashPath, originalPath, pathType}, newIndex) <- searchIndex trashHome fp index

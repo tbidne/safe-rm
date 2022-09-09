@@ -25,8 +25,8 @@ main :: IO ()
 main = do
   MkArgs {command} <- getArgs
   let action = case command of
-        DelCommandDelete paths -> traverse_ Del.del paths
-        DelCommandRestore paths -> traverse_ Del.restore paths
+        DelCommandDelete mtrash paths -> traverse_ (Del.del mtrash) paths
+        DelCommandRestore mtrash paths -> traverse_ (Del.restore mtrash) paths
 
   action `catchSync` handleEx
   where
