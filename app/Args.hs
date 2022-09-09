@@ -70,11 +70,11 @@ data DelCommand
 -- | CLI args.
 --
 -- @since 0.1
-data Args = MkArgs
+newtype Args = MkArgs
   { -- | Command to run.
     --
     -- @since 0.1
-    command :: !DelCommand
+    command :: DelCommand
   }
   deriving stock
     ( -- | @since 0.1

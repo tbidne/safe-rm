@@ -119,7 +119,7 @@ instance Pretty PathData where
 --
 -- @since 0.1
 newtype Index = MkIndex
-  { unIndex :: (Vector PathData)
+  { unIndex :: Vector PathData
   }
   deriving stock
     ( -- | @since 0.1
