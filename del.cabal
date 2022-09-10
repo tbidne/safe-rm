@@ -56,7 +56,11 @@ common common-exts
 
 library
   import:           common-exts
-  exposed-modules:  Del
+  exposed-modules:
+    Del
+    Del.Exceptions
+    Del.Types
+
   build-depends:
     , base           >=4.14.0.0  && <4.17
     , bytestring     >=0.10.10.0 && <0.12

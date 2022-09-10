@@ -5,163 +5,68 @@
 --
 -- @since 0.1
 module Del
-  ( -- * Deletion
+  ( -- * Functions
+
+    -- ** Deletion
     del,
     permDel,
     empty,
 
-    -- * Restore
+    -- ** Restore
     restore,
 
-    -- * Information
+    -- ** Information
+    Index (..),
     getIndex,
+
+    -- * Exceptions
+    PathNotFoundError (..),
+    RenameDuplicateError (..),
+    ReadIndexError (..),
+    PathNotInIndexError (..),
+    DuplicateIndexPathsError (..),
+    TrashPathNotFoundError (..),
+    PathExistsError (..),
   )
 where
 
-import Control.DeepSeq (NFData)
-import Control.Exception (Exception (displayException), throwIO)
+import Control.Exception (throwIO)
 import Control.Monad ((>=>))
-import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
 import Data.Char qualified as Ch
-import Data.Csv (FromField, FromRecord, HasHeader (NoHeader), ToField, ToRecord)
+import Data.Csv (HasHeader (NoHeader))
 import Data.Csv qualified as Csv
 import Data.Foldable (for_)
 import Data.List.NonEmpty (NonEmpty)
-import Data.Text qualified as T
-import Data.Text.Encoding qualified as TEnc
-import Data.Text.Encoding.Error qualified as TEncError
 #if !MIN_VERSION_prettyprinter(1, 7, 1)
-import Data.Text.Prettyprint.Doc (Pretty (pretty), layoutCompact, (<+>))
+import Data.Text.Prettyprint.Doc (Pretty (pretty), layoutCompact)
 import Data.Text.Prettyprint.Doc qualified as Pretty
 import Data.Text.Prettyprint.Render.String (renderString)
 #else
-import Prettyprinter (Pretty (pretty), layoutCompact, (<+>))
+import Prettyprinter (Pretty (pretty), layoutCompact)
 import Prettyprinter qualified as Pretty
 import Prettyprinter.Render.String (renderString)
 #endif
-import Data.Vector (Vector)
 import Data.Vector qualified as V
 import Data.Word (Word16)
-import GHC.Generics (Generic)
+import Del.Exceptions
+  ( DuplicateIndexPathsError (..),
+    PathExistsError (..),
+    PathNotFoundError (..),
+    PathNotInIndexError (..),
+    ReadIndexError (..),
+    RenameDuplicateError (..),
+    TrashPathNotFoundError (..),
+  )
+import Del.Types
+  ( Index (..),
+    PathData (..),
+    PathType (..),
+  )
 import System.Directory qualified as Dir
 import System.FilePath ((</>))
 import System.IO qualified as IO
-
--- | Path type.
---
--- @since 0.1
-data PathType
-  = -- | File type.
-    --
-    -- @since 0.1
-    PathTypeFile
-  | -- | Directory type
-    --
-    -- @since 0.1
-    PathTypeDirectory
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance FromField PathType where
-  parseField s
-    | s == "file" = pure PathTypeFile
-    | s == "directory" = pure PathTypeDirectory
-    | otherwise = fail $ "Expected 'file' or 'directory'. Received: " <> bsToStr s
-
--- | @since 0.1
-instance ToField PathType where
-  toField PathTypeFile = "file"
-  toField PathTypeDirectory = "directory"
-
--- | Data for a path.
---
--- @since 0.1
-data PathData = MkPathData
-  { -- | The path to be used in the trash directory.
-    --
-    -- @since 0.1
-    trashPath :: !FilePath,
-    -- | The original path on the file system.
-    --
-    -- @since 0.1
-    originalPath :: !FilePath,
-    -- | The type of the path.
-    --
-    -- @since 0.1
-    pathType :: !PathType
-  }
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      FromRecord,
-      -- | @since 0.1
-      NFData,
-      -- | @since 0.1
-      ToRecord
-    )
-
--- | @since 0.1
-instance Pretty PathData where
-  pretty MkPathData {trashPath, originalPath} = Pretty.vsep strs
-    where
-      strs =
-        [ "-" <+> pretty trashPath,
-          Pretty.indent 2 (pretty originalPath)
-        ]
-
--- | Index that stores the trash data.
---
--- @since 0.1
-newtype Index = MkIndex
-  { unIndex :: Vector PathData
-  }
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-  deriving
-    ( -- | @since 0.1
-      Semigroup,
-      -- | @since 0.1
-      Monoid
-    )
-    via (Vector PathData)
-
--- | @since 0.1
-instance Pretty Index where
-  pretty (MkIndex index) =
-    Pretty.vsep
-      . fmap pretty
-      . V.toList
-      $ index
 
 -- | @del trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
@@ -443,176 +348,3 @@ getTrashHome = (</> ".trash") <$> Dir.getHomeDirectory
 -- @since 0.1
 getIndexPath :: FilePath -> FilePath
 getIndexPath = (</> ".index.csv")
-
--- | Converts UTF8 'ByteString' to 'String'. Decoding is lenient.
---
--- @since 0.1
-bsToStr :: ByteString -> String
-bsToStr = T.unpack . TEnc.decodeUtf8With TEncError.lenientDecode
-
--- | Error when searching for a path.
---
--- @since 0.1
-newtype PathNotFoundError = MkPathNotFoundError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception PathNotFoundError where
-  displayException (MkPathNotFoundError fp) = "Path not found: " <> fp
-
--- | Error when attempting to rename a duplicate path.
---
--- @since 0.1
-newtype RenameDuplicateError = MkRenameDuplicateError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception RenameDuplicateError where
-  displayException (MkRenameDuplicateError fp) = "Failed renaming duplicate file: " <> fp
-
--- | Error when attempting to read the index.
---
--- @since 0.1
-newtype ReadIndexError = MkReadIndexError String
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception ReadIndexError where
-  displayException (MkReadIndexError err) = "Error reading index: " <> err
-
--- | Path not found in index.
---
--- @since 0.1
-newtype PathNotInIndexError = MkPathNotInIndexError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception PathNotInIndexError where
-  displayException (MkPathNotInIndexError fp) =
-    "Path not found in trash index: " <> fp
-
--- | Duplicate trash paths found.
---
--- @since 0.1
-newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError (Vector PathData)
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception DuplicateIndexPathsError where
-  displayException (MkDuplicateIndexPathsError matches) =
-    mconcat
-      [ "Wanted a unique match in the index, found ",
-        show $ V.length matches,
-        ": ",
-        showVec matches
-      ]
-    where
-      showVec :: Vector PathData -> String
-      showVec = V.foldl' f ""
-      f acc pd = "\n - " <> showPd pd <> acc
-      showPd MkPathData {trashPath, originalPath} =
-        mconcat
-          [ "trash path: ",
-            trashPath,
-            "\n   original path: ",
-            originalPath,
-            "\n"
-          ]
-
--- | Path not found in trash.
---
--- @since 0.1
-newtype TrashPathNotFoundError = MkTrashPathNotFoundError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception TrashPathNotFoundError where
-  displayException (MkTrashPathNotFoundError fp) = "Path not found in trash: " <> fp
-
--- | Path already exists.
---
--- @since 0.1
-newtype PathExistsError = MkPathExistsError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception PathExistsError where
-  displayException (MkPathExistsError fp) =
-    "File already exists at the original path: " <> fp
