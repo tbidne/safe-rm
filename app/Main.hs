@@ -11,6 +11,7 @@ import Args
       ( DelCommandDelete,
         DelCommandEmpty,
         DelCommandList,
+        DelCommandPermDelete,
         DelCommandRestore
       ),
     getArgs,
@@ -40,7 +41,8 @@ main :: IO ()
 main = do
   MkArgs {command} <- getArgs
   let action = case command of
-        DelCommandDelete mtrash paths -> traverse_ (Del.del mtrash) paths
+        DelCommandDelete mtrash paths -> Del.del mtrash paths
+        DelCommandPermDelete mtrash paths -> Del.permDel mtrash paths
         DelCommandEmpty mtrash -> Del.empty mtrash
         DelCommandList mtrash -> listIndex mtrash
         DelCommandRestore mtrash paths -> traverse_ (Del.restore mtrash) paths

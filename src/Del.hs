@@ -7,6 +7,7 @@
 module Del
   ( -- * Deletion
     del,
+    permDel,
     empty,
 
     -- * Restore
@@ -23,17 +24,22 @@ import Control.Monad ((>=>))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
+import Data.Char qualified as Ch
 import Data.Csv (FromField, FromRecord, HasHeader (NoHeader), ToField, ToRecord)
 import Data.Csv qualified as Csv
+import Data.Foldable (for_)
+import Data.List.NonEmpty (NonEmpty)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 #if !MIN_VERSION_prettyprinter(1, 7, 1)
-import Data.Text.Prettyprint.Doc (Pretty (pretty), (<+>))
+import Data.Text.Prettyprint.Doc (Pretty (pretty), layoutCompact, (<+>))
 import Data.Text.Prettyprint.Doc qualified as Pretty
+import Data.Text.Prettyprint.Render.String (renderString)
 #else
-import Prettyprinter (Pretty (pretty), (<+>))
+import Prettyprinter (Pretty (pretty), layoutCompact, (<+>))
 import Prettyprinter qualified as Pretty
+import Prettyprinter.Render.String (renderString)
 #endif
 import Data.Vector (Vector)
 import Data.Vector qualified as V
@@ -41,6 +47,7 @@ import Data.Word (Word16)
 import GHC.Generics (Generic)
 import System.Directory qualified as Dir
 import System.FilePath ((</>))
+import System.IO qualified as IO
 
 -- | Path type.
 --
@@ -167,13 +174,46 @@ instance Pretty Index where
 --   is reached).
 --
 -- @since 0.1
-del :: Maybe FilePath -> FilePath -> IO ()
-del mtrash fp = do
+del :: Maybe FilePath -> NonEmpty FilePath -> IO ()
+del mtrash paths = do
   trashHome <- trashOrDefault mtrash
   Dir.createDirectoryIfMissing False trashHome
-  pd <- toPathData trashHome fp
-  mvToTrash pd
-  appendIndex trashHome pd
+  for_ paths $ \fp -> do
+    pd <- toPathData trashHome fp
+    mvToTrash pd
+    appendIndex trashHome pd
+
+-- | Permanently deletes the paths from the trash.
+--
+-- @since 0.1
+permDel :: Maybe FilePath -> NonEmpty FilePath -> IO ()
+permDel mtrash paths = do
+  trashHome <- trashOrDefault mtrash
+  let indexPath = getIndexPath trashHome
+  index <- readIndex indexPath
+
+  -- No buffering on input so we can read a single char w/o requiring a newline
+  -- to end the input (which then gets passed to getChar, which interferes with
+  -- subsequent calls).
+  IO.hSetBuffering IO.stdin IO.NoBuffering
+
+  -- No buffering on output so the "Permanenty delete..." string gets printed
+  -- w/o the newline.
+  IO.hSetBuffering IO.stdout IO.NoBuffering
+
+  for_ paths $ \fp -> do
+    (pd@MkPathData {trashPath}, newIndex) <- searchIndex trashHome fp index
+    let pdStr = (renderString . layoutCompact . (Pretty.line <>) . pretty) pd
+    putStrLn pdStr
+    putStr "Permanently delete (y/n)? "
+    c <- Ch.toLower <$> IO.getChar
+    if
+        | c == 'y' -> do
+            Dir.removePathForcibly trashPath
+            writeIndex indexPath newIndex
+            putStrLn ""
+        | c == 'n' -> putStrLn ""
+        | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
 -- | Reads the index at either the specified or default location. If the
 -- file does not exist, returns empty.
