@@ -5,14 +5,21 @@
 --
 -- @since 0.1
 module Del
-  ( del,
-    getIndex,
+  ( -- * Deletion
+    del,
+    empty,
+
+    -- * Restore
     restore,
+
+    -- * Information
+    getIndex,
   )
 where
 
 import Control.DeepSeq (NFData)
 import Control.Exception (Exception (displayException), throwIO)
+import Control.Monad ((>=>))
 import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
@@ -133,6 +140,13 @@ newtype Index = MkIndex
     ( -- | @since 0.1
       NFData
     )
+  deriving
+    ( -- | @since 0.1
+      Semigroup,
+      -- | @since 0.1
+      Monoid
+    )
+    via (Vector PathData)
 
 -- | @since 0.1
 instance Pretty Index where
@@ -161,14 +175,17 @@ del mtrash fp = do
   mvToTrash pd
   appendIndex trashHome pd
 
--- | Reads the index at either the specified or default location.
+-- | Reads the index at either the specified or default location. If the
+-- file does not exist, returns empty.
 --
 -- @since 0.1
 getIndex :: Maybe FilePath -> IO Index
 getIndex mtrash = do
   trashHome <- trashOrDefault mtrash
   let indexPath = getIndexPath trashHome
-  readIndex indexPath
+  Dir.doesFileExist indexPath >>= \case
+    True -> readIndex indexPath
+    False -> pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location
@@ -200,6 +217,12 @@ restore mtrash fp = do
 
   -- override old index
   writeIndex indexPath newIndex
+
+-- | Empties the trash. Deletes the index file.
+--
+-- @since 0.1
+empty :: Maybe FilePath -> IO ()
+empty = trashOrDefault >=> Dir.removeDirectoryRecursive
 
 -- | Attempts to read the trash index file.
 --

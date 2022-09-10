@@ -7,7 +7,12 @@ module Main (main) where
 
 import Args
   ( Args (MkArgs, command),
-    DelCommand (DelCommandDelete, DelCommandList, DelCommandRestore),
+    DelCommand
+      ( DelCommandDelete,
+        DelCommandEmpty,
+        DelCommandList,
+        DelCommandRestore
+      ),
     getArgs,
   )
 import Control.Exception
@@ -36,6 +41,7 @@ main = do
   MkArgs {command} <- getArgs
   let action = case command of
         DelCommandDelete mtrash paths -> traverse_ (Del.del mtrash) paths
+        DelCommandEmpty mtrash -> Del.empty mtrash
         DelCommandList mtrash -> listIndex mtrash
         DelCommandRestore mtrash paths -> traverse_ (Del.restore mtrash) paths
 
