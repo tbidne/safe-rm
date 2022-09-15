@@ -45,7 +45,7 @@ main :: IO ()
 main = do
   MkArgs {command} <- getArgs
   let action = case command of
-        DelCommandDelete mtrash paths -> Del.del mtrash paths
+        DelCommandDelete mtrash paths -> Del.del mtrash (setToMap paths)
         DelCommandPermDelete mtrash paths ->
           Del.permDel mtrash (setToMap paths)
         DelCommandEmpty mtrash -> Del.empty mtrash

@@ -51,7 +51,7 @@ import Del.Types
   )
 import Optics.Core ((^.))
 import System.Directory qualified as Dir
-import System.FilePath ((</>))
+import System.FilePath (addTrailingPathSeparator, (</>))
 
 -- | Attempts to read the trash index file. If successful, guarantees:
 --
@@ -104,12 +104,12 @@ searchIndex ::
 searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
-    trashKeys = Set.map (trashHome </>) keys
+    trashKeys = Set.map (addTrailingPathSeparator . (trashHome </>)) keys
     foldKeys :: IO (HashSet PathData) -> FilePath -> IO (HashSet PathData)
     foldKeys macc trashKey = do
       acc <- macc
       case Map.lookup trashKey index of
-        Nothing -> throwIO $ MkTrashPathsNotFoundError trashKey
+        Nothing -> throwIO $ MkPathNotFoundError trashKey
         Just pd -> do
           -- optional collision detection
           mCollisionErr pd
@@ -201,25 +201,31 @@ pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 -- @since 0.1
 toPathData :: FilePath -> FilePath -> IO PathData
 toPathData trashHome fp = do
-  cp <- Dir.canonicalizePath fp
-
-  pathType' <- do
-    isFile <- Dir.doesFileExist cp
-    if isFile
-      then pure PathTypeFile
-      else do
-        isDir <- Dir.doesDirectoryExist cp
-        if isDir
-          then pure PathTypeDirectory
-          else throwIO $ MkPathNotFoundError cp
+  origPath <- Dir.canonicalizePath fp
 
   uniqPath <- uniqName (trashHome </> fp)
-  pure $
-    MkPathData
-      { trashPath = uniqPath,
-        originalPath = cp,
-        pathType = pathType'
-      }
+  isFile <- Dir.doesFileExist origPath
+  if isFile
+    then
+      pure
+        MkPathData
+          { trashPath = uniqPath,
+            originalPath = origPath,
+            pathType = PathTypeFile
+          }
+    else do
+      isDir <- Dir.doesDirectoryExist origPath
+      if isDir
+        then
+          pure
+            -- NOTE: ensure paths have trailing slashes so that we can ensure
+            -- later lookups succeed
+            MkPathData
+              { trashPath = addTrailingPathSeparator uniqPath,
+                originalPath = addTrailingPathSeparator origPath,
+                pathType = PathTypeDirectory
+              }
+        else throwIO $ MkPathNotFoundError origPath
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -259,18 +265,17 @@ mvToTrash pd = renameFn (pd ^. #originalPath) (pd ^. #trashPath)
 -- after a successful move to the trash.
 --
 -- @since 0.1
-appendIndex :: FilePath -> PathData -> IO ()
-appendIndex trashHome =
-  BS.appendFile index
+appendIndex :: FilePath -> Index -> IO ()
+appendIndex indexPath =
+  BS.appendFile indexPath
     . BSL.toStrict
     -- TODO: Include a header. Somehow we have to know if the file exists
     -- (or create a blank one first)
     . Csv.encode
-    . (: [])
-  where
-    index = getIndexPath trashHome
+    . Map.elems
+    . unIndex
 
--- | Appends the path data to the trash index. This is intended to be used
+-- | Writes the path data to the trash index. This is intended to be used
 -- after a successful move to the trash.
 --
 -- @since 0.1

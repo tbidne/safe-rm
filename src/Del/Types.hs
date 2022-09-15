@@ -25,6 +25,7 @@ import Prettyprinter qualified as Pretty
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+import Optics.Core ((^.))
 
 -- | Path type.
 --
@@ -52,6 +53,11 @@ data PathType
       -- | @since 0.1
       NFData
     )
+
+-- | @since 0.1
+instance Pretty PathType where
+  pretty PathTypeFile = "File"
+  pretty PathTypeDirectory = "Directory"
 
 -- | @since 0.1
 instance FromField PathType where
@@ -103,11 +109,12 @@ data PathData = MkPathData
 
 -- | @since 0.1
 instance Pretty PathData where
-  pretty MkPathData {trashPath, originalPath} = Pretty.vsep strs
+  pretty pd = Pretty.vsep strs <+> Pretty.line
     where
       strs =
-        [ "-" <+> pretty trashPath,
-          Pretty.indent 2 (pretty originalPath)
+        [ "type:    " <+> pretty (pd ^. #pathType),
+          "trash:   " <+> (pretty $ pd ^. #trashPath),
+          "original:" <+> (pretty $ pd ^. #originalPath)
         ]
 
 -- | Index that stores the trash data.

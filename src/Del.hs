@@ -25,7 +25,6 @@ import Data.Foldable (for_)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet (HashSet)
 import Data.IORef (modifyIORef', newIORef, readIORef)
-import Data.List.NonEmpty (NonEmpty)
 import Del.Internal
   ( appendIndex,
     getIndexPath,
@@ -57,14 +56,24 @@ import System.IO qualified as IO
 -- defaults to @~\/.trash@.
 --
 -- @since 0.1
-del :: Maybe FilePath -> NonEmpty FilePath -> IO ()
+del :: Maybe FilePath -> HashSet FilePath -> IO ()
 del mtrash paths = do
   trashHome <- trashOrDefault mtrash
+  let indexPath = getIndexPath trashHome
   Dir.createDirectoryIfMissing False trashHome
-  for_ paths $ \fp -> do
-    pd <- toPathData trashHome fp
-    mvToTrash pd
-    appendIndex trashHome pd
+
+  deletedPathsRef <- newIORef Map.empty
+
+  -- move path to trash
+  let delPathsFn = for_ paths $ \fp -> do
+        pd <- toPathData trashHome fp
+        mvToTrash pd
+        modifyIORef' deletedPathsRef (Map.insert (pd ^. #trashPath) pd)
+
+  -- override old index
+  delPathsFn `finally` do
+    deletedPaths <- readIORef deletedPathsRef
+    appendIndex indexPath (MkIndex deletedPaths)
 
 -- | Permanently deletes the paths from the trash.
 --
