@@ -5,7 +5,6 @@ module Del.Exceptions
   ( PathNotFoundError (..),
     RenameDuplicateError (..),
     ReadIndexError (..),
-    PathNotInIndexError (..),
     DuplicateIndexPathsError (..),
     TrashPathNotFoundError (..),
     PathExistsError (..),
@@ -14,9 +13,6 @@ where
 
 import Control.DeepSeq (NFData)
 import Control.Exception (Exception (displayException))
-import Data.Vector (Vector)
-import Data.Vector qualified as V
-import Del.Types (PathData (..))
 import GHC.Generics (Generic)
 
 -- | Error when searching for a path.
@@ -59,7 +55,8 @@ newtype RenameDuplicateError = MkRenameDuplicateError FilePath
 
 -- | @since 0.1
 instance Exception RenameDuplicateError where
-  displayException (MkRenameDuplicateError fp) = "Failed renaming duplicate file: " <> fp
+  displayException (MkRenameDuplicateError fp) =
+    "Failed renaming duplicate file: " <> fp
 
 -- | Error when attempting to read the index.
 --
@@ -82,32 +79,10 @@ newtype ReadIndexError = MkReadIndexError String
 instance Exception ReadIndexError where
   displayException (MkReadIndexError err) = "Error reading index: " <> err
 
--- | Path not found in index.
---
--- @since 0.1
-newtype PathNotInIndexError = MkPathNotInIndexError FilePath
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
--- | @since 0.1
-instance Exception PathNotInIndexError where
-  displayException (MkPathNotInIndexError fp) =
-    "Path not found in trash index: " <> fp
-
 -- | Duplicate trash paths found.
 --
 -- @since 0.1
-newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError (Vector PathData)
+newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError FilePath
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -123,30 +98,17 @@ newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError (Vector PathData)
 
 -- | @since 0.1
 instance Exception DuplicateIndexPathsError where
-  displayException (MkDuplicateIndexPathsError matches) =
+  displayException (MkDuplicateIndexPathsError fp) =
     mconcat
-      [ "Wanted a unique match in the index, found ",
-        show $ V.length matches,
-        ": ",
-        showVec matches
+      [ "Trash paths should be unique, but found multiple entries for the ",
+        "following path: ",
+        fp
       ]
-    where
-      showVec :: Vector PathData -> String
-      showVec = V.foldl' f ""
-      f acc pd = "\n - " <> showPd pd <> acc
-      showPd MkPathData {trashPath, originalPath} =
-        mconcat
-          [ "trash path: ",
-            trashPath,
-            "\n   original path: ",
-            originalPath,
-            "\n"
-          ]
 
 -- | Path not found in trash.
 --
 -- @since 0.1
-newtype TrashPathNotFoundError = MkTrashPathNotFoundError FilePath
+newtype TrashPathNotFoundError = MkTrashPathsNotFoundError FilePath
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -162,7 +124,13 @@ newtype TrashPathNotFoundError = MkTrashPathNotFoundError FilePath
 
 -- | @since 0.1
 instance Exception TrashPathNotFoundError where
-  displayException (MkTrashPathNotFoundError fp) = "Path not found in trash: " <> fp
+  -- TODO: mention commands for fixing these (e.g. empty, new 'fix' command)
+  displayException (MkTrashPathsNotFoundError fp) =
+    mconcat
+      [ "The following path was listed in the trash index but was not found ",
+        "in the trash directory: ",
+        fp
+      ]
 
 -- | Path already exists.
 --

@@ -11,6 +11,9 @@ import Control.DeepSeq (NFData)
 import Data.ByteString (ByteString)
 import Data.Csv (FromField, FromRecord, ToField, ToRecord)
 import Data.Csv qualified as Csv
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as Map
+import Data.Hashable (Hashable)
 import GHC.Generics (Generic)
 #if !MIN_VERSION_prettyprinter(1, 7, 1)
 import Data.Text.Prettyprint.Doc (Pretty (pretty), (<+>))
@@ -22,8 +25,6 @@ import Prettyprinter qualified as Pretty
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
-import Data.Vector (Vector)
-import Data.Vector qualified as V
 
 -- | Path type.
 --
@@ -47,6 +48,8 @@ data PathType
     )
   deriving anyclass
     ( -- | @since 0.1
+      Hashable,
+      -- | @since 0.1
       NFData
     )
 
@@ -91,6 +94,8 @@ data PathData = MkPathData
     ( -- | @since 0.1
       FromRecord,
       -- | @since 0.1
+      Hashable,
+      -- | @since 0.1
       NFData,
       -- | @since 0.1
       ToRecord
@@ -109,7 +114,7 @@ instance Pretty PathData where
 --
 -- @since 0.1
 newtype Index = MkIndex
-  { unIndex :: Vector PathData
+  { unIndex :: HashMap FilePath PathData
   }
   deriving stock
     ( -- | @since 0.1
@@ -129,15 +134,15 @@ newtype Index = MkIndex
       -- | @since 0.1
       Monoid
     )
-    via (Vector PathData)
+    via (HashMap FilePath PathData)
 
 -- | @since 0.1
 instance Pretty Index where
-  pretty (MkIndex index) =
+  pretty =
     Pretty.vsep
       . fmap pretty
-      . V.toList
-      $ index
+      . Map.elems
+      . unIndex
 
 -- | Converts UTF8 'ByteString' to 'String'. Decoding is lenient.
 --
