@@ -8,11 +8,13 @@ module Del.Types
   ( PathType (..),
     PathData (..),
     Index (..),
+    Statistics (..),
   )
 where
 
 import Control.DeepSeq (NFData)
 import Data.ByteString (ByteString)
+import Data.Bytes qualified as Bytes
 import Data.Csv
   ( DefaultOrdered (headerOrder),
     FromField,
@@ -36,11 +38,14 @@ import Data.Text.Prettyprint.Doc qualified as Pretty
 import Prettyprinter (Pretty (pretty), (<+>))
 import Prettyprinter qualified as Pretty
 #endif
+import Data.Bytes (SomeSize)
+import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.String (IsString)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 import GHC.Exts (IsList (Item))
+import GHC.Natural (Natural)
 import Optics.Core ((^.))
 
 -- | Path type.
@@ -198,3 +203,48 @@ instance Pretty Index where
 -- @since 0.1
 bsToStr :: ByteString -> String
 bsToStr = T.unpack . TEnc.decodeUtf8With TEncError.lenientDecode
+
+-- | Holds trash statistics.
+--
+-- @since 0.1
+data Statistics = MkStatistics
+  { -- | Number of top level entires in the trash index. This should be the
+    -- same as the index length.
+    --
+    -- @since 0.1
+    numEntries :: !Natural,
+    -- | Number of total files in the trash.
+    --
+    -- @since 0.1
+    numFiles :: !Natural,
+    -- | Total size of the trash directory.
+    --
+    -- @since 0.1
+    size :: !(SomeSize Double)
+  }
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Generic,
+      -- | @since 0.1
+      Show
+    )
+  deriving anyclass
+    ( -- | @since 0.1
+      NFData
+    )
+
+-- | @since 0.1
+instance Pretty Statistics where
+  pretty stats = Pretty.vsep strs <+> Pretty.line
+    where
+      strs =
+        [ "Entries:     " <+> pretty (stats ^. #numEntries),
+          "Total Files: " <+> pretty (stats ^. #numFiles),
+          "Size:        " <+> pretty (formatSz $ stats ^. #size)
+        ]
+      formatSz =
+        Bytes.formatSized
+          (MkFloatingFormatter (Just 2))
+          Bytes.sizedFormatterUnix

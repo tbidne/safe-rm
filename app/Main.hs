@@ -12,7 +12,8 @@ import Args
         DelCommandEmpty,
         DelCommandList,
         DelCommandPermDelete,
-        DelCommandRestore
+        DelCommandRestore,
+        DelCommandStats
       ),
     getArgs,
   )
@@ -49,21 +50,30 @@ main = do
         DelCommandPermDelete mtrash paths ->
           Del.permDel mtrash (setToMap paths)
         DelCommandEmpty mtrash -> Del.empty mtrash
-        DelCommandList mtrash -> listIndex mtrash
         DelCommandRestore mtrash paths ->
           Del.restore mtrash (setToMap paths)
+        DelCommandList mtrash -> do
+          listIndex mtrash
+          printStats mtrash
+        DelCommandStats mtrash -> printStats mtrash
   action `catchSync` handleEx
   where
     handleEx :: SomeException -> IO ()
     handleEx = putStrLn . displayException
 
 listIndex :: Maybe FilePath -> IO ()
-listIndex =
+listIndex = prettyDel Del.getIndex
+
+printStats :: Maybe FilePath -> IO ()
+printStats = prettyDel Del.getStatistics
+
+prettyDel :: Pretty b => (a -> IO b) -> a -> IO ()
+prettyDel f =
   putStrLn
     . renderString
     . layoutCompact
     . pretty
-    <=< Del.getIndex
+    <=< f
 
 setToMap :: Hashable a => NonEmpty a -> HashSet a
 setToMap = Set.fromList . NE.toList

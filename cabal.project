@@ -6,6 +6,17 @@ package del
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
+    -Wno-unticked-promoted-constructors
 
 optimization: 2
 test-show-details: direct
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/algebra-simple.git
+    tag: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/byte-types.git
+    tag: 0e642710ef5b8c277c77da8cfad36f0fe7771218

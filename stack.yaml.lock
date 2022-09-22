@@ -11,6 +11,28 @@ packages:
     hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
   original:
     hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
+- completed:
+    name: algebra-simple
+    pantry-tree:
+      sha256: 31a41c91df1a085c44b05a31f9ba71327f072b2f0f5349c6789650d1849eeba9
+      size: 4142
+    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+    git: https://github.com/tbidne/algebra-simple.git
+    version: '0.1'
+  original:
+    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+    git: https://github.com/tbidne/algebra-simple.git
+- completed:
+    name: byte-types
+    pantry-tree:
+      sha256: 02fe220d0192a03e7bc499bf396e6c5c6a1c3558e5b3bb35e022b5469f456c55
+      size: 9159
+    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+    git: https://github.com/tbidne/byte-types.git
+    version: '0.1'
+  original:
+    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+    git: https://github.com/tbidne/byte-types.git
 snapshots:
 - completed:
     sha256: 4c31d4ef975b0211078862566aedf3b82b6cea569fc2cde4c72a51e5a8d236ce

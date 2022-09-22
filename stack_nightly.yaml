@@ -7,5 +7,10 @@ ghc-options:
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
+    -Wno-unticked-promoted-constructors
 extra-deps:
 - package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
+- git: https://github.com/tbidne/algebra-simple.git
+  commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+- git: https://github.com/tbidne/byte-types.git
+  commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218

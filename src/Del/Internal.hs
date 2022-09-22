@@ -18,6 +18,7 @@ module Del.Internal
     trashOrDefault,
     getTrashHome,
     mvToTrash,
+    getStats,
 
     -- * Utilities
     toPathData,
@@ -26,11 +27,14 @@ module Del.Internal
 where
 
 import Control.Exception (throwIO)
-import Control.Monad ((>=>))
+import Control.Monad (join, (>=>))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
+import Data.Bytes (Bytes (MkBytes), Size (B))
+import Data.Bytes qualified as Bytes
 import Data.Csv (HasHeader (HasHeader))
 import Data.Csv qualified as Csv
+import Data.Foldable (Foldable (foldl'))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet (HashSet)
@@ -50,7 +54,9 @@ import Del.Types
   ( Index (MkIndex, unIndex),
     PathData (MkPathData, originalPath, pathType, trashPath),
     PathType (PathTypeDirectory, PathTypeFile),
+    Statistics (MkStatistics, numEntries, numFiles, size),
   )
+import GHC.Natural (Natural)
 import Optics.Core ((^.))
 import System.Directory qualified as Dir
 import System.FilePath (dropTrailingPathSeparator, (</>))
@@ -306,6 +312,50 @@ getTrashHome = (</> ".trash") <$> Dir.getHomeDirectory
 -- @since 0.1
 getIndexPath :: FilePath -> FilePath
 getIndexPath = (</> ".index.csv")
+
+-- | Returns stats on the trash directory.
+--
+-- @since 0.1
+getStats :: FilePath -> IO Statistics
+getStats fp = do
+  -- TODO: This _should_ be the same as the index length (corresponds exactly
+  -- to top-level paths except .index.csv). We do this instead of parsing
+  -- the entire index for performance.
+  --
+  -- We may want to actually verify this invariant here, failing if there is
+  -- a mismatch.
+  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory fp
+  allFiles <- getAllFiles fp
+  allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
+  let numFiles = length allFiles - 1
+      normalized = Bytes.normalize (MkBytes @B allSizes)
+  pure $
+    MkStatistics
+      { numEntries = toNat numEntries,
+        numFiles = toNat numFiles,
+        size = normalized
+      }
+  where
+    sumFileSizes macc f = do
+      !acc <- macc
+      sz <- Dir.getFileSize f
+      pure $ acc + sz
+    toDouble :: Integer -> Double
+    toDouble = fromIntegral
+    toNat :: Int -> Natural
+    toNat = fromIntegral
+
+getAllFiles :: FilePath -> IO [FilePath]
+getAllFiles fp =
+  Dir.doesFileExist fp >>= \case
+    True -> pure [fp]
+    False ->
+      Dir.doesDirectoryExist fp >>= \case
+        True ->
+          Dir.listDirectory fp
+            >>= fmap join
+              . traverse (getAllFiles . (fp </>))
+        False -> throwIO $ MkPathNotFoundError fp
 
 -- | 'allM' that must have at least one 'True'.
 --

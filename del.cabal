@@ -65,6 +65,7 @@ library
 
   build-depends:
     , base                  >=4.14.0.0  && <4.17
+    , byte-types            ^>=0.1
     , bytestring            >=0.10.10.0 && <0.12
     , cassava               ^>=0.5
     , deepseq               ^>=1.4.4.0

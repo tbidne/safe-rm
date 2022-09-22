@@ -14,7 +14,9 @@ module Del
     restore,
 
     -- * Information
+    Statistics (..),
     getIndex,
+    getStatistics,
   )
 where
 
@@ -29,6 +31,7 @@ import Del.Internal
   ( allM1,
     appendIndex,
     getIndexPath,
+    getStats,
     mvToTrash,
     pathTypeToRenameFn,
     readIndex,
@@ -47,7 +50,7 @@ import Prettyprinter (Pretty (pretty), layoutCompact)
 import Prettyprinter qualified as Pretty
 import Prettyprinter.Render.String (renderString)
 #endif
-import Del.Types (Index (..), PathData (..))
+import Del.Types (Index (..), PathData (..), Statistics (..))
 import Optics.Core ((^.))
 import System.Directory qualified as Dir
 import System.IO qualified as IO
@@ -137,6 +140,12 @@ getIndex mtrash = do
   Dir.doesFileExist indexPath >>= \case
     True -> readIndex indexPath
     False -> pure mempty
+
+-- | Retrieves statistics for the trash directory.
+--
+-- @since 0.1
+getStatistics :: Maybe FilePath -> IO Statistics
+getStatistics = trashOrDefault >=> getStats
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location
