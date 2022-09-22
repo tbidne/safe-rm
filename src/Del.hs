@@ -26,7 +26,8 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashSet (HashSet)
 import Data.IORef (modifyIORef', newIORef, readIORef)
 import Del.Internal
-  ( appendIndex,
+  ( allM1,
+    appendIndex,
     getIndexPath,
     mvToTrash,
     pathTypeToRenameFn,
@@ -72,8 +73,16 @@ del mtrash paths = do
 
   -- override old index
   delPathsFn `finally` do
+    -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
-    appendIndex indexPath (MkIndex deletedPaths)
+    nonEmpty <-
+      allM1
+        [ Dir.doesFileExist indexPath,
+          (> 0) <$> Dir.getFileSize indexPath
+        ]
+    if nonEmpty
+      then appendIndex indexPath (MkIndex deletedPaths)
+      else writeIndex indexPath (MkIndex deletedPaths)
 
 -- | Permanently deletes the paths from the trash.
 --
@@ -111,14 +120,9 @@ permDel mtrash paths = do
             | c == 'n' -> putStrLn ""
             | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
-        pathTypeToRenameFn
-          (pd ^. #pathType)
-          (pd ^. #trashPath)
-          (pd ^. #originalPath)
-        modifyIORef' deletedPathsRef (Map.insert (pd ^. #trashPath) pd)
-
   -- override old index
   deletePathsFn `finally` do
+    -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
     writeIndex indexPath (MkIndex $ Map.difference indexMap deletedPaths)
 
@@ -158,6 +162,7 @@ restore mtrash paths = do
 
   -- override old index
   restorePathsFn `finally` do
+    -- TODO: mask all exceptions and enforce no-throw
     restoredPaths <- readIORef restoredPathsRef
     writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
 

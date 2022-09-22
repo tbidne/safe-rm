@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Del.Types
   ( PathType (..),
@@ -9,7 +10,17 @@ where
 
 import Control.DeepSeq (NFData)
 import Data.ByteString (ByteString)
-import Data.Csv (FromField, FromRecord, ToField, ToRecord)
+import Data.Csv
+  ( DefaultOrdered (headerOrder),
+    FromField,
+    FromNamedRecord,
+    FromRecord,
+    ToField,
+    ToNamedRecord,
+    ToRecord,
+    (.:),
+    (.=),
+  )
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
@@ -22,9 +33,11 @@ import Data.Text.Prettyprint.Doc qualified as Pretty
 import Prettyprinter (Pretty (pretty), (<+>))
 import Prettyprinter qualified as Pretty
 #endif
+import Data.String (IsString)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+import GHC.Exts (IsList (Item))
 import Optics.Core ((^.))
 
 -- | Path type.
@@ -75,18 +88,18 @@ instance ToField PathType where
 --
 -- @since 0.1
 data PathData = MkPathData
-  { -- | The path to be used in the trash directory.
+  { -- | The type of the path.
+    --
+    -- @since 0.1
+    pathType :: !PathType,
+    -- | The path to be used in the trash directory.
     --
     -- @since 0.1
     trashPath :: !FilePath,
     -- | The original path on the file system.
     --
     -- @since 0.1
-    originalPath :: !FilePath,
-    -- | The type of the path.
-    --
-    -- @since 0.1
-    pathType :: !PathType
+    originalPath :: !FilePath
   }
   deriving stock
     ( -- | @since 0.1
@@ -108,14 +121,40 @@ data PathData = MkPathData
     )
 
 -- | @since 0.1
+instance FromNamedRecord PathData where
+  parseNamedRecord m =
+    MkPathData
+      <$> m .: "type"
+      <*> m .: "trash"
+      <*> m .: "original"
+
+-- | @since 0.1
+instance ToNamedRecord PathData where
+  toNamedRecord pd = Map.fromList $ zipWith (flip ($)) headerNames labelFn
+    where
+      labelFn =
+        [ \x -> x .= (pd ^. #pathType),
+          \x -> x .= (pd ^. #trashPath),
+          \x -> x .= (pd ^. #originalPath)
+        ]
+
+-- | @since 0.1
+instance DefaultOrdered PathData where
+  headerOrder _ = headerNames
+
+-- | @since 0.1
 instance Pretty PathData where
   pretty pd = Pretty.vsep strs <+> Pretty.line
     where
-      strs =
-        [ "type:    " <+> pretty (pd ^. #pathType),
-          "trash:   " <+> (pretty $ pd ^. #trashPath),
-          "original:" <+> (pretty $ pd ^. #originalPath)
+      strs = zipWith (flip ($)) headerNames labelFn
+      labelFn =
+        [ \x -> x <> ":    " <+> pretty (pd ^. #pathType),
+          \x -> x <> ":   " <+> pretty (pd ^. #trashPath),
+          \x -> x <> ":" <+> pretty (pd ^. #originalPath)
         ]
+
+headerNames :: (IsList a, IsString (Item a)) => a
+headerNames = ["type", "trash", "original"]
 
 -- | Index that stores the trash data.
 --

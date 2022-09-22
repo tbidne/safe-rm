@@ -21,6 +21,7 @@ module Del.Internal
 
     -- * Utilities
     toPathData,
+    allM1,
   )
 where
 
@@ -28,12 +29,13 @@ import Control.Exception (throwIO)
 import Control.Monad ((>=>))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
-import Data.Csv (HasHeader (NoHeader))
+import Data.Csv (HasHeader (HasHeader))
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as Set
+import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Vector qualified as V
 import Data.Word (Word16)
 import Del.Exceptions
@@ -51,7 +53,7 @@ import Del.Types
   )
 import Optics.Core ((^.))
 import System.Directory qualified as Dir
-import System.FilePath (addTrailingPathSeparator, (</>))
+import System.FilePath (dropTrailingPathSeparator, (</>))
 
 -- | Attempts to read the trash index file. If successful, guarantees:
 --
@@ -104,7 +106,8 @@ searchIndex ::
 searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
-    trashKeys = Set.map (addTrailingPathSeparator . (trashHome </>)) keys
+    -- NOTE: drop trailing slashes to match our index's schema
+    trashKeys = Set.map (dropTrailingPathSeparator . (trashHome </>)) keys
     foldKeys :: IO (HashSet PathData) -> FilePath -> IO (HashSet PathData)
     foldKeys macc trashKey = do
       acc <- macc
@@ -133,7 +136,7 @@ readIndexWithFold ::
   IO a
 readIndexWithFold foldFn = BS.readFile >=> runFold . decode
   where
-    decode = Csv.decode NoHeader . BSL.fromStrict
+    decode = Csv.decode HasHeader . BSL.fromStrict
     runFold = \case
       Left err -> throwIO $ MkReadIndexError err
       Right vec -> V.foldl' foldFn (pure mempty) vec
@@ -218,11 +221,11 @@ toPathData trashHome fp = do
       if isDir
         then
           pure
-            -- NOTE: ensure paths have trailing slashes so that we can ensure
-            -- later lookups succeed
+            -- NOTE: ensure paths do not have trailing slashes so that we can
+            -- ensure later lookups succeed (requires string equality)
             MkPathData
-              { trashPath = addTrailingPathSeparator uniqPath,
-                originalPath = addTrailingPathSeparator origPath,
+              { trashPath = dropTrailingPathSeparator uniqPath,
+                originalPath = dropTrailingPathSeparator origPath,
                 pathType = PathTypeDirectory
               }
         else throwIO $ MkPathNotFoundError origPath
@@ -269,8 +272,6 @@ appendIndex :: FilePath -> Index -> IO ()
 appendIndex indexPath =
   BS.appendFile indexPath
     . BSL.toStrict
-    -- TODO: Include a header. Somehow we have to know if the file exists
-    -- (or create a blank one first)
     . Csv.encode
     . Map.elems
     . unIndex
@@ -283,8 +284,7 @@ writeIndex :: FilePath -> Index -> IO ()
 writeIndex indexPath =
   BS.writeFile indexPath
     . BSL.toStrict
-    -- TODO: write a header
-    . Csv.encode
+    . Csv.encodeDefaultOrderedByName
     . Map.elems
     . unIndex
 
@@ -306,3 +306,23 @@ getTrashHome = (</> ".trash") <$> Dir.getHomeDirectory
 -- @since 0.1
 getIndexPath :: FilePath -> FilePath
 getIndexPath = (</> ".index.csv")
+
+-- | 'allM' that must have at least one 'True'.
+--
+-- @since 0.1
+allM1 :: Monad m => NonEmpty (m Bool) -> m Bool
+allM1 (m :| ms) =
+  m >>= \case
+    True -> allM ms
+    False -> pure False
+
+-- | 'all' lifted to monads.
+--
+-- @since 0.1
+allM :: (Foldable t, Monad m) => t (m Bool) -> m Bool
+allM = foldr f (pure True)
+  where
+    f m acc =
+      m >>= \case
+        True -> acc
+        False -> pure False
