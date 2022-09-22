@@ -10,6 +10,7 @@ module Args
   )
 where
 
+import Control.Applicative (Alternative ((<|>)))
 import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty ((:|)))
@@ -137,19 +138,35 @@ versNum = "Version: " <> $$(PV.packageVersionStringTH "dir.cabal")
 
 commandParser :: Parser DelCommand
 commandParser =
-  OA.hsubparser $
-    mconcat
-      [ mkCommand "d" delParser delTxt,
-        mkCommand "x" permDelParser permDelTxt,
-        mkCommand "e" emptyParser emptyTxt,
-        mkCommand "r" restoreParser restoreTxt,
-        mkCommand "l" listParser listTxt
-      ]
+  OA.hsubparser
+    ( mconcat
+        [ mkCommand "d" delParser delTxt,
+          mkCommand "x" permDelParser permDelTxt,
+          mkCommand "e" emptyParser emptyTxt,
+          OA.commandGroup "Delete Commands"
+        ]
+    )
+    <|> OA.hsubparser
+      ( mconcat
+          [ mkCommand "r" restoreParser restoreTxt,
+            OA.commandGroup "Restore Commands",
+            OA.hidden
+          ]
+      )
+    <|> OA.hsubparser
+      ( mconcat
+          [ mkCommand "l" listParser listTxt,
+            OA.commandGroup "Information Commands",
+            OA.hidden
+          ]
+      )
   where
-    delTxt = OA.progDesc "Moves the path to the trash."
-    permDelTxt = OA.progDesc "Permanently deletes a path from the trash."
+    delTxt = OA.progDesc "Moves the path(s) to the trash."
+    permDelTxt = OA.progDesc "Permanently deletes path(s) from the trash."
     emptyTxt = OA.progDesc "Empties the trash and deletes the index."
-    restoreTxt = OA.progDesc "Restores the trash path to its original location."
+    restoreTxt =
+      OA.progDesc
+        "Restores the trash path(s) to their original location."
     listTxt = OA.progDesc "Lists all trash contents."
 
     delParser =
