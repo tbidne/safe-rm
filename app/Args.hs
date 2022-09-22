@@ -211,7 +211,7 @@ trashParser =
 
 pathsParser :: Parser (NonEmpty FilePath)
 pathsParser =
-  -- NOTE: _should_ be safe because OA.show only succeeds for non-zero input.
+  -- NOTE: _should_ be safe because OA.some only succeeds for non-zero input.
   -- We do this rather than using NonEmpty's some1 because otherwise the CLI
   -- help metavar is duplicated i.e. "PATHS... [PATHS...]".
   unsafeNE
