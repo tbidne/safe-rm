@@ -1,6 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
 
+-- | Provides types.
+--
+-- @since 0.1
 module Del.Types
   ( PathType (..),
     PathData (..),

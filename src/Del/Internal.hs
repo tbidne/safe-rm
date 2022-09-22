@@ -120,7 +120,7 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
     mCollisionErr =
       if errIfOrigCollision
         then noOrigPathCollision
-        else (const (pure ()))
+        else const (pure ())
 
 -- | Reads a csv index file and applies the fold function to each
 -- 'PathData' encountered. The fold function allows 'IO' in case it is needed
