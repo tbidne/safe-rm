@@ -46,7 +46,7 @@ import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 import GHC.Exts (IsList (Item))
 import GHC.Natural (Natural)
-import Optics.Core ((^.))
+import Optics.Core (view, (^.))
 
 -- | Path type.
 --
@@ -196,7 +196,7 @@ instance Pretty Index where
     Pretty.vsep
       . fmap pretty
       . Map.elems
-      . unIndex
+      . view #unIndex
 
 -- | Converts UTF8 'ByteString' to 'String'. Decoding is lenient.
 --

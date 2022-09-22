@@ -54,6 +54,7 @@ common common-exts
     TypeApplications
     TypeFamilyDependencies
     TypeOperators
+    NoFieldSelectors
 
 library
   import:           common-exts

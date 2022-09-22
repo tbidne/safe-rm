@@ -57,7 +57,7 @@ import Del.Types
     Statistics (MkStatistics, numEntries, numFiles, size),
   )
 import GHC.Natural (Natural)
-import Optics.Core ((^.))
+import Optics.Core (view, (^.))
 import System.Directory qualified as Dir
 import System.FilePath (dropTrailingPathSeparator, (</>))
 
@@ -280,7 +280,7 @@ appendIndex indexPath =
     . BSL.toStrict
     . Csv.encode
     . Map.elems
-    . unIndex
+    . view #unIndex
 
 -- | Writes the path data to the trash index. This is intended to be used
 -- after a successful move to the trash.
@@ -292,7 +292,7 @@ writeIndex indexPath =
     . BSL.toStrict
     . Csv.encodeDefaultOrderedByName
     . Map.elems
-    . unIndex
+    . view #unIndex
 
 -- | If the argument is given, returns it. Otherwise searches for the default
 -- trash location.
