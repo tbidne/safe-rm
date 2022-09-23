@@ -10,15 +10,11 @@ module Del.Args
   )
 where
 
-import Control.Applicative (Alternative ((<|>)))
 import Control.Applicative qualified as A
 import Data.List qualified as L
-import Data.List.NonEmpty (NonEmpty ((:|)))
-import Data.String (IsString (fromString))
 import Data.Version.Package qualified as PV
+import Del.Prelude
 import Development.GitRev qualified as GitRev
-import GHC.Generics (Generic)
-import GHC.Stack (HasCallStack)
 import Options.Applicative
   ( CommandFields,
     InfoMod,

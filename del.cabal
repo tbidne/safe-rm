@@ -22,6 +22,7 @@ source-repository head
 
 common common-exts
   default-extensions:
+    NoImplicitPrelude
     BangPatterns
     ConstraintKinds
     DataKinds
@@ -62,6 +63,7 @@ library
     Del
     Del.Exceptions
     Del.Internal
+    Del.Prelude
     Del.Types
 
   build-depends:
@@ -93,8 +95,8 @@ library del-exe-internal
     , del
     , gitrev                >=1.2.0   && <1.4
     , hashable
-    , optparse-applicative  >=0.15    && <0.18
     , optics-core
+    , optparse-applicative  >=0.15    && <0.18
     , package-version       >=0.1.0.0 && <0.4
     , prettyprinter
     , text
@@ -104,12 +106,13 @@ library del-exe-internal
   default-language: Haskell2010
 
 executable del
-  import:           common-exts
-  main-is:          Main.hs
+  import:             common-exts
+  default-extensions: ImplicitPrelude
+  main-is:            Main.hs
   build-depends:
     , base
     , del-exe-internal
 
-  hs-source-dirs:   app
-  ghc-options:      -threaded -with-rtsopts=-N
-  default-language: Haskell2010
+  hs-source-dirs:     app
+  ghc-options:        -threaded -with-rtsopts=-N
+  default-language:   Haskell2010

@@ -26,22 +26,15 @@ module Del.Internal
   )
 where
 
-import Control.Exception (throwIO)
-import Control.Monad (join, (>=>))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
 import Data.Bytes (Bytes (MkBytes), Size (B))
 import Data.Bytes qualified as Bytes
 import Data.Csv (HasHeader (HasHeader))
 import Data.Csv qualified as Csv
-import Data.Foldable (Foldable (foldl'))
-import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
-import Data.HashSet (HashSet)
 import Data.HashSet qualified as Set
-import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.Vector qualified as V
-import Data.Word (Word16)
 import Del.Exceptions
   ( DuplicateIndexPathsError (MkDuplicateIndexPathsError),
     PathExistsError (MkPathExistsError),
@@ -50,16 +43,15 @@ import Del.Exceptions
     RenameDuplicateError (MkRenameDuplicateError),
     TrashPathNotFoundError (MkTrashPathsNotFoundError),
   )
+import Del.Prelude
 import Del.Types
   ( Index (MkIndex, unIndex),
     PathData (MkPathData, originalPath, pathType, trashPath),
     PathType (PathTypeDirectory, PathTypeFile),
     Statistics (MkStatistics, numEntries, numFiles, size),
   )
-import GHC.Natural (Natural)
-import Optics.Core (view, (^.))
 import System.Directory qualified as Dir
-import System.FilePath (dropTrailingPathSeparator, (</>))
+import System.FilePath (dropTrailingPathSeparator)
 
 -- | Attempts to read the trash index file. If successful, guarantees:
 --

@@ -11,9 +11,7 @@ module Del.Exceptions
   )
 where
 
-import Control.DeepSeq (NFData)
-import Control.Exception (Exception (displayException))
-import GHC.Generics (Generic)
+import Del.Prelude
 
 -- | Error when searching for a path.
 --

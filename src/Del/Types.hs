@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedLists #-}
 
 -- | Provides types.
@@ -12,9 +11,9 @@ module Del.Types
   )
 where
 
-import Control.DeepSeq (NFData)
-import Data.ByteString (ByteString)
+import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
+import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.Csv
   ( DefaultOrdered (headerOrder),
     FromField,
@@ -27,26 +26,12 @@ import Data.Csv
     (.=),
   )
 import Data.Csv qualified as Csv
-import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
-import Data.Hashable (Hashable)
-import GHC.Generics (Generic)
-#if !MIN_VERSION_prettyprinter(1, 7, 1)
-import Data.Text.Prettyprint.Doc (Pretty (pretty), (<+>))
-import Data.Text.Prettyprint.Doc qualified as Pretty
-#else
-import Prettyprinter (Pretty (pretty), (<+>))
-import Prettyprinter qualified as Pretty
-#endif
-import Data.Bytes (SomeSize)
-import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
-import Data.String (IsString)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+import Del.Prelude
 import GHC.Exts (IsList (Item))
-import GHC.Natural (Natural)
-import Optics.Core (view, (^.))
 
 -- | Path type.
 --
@@ -152,7 +137,7 @@ instance DefaultOrdered PathData where
 
 -- | @since 0.1
 instance Pretty PathData where
-  pretty pd = Pretty.vsep strs <+> Pretty.line
+  pretty pd = vsep strs <+> line
     where
       strs = zipWith (flip ($)) headerNames labelFn
       labelFn =
@@ -193,7 +178,7 @@ newtype Index = MkIndex
 -- | @since 0.1
 instance Pretty Index where
   pretty =
-    Pretty.vsep
+    vsep
       . fmap pretty
       . Map.elems
       . view #unIndex
@@ -237,7 +222,7 @@ data Statistics = MkStatistics
 
 -- | @since 0.1
 instance Pretty Statistics where
-  pretty stats = Pretty.vsep strs <+> Pretty.line
+  pretty stats = vsep strs <+> line
     where
       strs =
         [ "Entries:     " <+> pretty (stats ^. #numEntries),

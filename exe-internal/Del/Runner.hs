@@ -9,6 +9,10 @@ module Del.Runner
   )
 where
 
+import Data.HashSet qualified as Set
+import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
+import Del qualified
 import Del.Args
   ( Args (command),
     DelCommand
@@ -21,30 +25,8 @@ import Del.Args
       ),
     getArgs,
   )
-import Control.Exception
-  ( Exception (displayException, fromException, toException),
-    SomeAsyncException (SomeAsyncException),
-    SomeException,
-    catch,
-    throwIO,
-  )
-import Control.Monad ((<=<))
-import Data.HashSet (HashSet)
-import Data.HashSet qualified as Set
-import Data.Hashable (Hashable)
-import Data.List.NonEmpty (NonEmpty)
-import Data.List.NonEmpty qualified as NE
-import Data.Text (Text)
-import Data.Text qualified as T
-#if !MIN_VERSION_prettyprinter(1, 7, 1)
-import Data.Text.Prettyprint.Doc (Pretty (pretty), layoutCompact)
-import Data.Text.Prettyprint.Doc.Render.Text (renderStrict)
-#else
-import Prettyprinter (Pretty (pretty), layoutCompact)
-import Prettyprinter.Render.Text (renderStrict)
-#endif
-import Del qualified
-import Optics.Core 
+import Del.Prelude
+
 -- | Reads cli args and prints the results to stdout.
 --
 -- @since 0.1
