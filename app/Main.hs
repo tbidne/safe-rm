@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -- | Main module.
 --
 -- @since 0.1

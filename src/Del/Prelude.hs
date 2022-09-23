@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -- | Custom prelude.
 --
 -- @since 0.1
@@ -43,25 +41,6 @@ import Data.Ord as X (Ord ((>)))
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text)
-#if !MIN_VERSION_prettyprinter(1, 7, 1)
-import Data.Text.Prettyprint.Doc as X
-  ( Pretty (pretty),
-    layoutCompact,
-    line,
-    vsep,
-    (<+>),
-  )
-import Data.Text.Prettyprint.Doc.Render.Text as X (renderStrict)
-#else
-import Prettyprinter as X
-  ( Pretty (pretty),
-    layoutCompact,
-    line,
-    vsep,
-    (<+>),
-  )
-import Prettyprinter.Render.Text as X (renderStrict)
-#endif
 import Data.Traversable as X (traverse)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16)
@@ -75,6 +54,14 @@ import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (fromIntegral)
 import GHC.Stack as X (HasCallStack)
 import Optics.Core as X (view, (^.))
+import Prettyprinter as X
+  ( Pretty (pretty),
+    layoutCompact,
+    line,
+    vsep,
+    (<+>),
+  )
+import Prettyprinter.Render.Text as X (renderStrict)
 import System.FilePath as X ((</>))
 import System.IO as X
   ( BufferMode (NoBuffering),

@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -- | This modules provides an executable for running del.
 --
 -- @since 0.1
