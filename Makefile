@@ -24,7 +24,7 @@ test:
 
 .PHONY: functional
 functional:
-	RUN_FUNCTIONAL=1 cabal test functional
+	cabal test functional
 
 .PHONY: repl
 repl:
