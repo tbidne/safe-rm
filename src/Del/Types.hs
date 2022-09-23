@@ -193,7 +193,7 @@ bsToStr = T.unpack . TEnc.decodeUtf8With TEncError.lenientDecode
 --
 -- @since 0.1
 data Statistics = MkStatistics
-  { -- | Number of top level entires in the trash index. This should be the
+  { -- | Number of top level entries in the trash index. This should be the
     -- same as the index length.
     --
     -- @since 0.1

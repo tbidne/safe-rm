@@ -69,13 +69,14 @@ permDel mtrash paths = do
   let indexPath = I.getIndexPath trashHome
   index@(MkIndex indexMap) <- I.readIndex indexPath
 
-  -- NOTE: No buffering on input so we can read a single char w/o requiring a
-  -- newline to end the input (which then gets passed to getChar, which
-  -- interferes with subsequent calls).
+  -- NOTE:
+  -- - No buffering on input so we can read a single char w/o requiring a
+  --   newline to end the input (which then gets passed to getChar, which
+  --   interferes with subsequent calls).
+  --
+  -- - No buffering on output so the "Permanently delete..." string gets
+  --   printed w/o the newline.
   IO.hSetBuffering IO.stdin NoBuffering
-
-  -- NOTE: No buffering on output so the "Permanently delete..." string gets
-  -- printed w/o the newline.
   IO.hSetBuffering IO.stdout NoBuffering
 
   toDelete <- I.searchIndexForPermDel trashHome paths index
@@ -86,6 +87,7 @@ permDel mtrash paths = do
   let deletePathsFn = for_ toDelete $ \pd -> do
         let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
         putStrLn $ T.unpack pdStr
+        -- TODO: add a "-f" override
         putStr "Permanently delete (y/n)? "
         c <- Ch.toLower <$> IO.getChar
         if

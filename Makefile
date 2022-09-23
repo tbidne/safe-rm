@@ -22,6 +22,10 @@ test:
 		cabal test $(ARGS); \
 	fi
 
+.PHONY: functional
+functional:
+	RUN_FUNCTIONAL=1 cabal test functional
+
 .PHONY: repl
 repl:
 	if [ -z "$(ARGS)" ]; then \

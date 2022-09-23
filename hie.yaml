@@ -9,5 +9,5 @@ cradle:
     - path: "./app/Main.hs"
       component: "del:exe:del"
 
-    - path: "./app/Args.hs"
-      component: "del:exe:del"
+    - path: "./test/functional"
+      component: "del:test:functional"

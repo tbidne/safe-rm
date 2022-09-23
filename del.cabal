@@ -89,3 +89,26 @@ executable del
   hs-source-dirs:     app
   ghc-options:        -threaded -with-rtsopts=-N
   default-language:   GHC2021
+
+test-suite functional
+  import:           common-exts
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  other-modules:
+    Functional.Commands.D
+    Functional.Prelude
+    Functional.TestArgs
+
+  build-depends:
+    , base
+    , bytestring
+    , del
+    , del-exe-internal
+    , directory
+    , env-guard         ^>=0.2
+    , tasty             >=1.1.0.3 && <1.5
+    , tasty-hunit       >=0.9     && <0.11
+    , text
+
+  hs-source-dirs:   test/functional
+  default-language: GHC2021

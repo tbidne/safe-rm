@@ -51,7 +51,7 @@ import Del.Types
     Statistics (MkStatistics, numEntries, numFiles, size),
   )
 import System.Directory qualified as Dir
-import System.FilePath (dropTrailingPathSeparator)
+import System.FilePath qualified as FP
 
 -- | Attempts to read the trash index file. If successful, guarantees:
 --
@@ -105,7 +105,7 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
-    trashKeys = Set.map (dropTrailingPathSeparator . (trashHome </>)) keys
+    trashKeys = Set.map (FP.dropTrailingPathSeparator . (trashHome </>)) keys
     foldKeys :: IO (HashSet PathData) -> FilePath -> IO (HashSet PathData)
     foldKeys macc trashKey = do
       acc <- macc
@@ -203,8 +203,14 @@ pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 toPathData :: FilePath -> FilePath -> IO PathData
 toPathData trashHome fp = do
   origPath <- Dir.canonicalizePath fp
-
-  uniqPath <- uniqName (trashHome </> fp)
+  -- NOTE: need to get the file name here because fp could refer to an
+  -- absolute path. In this case, </> returns the 2nd arg which is absolutely
+  -- not what we want.
+  --
+  -- This works for directories too because canonicalizePath drops the
+  -- trailing slashes.
+  let fileName = FP.takeFileName origPath
+  uniqPath <- uniqName (trashHome </> fileName)
   isFile <- Dir.doesFileExist origPath
   if isFile
     then
@@ -222,8 +228,8 @@ toPathData trashHome fp = do
             -- NOTE: ensure paths do not have trailing slashes so that we can
             -- ensure later lookups succeed (requires string equality)
             MkPathData
-              { trashPath = dropTrailingPathSeparator uniqPath,
-                originalPath = dropTrailingPathSeparator origPath,
+              { trashPath = FP.dropTrailingPathSeparator uniqPath,
+                originalPath = FP.dropTrailingPathSeparator origPath,
                 pathType = PathTypeDirectory
               }
         else throwIO $ MkPathNotFoundError origPath

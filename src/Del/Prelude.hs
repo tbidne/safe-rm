@@ -9,6 +9,7 @@ where
 import Control.Applicative as X
   ( Alternative ((<|>)),
     Applicative (pure, (<*>)),
+    (*>),
   )
 import Control.DeepSeq as X (NFData)
 import Control.Exception as X
@@ -21,13 +22,13 @@ import Control.Exception as X
   )
 import Control.Monad as X (Monad ((>>=)), join, (<=<), (>=>))
 import Control.Monad.Fail as X (MonadFail (fail))
-import Data.Bool as X (Bool (False, True), not, otherwise)
+import Data.Bool as X (Bool (False, True), not, otherwise, (&&))
 import Data.ByteString as X (ByteString)
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((==)))
 import Data.Foldable as X (Foldable (foldl', foldr, length), for_)
 import Data.Function as X (const, flip, ($), (.))
-import Data.Functor as X (Functor (fmap), (<$>))
+import Data.Functor as X (Functor (fmap), ($>), (<$>))
 import Data.HashMap.Strict as X (HashMap)
 import Data.HashSet as X (HashSet)
 import Data.Hashable as X (Hashable)
@@ -45,7 +46,7 @@ import Data.Traversable as X (traverse)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16)
 import GHC.Enum as X (Bounded (maxBound))
-import GHC.Err as X (error)
+import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
 import GHC.Integer as X (Integer)
@@ -62,6 +63,7 @@ import Prettyprinter as X
     (<+>),
   )
 import Prettyprinter.Render.Text as X (renderStrict)
+import System.Directory as X (createDirectoryIfMissing)
 import System.FilePath as X ((</>))
 import System.IO as X
   ( BufferMode (NoBuffering),
