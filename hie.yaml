@@ -3,6 +3,9 @@ cradle:
     - path: "./src"
       component: "lib:del"
 
+    - path: "./exe-internal"
+      component: "del:lib:del-exe-internal"
+
     - path: "./app/Main.hs"
       component: "del:exe:del"
 

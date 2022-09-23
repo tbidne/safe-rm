@@ -82,19 +82,33 @@ library
   hs-source-dirs:   src
   default-language: Haskell2010
 
-executable del
+library del-exe-internal
   import:           common-exts
-  main-is:          Main.hs
-  other-modules:    Args
+  exposed-modules:
+    Del.Args
+    Del.Runner
+
   build-depends:
     , base
     , del
     , gitrev                >=1.2.0   && <1.4
     , hashable
     , optparse-applicative  >=0.15    && <0.18
+    , optics-core
     , package-version       >=0.1.0.0 && <0.4
     , prettyprinter
+    , text
     , unordered-containers
+
+  hs-source-dirs:   exe-internal
+  default-language: Haskell2010
+
+executable del
+  import:           common-exts
+  main-is:          Main.hs
+  build-depends:
+    , base
+    , del-exe-internal
 
   hs-source-dirs:   app
   ghc-options:      -threaded -with-rtsopts=-N

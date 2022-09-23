@@ -3,7 +3,7 @@
 -- | Provides CLI args functionality.
 --
 -- @since 0.1
-module Args
+module Del.Args
   ( getArgs,
     Args (..),
     DelCommand (..),
@@ -17,6 +17,7 @@ import Data.List.NonEmpty (NonEmpty ((:|)))
 import Data.String (IsString (fromString))
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
+import GHC.Generics (Generic)
 import GHC.Stack (HasCallStack)
 import Options.Applicative
   ( CommandFields,
@@ -92,6 +93,8 @@ newtype Args = MkArgs
   deriving stock
     ( -- | @since 0.1
       Eq,
+      -- | @since 0.1
+      Generic,
       -- | @since 0.1
       Show
     )
