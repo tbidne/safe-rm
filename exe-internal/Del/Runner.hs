@@ -54,10 +54,10 @@ runDelHandler handler = do
     handleEx = handler . T.pack . displayException
 
 listIndex :: (Text -> IO a) -> Maybe FilePath -> IO a
-listIndex handler = prettyDel Del.getIndex handler
+listIndex = prettyDel Del.getIndex
 
 printStats :: (Text -> IO a) -> Maybe FilePath -> IO a
-printStats handler = prettyDel Del.getStatistics handler
+printStats = prettyDel Del.getStatistics
 
 prettyDel :: Pretty b => (a -> IO b) -> (Text -> IO c) -> a -> IO c
 prettyDel f handler =
