@@ -94,7 +94,7 @@ haddock:
 
 .PHONY: haddockc
 haddockc:
-	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- .
+	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- . -m Del.Prelude 90
 
 # generate dist and docs suitable for hackage
 .PHONY: hackage
