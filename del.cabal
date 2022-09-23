@@ -94,11 +94,8 @@ library del-exe-internal
     , base
     , del
     , gitrev                >=1.2.0   && <1.4
-    , hashable
-    , optics-core
     , optparse-applicative  >=0.15    && <0.18
     , package-version       >=0.1.0.0 && <0.4
-    , prettyprinter
     , text
     , unordered-containers
 
