@@ -159,7 +159,6 @@ isMatchHelper (Outfix e1 e2) r = e1 `T.isPrefixOf` r && e2 `T.isSuffixOf` r
 unlineMatches :: [TextMatch] -> String
 unlineMatches [] = ""
 unlineMatches (t : ts) = showTextMatch t <> "\n" <> unlineMatches ts
-  where
 
 showTextMatch :: TextMatch -> String
 showTextMatch (Exact e) = T.unpack e

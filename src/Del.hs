@@ -22,9 +22,11 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
+import Del.Data.Index (Index (..))
+import Del.Data.PathData (PathData (..))
+import Del.Data.Statistics (Statistics (..))
 import Del.Internal qualified as I
 import Del.Prelude
-import Del.Types (Index (..), PathData (..), Statistics (..))
 import System.Directory qualified as Dir
 import System.IO qualified as IO
 

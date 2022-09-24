@@ -35,6 +35,10 @@ import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Vector qualified as V
+import Del.Data.Index (Index (..))
+import Del.Data.PathData (PathData (..))
+import Del.Data.PathType (PathType (..))
+import Del.Data.Statistics (Statistics (..))
 import Del.Exceptions
   ( DuplicateIndexPathsError (MkDuplicateIndexPathsError),
     PathExistsError (MkPathExistsError),
@@ -44,12 +48,6 @@ import Del.Exceptions
     TrashPathNotFoundError (MkTrashPathsNotFoundError),
   )
 import Del.Prelude
-import Del.Types
-  ( Index (MkIndex, unIndex),
-    PathData (MkPathData, originalPath, pathType, trashPath),
-    PathType (PathTypeDirectory, PathTypeFile),
-    Statistics (MkStatistics, numEntries, numFiles, size),
-  )
 import System.Directory qualified as Dir
 import System.FilePath qualified as FP
 

@@ -37,10 +37,13 @@ library
   import:           common-exts
   exposed-modules:
     Del
+    Del.Data.Index
+    Del.Data.PathData
+    Del.Data.PathType
+    Del.Data.Statistics
     Del.Exceptions
     Del.Internal
     Del.Prelude
-    Del.Types
 
   build-depends:
     , base                  >=4.14.0.0  && <4.17
