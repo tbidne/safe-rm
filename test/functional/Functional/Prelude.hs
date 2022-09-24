@@ -136,16 +136,17 @@ matches [] t@(_ : _) =
 matches (e : es) (t : ts) = isMatch (e :| es) (t :| ts)
 
 isMatch :: NonEmpty TextMatch -> NonEmpty Text -> Maybe String
-isMatch (s :| es) (r :| rs) = case isMatchHelper s (T.strip r) of
-  True -> matches es rs
-  False ->
-    Just $
-      mconcat
-        [ "Expected: ",
-          showTextMatch s,
-          "\nReceived: ",
-          T.unpack r
-        ]
+isMatch (s :| es) (r :| rs) =
+  if isMatchHelper s (T.strip r)
+    then matches es rs
+    else
+      Just $
+        mconcat
+          [ "Expected: ",
+            showTextMatch s,
+            "\nReceived: ",
+            T.unpack r
+          ]
 
 isMatchHelper :: TextMatch -> Text -> Bool
 isMatchHelper (Exact e) r = e == r
