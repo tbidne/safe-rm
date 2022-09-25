@@ -25,6 +25,7 @@ import Data.Text qualified as T
 import Del.Data.Index (Index (..))
 import Del.Data.PathData (PathData (..))
 import Del.Data.Statistics (Statistics (..))
+import Del.Data.Timestamp (getCurrentLocalTime)
 import Del.Internal qualified as I
 import Del.Prelude
 import System.Directory qualified as Dir
@@ -42,10 +43,11 @@ del mtrash paths = do
   Dir.createDirectoryIfMissing False trashHome
 
   deletedPathsRef <- newIORef Map.empty
+  currTime <- getCurrentLocalTime
 
   -- move path to trash
   let delPathsFn = for_ paths $ \fp -> do
-        pd <- I.toPathData trashHome fp
+        pd <- I.toPathData currTime trashHome fp
         I.mvToTrash pd
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #trashPath) pd)
 

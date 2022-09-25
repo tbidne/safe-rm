@@ -39,6 +39,7 @@ import Del.Data.Index (Index (..))
 import Del.Data.PathData (PathData (..))
 import Del.Data.PathType (PathType (..))
 import Del.Data.Statistics (Statistics (..))
+import Del.Data.Timestamp
 import Del.Exceptions
   ( DuplicateIndexPathsError (MkDuplicateIndexPathsError),
     PathExistsError (MkPathExistsError),
@@ -198,8 +199,8 @@ pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory
 -- * File/directory type.
 --
 -- @since 0.1
-toPathData :: FilePath -> FilePath -> IO PathData
-toPathData trashHome fp = do
+toPathData :: Timestamp -> FilePath -> FilePath -> IO PathData
+toPathData currTime trashHome fp = do
   origPath <- Dir.canonicalizePath fp
   -- NOTE: need to get the file name here because fp could refer to an
   -- absolute path. In this case, </> returns the 2nd arg which is absolutely
@@ -216,7 +217,8 @@ toPathData trashHome fp = do
         MkPathData
           { trashPath = uniqPath,
             originalPath = origPath,
-            pathType = PathTypeFile
+            pathType = PathTypeFile,
+            created = currTime
           }
     else do
       isDir <- Dir.doesDirectoryExist origPath
@@ -228,7 +230,8 @@ toPathData trashHome fp = do
             MkPathData
               { trashPath = FP.dropTrailingPathSeparator uniqPath,
                 originalPath = FP.dropTrailingPathSeparator origPath,
-                pathType = PathTypeDirectory
+                pathType = PathTypeDirectory,
+                created = currTime
               }
         else throwIO $ MkPathNotFoundError origPath
 

@@ -5,6 +5,11 @@
 -- @since 0.1
 module Del.Data.PathData
   ( PathData (..),
+
+    -- * Sorting
+    sortDefault,
+    sortCreated,
+    sortName,
   )
 where
 
@@ -20,6 +25,7 @@ import Data.Csv
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Del.Data.PathType (PathType (..))
+import Del.Data.Timestamp (Timestamp (..))
 import Del.Prelude
 import GHC.Exts (IsList (Item))
 
@@ -40,7 +46,11 @@ data PathData = MkPathData
     -- | The original path on the file system.
     --
     -- @since 0.1
-    originalPath :: !FilePath
+    originalPath :: !FilePath,
+    -- | Time this entry was created.
+    --
+    -- @since 0.1
+    created :: !Timestamp
   }
   deriving stock
     ( -- | @since 0.1
@@ -68,6 +78,7 @@ instance FromNamedRecord PathData where
       <$> m .: "type"
       <*> m .: "trash"
       <*> m .: "original"
+      <*> m .: "created"
 
 -- | @since 0.1
 instance ToNamedRecord PathData where
@@ -76,7 +87,8 @@ instance ToNamedRecord PathData where
       labelFn =
         [ \x -> x .= (pd ^. #pathType),
           \x -> x .= (pd ^. #trashPath),
-          \x -> x .= (pd ^. #originalPath)
+          \x -> x .= (pd ^. #originalPath),
+          \x -> x .= (pd ^. #created)
         ]
 
 -- | @since 0.1
@@ -91,8 +103,32 @@ instance Pretty PathData where
       labelFn =
         [ \x -> x <> ":    " <+> pretty (pd ^. #pathType),
           \x -> x <> ":   " <+> pretty (pd ^. #trashPath),
-          \x -> x <> ":" <+> pretty (pd ^. #originalPath)
+          \x -> x <> ":" <+> pretty (pd ^. #originalPath),
+          \x -> x <> ":" <+> pretty (pd ^. #created)
         ]
 
 headerNames :: (IsList a, IsString (Item a)) => a
-headerNames = ["type", "trash", "original"]
+headerNames = ["type", "trash", "original", "created"]
+
+-- | Sorts by the created date then the name.
+--
+-- @since 0.1
+sortDefault :: PathData -> PathData -> Ordering
+sortDefault x y = case sortCreated x y of
+  EQ -> sortName x y
+  other -> other
+
+-- | Sorts by the created date.
+--
+-- @since 0.1
+sortCreated :: PathData -> PathData -> Ordering
+sortCreated = mapOrd (view #created)
+
+-- | Sorts by the name.
+--
+-- @since 0.1
+sortName :: PathData -> PathData -> Ordering
+sortName = mapOrd (view #trashPath)
+
+mapOrd :: Ord b => (a -> b) -> a -> a -> Ordering
+mapOrd f x y = f x `compare` f y

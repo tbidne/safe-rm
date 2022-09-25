@@ -7,7 +7,8 @@ module Del.Data.Index
 where
 
 import Data.HashMap.Strict qualified as Map
-import Del.Data.PathData
+import Data.List qualified as L
+import Del.Data.PathData (PathData, sortDefault)
 import Del.Prelude
 
 -- | Index that stores the trash data.
@@ -43,5 +44,6 @@ instance Pretty Index where
   pretty =
     vsep
       . fmap pretty
+      . L.sortBy sortDefault
       . Map.elems
       . view #unIndex
