@@ -76,8 +76,7 @@ instance Pretty Index where
 --
 -- @since 0.1
 readIndex :: FilePath -> IO Index
-readIndex fp = do
-  fmap MkIndex . readIndexWithFold foldVec $ fp
+readIndex fp = fmap MkIndex . readIndexWithFold foldVec $ fp
   where
     trashHome = FP.takeDirectory fp
     foldVec macc pd = do

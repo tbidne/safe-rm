@@ -56,7 +56,6 @@ del mtrash paths = do
 
   -- override old index
   delPathsFn `finally` do
-    -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
     nonEmpty <-
       Utils.allM1
@@ -106,7 +105,6 @@ permDel mtrash paths = do
 
   -- override old index
   deletePathsFn `finally` do
-    -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
     Index.writeIndex indexPath (MkIndex $ Map.difference indexMap deletedPaths)
 
@@ -150,7 +148,6 @@ restore mtrash paths = do
 
   -- override old index
   restorePathsFn `finally` do
-    -- TODO: mask all exceptions and enforce no-throw
     restoredPaths <- readIORef restoredPathsRef
     Index.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
 
