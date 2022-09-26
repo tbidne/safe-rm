@@ -6,7 +6,7 @@ package del
     -Wincomplete-record-updates -Wincomplete-uni-patterns
     -Wmissing-home-modules -Wmissing-export-lists -Wpartial-fields
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
-    -Wno-unticked-promoted-constructors
+    -Wno-unticked-promoted-constructors -Wprepositive-qualified-module
 
 optimization: 2
 test-show-details: direct
