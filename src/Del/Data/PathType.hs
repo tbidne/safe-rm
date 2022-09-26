@@ -3,6 +3,8 @@
 -- @since 0.1
 module Del.Data.PathType
   ( PathType (..),
+    pathTypeToExistFn,
+    pathTypeToRenameFn,
   )
 where
 
@@ -15,6 +17,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 import Del.Prelude
+import System.Directory qualified as Dir
 
 -- | Path type.
 --
@@ -65,3 +68,17 @@ instance ToField PathType where
 -- @since 0.1
 bsToStr :: ByteString -> String
 bsToStr = T.unpack . TEnc.decodeUtf8With TEncError.lenientDecode
+
+-- | Tests a path's existence.
+--
+-- @since 0.1
+pathTypeToExistFn :: PathType -> FilePath -> IO Bool
+pathTypeToExistFn PathTypeFile = Dir.doesFileExist
+pathTypeToExistFn PathTypeDirectory = Dir.doesDirectoryExist
+
+-- | Renames a path based on its type.
+--
+-- @since 0.1
+pathTypeToRenameFn :: PathType -> FilePath -> FilePath -> IO ()
+pathTypeToRenameFn PathTypeFile = Dir.renameFile
+pathTypeToRenameFn PathTypeDirectory = Dir.renameDirectory

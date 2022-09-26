@@ -43,8 +43,8 @@ library
     Del.Data.Statistics
     Del.Data.Timestamp
     Del.Exceptions
-    Del.Internal
     Del.Prelude
+    Del.Utils
 
   build-depends:
     , base                  >=4.14.0.0  && <4.17

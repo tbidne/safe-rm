@@ -3,13 +3,16 @@
 -- @since 0.1
 module Del.Data.Statistics
   ( Statistics (..),
+    getStats,
   )
 where
 
-import Data.Bytes (SomeSize)
+import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
+import Del.Exceptions (PathNotFoundError (..))
 import Del.Prelude
+import System.Directory qualified as Dir
 
 -- | Holds trash statistics.
 --
@@ -55,3 +58,47 @@ instance Pretty Statistics where
         Bytes.formatSized
           (MkFloatingFormatter (Just 2))
           Bytes.sizedFormatterUnix
+
+-- | Returns stats on the trash directory.
+--
+-- @since 0.1
+getStats :: FilePath -> IO Statistics
+getStats fp = do
+  -- TODO: This _should_ be the same as the index length (corresponds exactly
+  -- to top-level paths except .index.csv). We do this instead of parsing
+  -- the entire index for performance.
+  --
+  -- We may want to actually verify this invariant here, failing if there is
+  -- a mismatch.
+  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory fp
+  allFiles <- getAllFiles fp
+  allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
+  let numFiles = length allFiles - 1
+      normalized = Bytes.normalize (MkBytes @B allSizes)
+  pure $
+    MkStatistics
+      { numEntries = toNat numEntries,
+        numFiles = toNat numFiles,
+        size = normalized
+      }
+  where
+    sumFileSizes macc f = do
+      !acc <- macc
+      sz <- Dir.getFileSize f
+      pure $ acc + sz
+    toDouble :: Integer -> Double
+    toDouble = fromIntegral
+    toNat :: Int -> Natural
+    toNat = fromIntegral
+
+getAllFiles :: FilePath -> IO [FilePath]
+getAllFiles fp =
+  Dir.doesFileExist fp >>= \case
+    True -> pure [fp]
+    False ->
+      Dir.doesDirectoryExist fp >>= \case
+        True ->
+          Dir.listDirectory fp
+            >>= fmap join
+              . traverse (getAllFiles . (fp </>))
+        False -> throwIO $ MkPathNotFoundError fp

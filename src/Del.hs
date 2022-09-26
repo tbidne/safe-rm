@@ -23,11 +23,15 @@ import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Del.Data.Index (Index (..))
-import Del.Data.PathData (PathData (..), toPathData)
+import Del.Data.Index qualified as Index
+import Del.Data.PathData (PathData (..))
+import Del.Data.PathData qualified as PathData
+import Del.Data.PathType qualified as PathType
 import Del.Data.Statistics (Statistics (..))
-import Del.Data.Timestamp (getCurrentLocalTime)
-import Del.Internal qualified as I
+import Del.Data.Statistics qualified as Stats
+import Del.Data.Timestamp qualified as Timestamp
 import Del.Prelude
+import Del.Utils qualified as Utils
 import System.Directory qualified as Dir
 import System.IO qualified as IO
 
@@ -38,17 +42,16 @@ import System.IO qualified as IO
 -- @since 0.1
 del :: Maybe FilePath -> HashSet FilePath -> IO ()
 del mtrash paths = do
-  trashHome <- I.trashOrDefault mtrash
-  let indexPath = I.getIndexPath trashHome
+  (trashHome, indexPath) <- Utils.getTrashAndIndex mtrash
   Dir.createDirectoryIfMissing False trashHome
 
   deletedPathsRef <- newIORef Map.empty
-  currTime <- getCurrentLocalTime
+  currTime <- Timestamp.getCurrentLocalTime
 
   -- move path to trash
   let delPathsFn = for_ paths $ \fp -> do
-        pd <- toPathData currTime trashHome fp
-        I.mvToTrash trashHome pd
+        pd <- PathData.toPathData currTime trashHome fp
+        PathData.mvToTrash trashHome pd
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
 
   -- override old index
@@ -56,22 +59,21 @@ del mtrash paths = do
     -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
     nonEmpty <-
-      I.allM1
+      Utils.allM1
         [ Dir.doesFileExist indexPath,
           (> 0) <$> Dir.getFileSize indexPath
         ]
     if nonEmpty
-      then I.appendIndex indexPath (MkIndex deletedPaths)
-      else I.writeIndex indexPath (MkIndex deletedPaths)
+      then Index.appendIndex indexPath (MkIndex deletedPaths)
+      else Index.writeIndex indexPath (MkIndex deletedPaths)
 
 -- | Permanently deletes the paths from the trash.
 --
 -- @since 0.1
 permDel :: Maybe FilePath -> HashSet FilePath -> IO ()
 permDel mtrash paths = do
-  trashHome <- I.trashOrDefault mtrash
-  let indexPath = I.getIndexPath trashHome
-  index@(MkIndex indexMap) <- I.readIndex indexPath
+  indexPath <- view _2 <$> Utils.getTrashAndIndex mtrash
+  index@(MkIndex indexMap) <- Index.readIndex indexPath
 
   -- NOTE:
   -- - No buffering on input so we can read a single char w/o requiring a
@@ -83,7 +85,7 @@ permDel mtrash paths = do
   IO.hSetBuffering IO.stdin NoBuffering
   IO.hSetBuffering IO.stdout NoBuffering
 
-  toDelete <- I.searchIndexForPermDel paths index
+  toDelete <- Index.searchIndex False paths index
 
   deletedPathsRef <- newIORef Map.empty
 
@@ -106,7 +108,7 @@ permDel mtrash paths = do
   deletePathsFn `finally` do
     -- TODO: mask all exceptions and enforce no-throw
     deletedPaths <- readIORef deletedPathsRef
-    I.writeIndex indexPath (MkIndex $ Map.difference indexMap deletedPaths)
+    Index.writeIndex indexPath (MkIndex $ Map.difference indexMap deletedPaths)
 
 -- | Reads the index at either the specified or default location. If the
 -- file does not exist, returns empty.
@@ -114,17 +116,16 @@ permDel mtrash paths = do
 -- @since 0.1
 getIndex :: Maybe FilePath -> IO Index
 getIndex mtrash = do
-  trashHome <- I.trashOrDefault mtrash
-  let indexPath = I.getIndexPath trashHome
+  indexPath <- view _2 <$> Utils.getTrashAndIndex mtrash
   Dir.doesFileExist indexPath >>= \case
-    True -> I.readIndex indexPath
+    True -> Index.readIndex indexPath
     False -> pure mempty
 
 -- | Retrieves statistics for the trash directory.
 --
 -- @since 0.1
 getStatistics :: Maybe FilePath -> IO Statistics
-getStatistics = I.trashOrDefault >=> I.getStats
+getStatistics = Utils.getTrashAndIndex >=> Stats.getStats . view _1
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location
@@ -133,16 +134,15 @@ getStatistics = I.trashOrDefault >=> I.getStats
 -- @since 0.1
 restore :: Maybe FilePath -> HashSet FilePath -> IO ()
 restore mtrash paths = do
-  trashHome <- I.trashOrDefault mtrash
-  let indexPath = I.getIndexPath trashHome
-  index@(MkIndex indexMap) <- I.readIndex indexPath
-  toRestore <- I.searchIndexForRestore paths index
+  indexPath <- view _2 <$> Utils.getTrashAndIndex mtrash
+  index@(MkIndex indexMap) <- Index.readIndex indexPath
+  toRestore <- Index.searchIndex True paths index
 
   restoredPathsRef <- newIORef Map.empty
 
   -- move trash paths back to original location
   let restorePathsFn = for_ toRestore $ \pd -> do
-        I.pathTypeToRenameFn
+        PathType.pathTypeToRenameFn
           (pd ^. #pathType)
           (pd ^. #fileName)
           (pd ^. #originalPath)
@@ -152,10 +152,10 @@ restore mtrash paths = do
   restorePathsFn `finally` do
     -- TODO: mask all exceptions and enforce no-throw
     restoredPaths <- readIORef restoredPathsRef
-    I.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
+    Index.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
 
 -- | Empties the trash. Deletes the index file.
 --
 -- @since 0.1
 empty :: Maybe FilePath -> IO ()
-empty = I.trashOrDefault >=> Dir.removeDirectoryRecursive
+empty = Utils.getTrashAndIndex >=> Dir.removeDirectoryRecursive . view _1

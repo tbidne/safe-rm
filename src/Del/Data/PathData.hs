@@ -9,6 +9,9 @@ module Del.Data.PathData
     -- * Creation
     toPathData,
 
+    -- * Deletion
+    mvToTrash,
+
     -- * Sorting
     sortDefault,
     sortCreated,
@@ -28,6 +31,7 @@ import Data.Csv
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Del.Data.PathType (PathType (..))
+import Del.Data.PathType qualified as PathType
 import Del.Data.Timestamp (Timestamp (..))
 import Del.Exceptions (PathNotFoundError (..), RenameDuplicateError (MkRenameDuplicateError))
 import Del.Prelude
@@ -206,3 +210,12 @@ sortName = mapOrd (view #fileName)
 
 mapOrd :: Ord b => (a -> b) -> a -> a -> Ordering
 mapOrd f x y = f x `compare` f y
+
+-- | Moves the file to the trash.
+--
+-- @since 0.1
+mvToTrash :: FilePath -> PathData -> IO ()
+mvToTrash trashHome pd = renameFn (pd ^. #originalPath) trashPath
+  where
+    trashPath = trashHome </> pd ^. #fileName
+    renameFn = PathType.pathTypeToRenameFn (pd ^. #pathType)
