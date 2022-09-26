@@ -6,7 +6,6 @@ module Main (main) where
 import Functional.Commands.D qualified as D
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
-
 import System.Directory qualified as Dir
 import Test.Tasty qualified as Tasty
 

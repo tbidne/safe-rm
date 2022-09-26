@@ -11,11 +11,18 @@ import Control.Exception
     throwIO,
   )
 import Del.Runner (runDel)
-import System.Exit (exitFailure)
+import System.Exit (ExitCode (ExitSuccess), exitFailure)
 
 main :: IO ()
-main = runDel `catchSync` handleEx
+main =
+  runDel
+    `catchSync` doNothingOnSuccess
+    `catchSync` handleEx
   where
+    doNothingOnSuccess :: ExitCode -> IO ()
+    doNothingOnSuccess ExitSuccess = pure ()
+    doNothingOnSuccess ex = throwIO ex
+
     handleEx :: SomeException -> IO ()
     handleEx ex = do
       putStrLn . displayException $ ex
