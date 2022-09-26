@@ -39,8 +39,8 @@ runDelHandler handler = do
   command <- view #command <$> getArgs
   case command of
     DelCommandDelete mtrash paths -> Del.del mtrash (setToMap paths)
-    DelCommandPermDelete mtrash paths ->
-      Del.permDel mtrash (setToMap paths)
+    DelCommandPermDelete mtrash force paths ->
+      Del.permDel mtrash force (setToMap paths)
     DelCommandEmpty mtrash -> Del.empty mtrash
     DelCommandRestore mtrash paths ->
       Del.restore mtrash (setToMap paths)

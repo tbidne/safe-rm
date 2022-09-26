@@ -53,7 +53,7 @@ data DelCommand
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
-    DelCommandPermDelete !(Maybe FilePath) !(NonEmpty FilePath)
+    DelCommandPermDelete !(Maybe FilePath) !Bool !(NonEmpty FilePath)
   | -- | Empties the trash.
     --
     -- @since 0.1
@@ -181,6 +181,7 @@ commandParser =
     permDelParser =
       DelCommandPermDelete
         <$> trashParser
+        <*> forceParser
         <*> pathsParser
     emptyParser = DelCommandEmpty <$> trashParser
     restoreParser =
@@ -189,6 +190,17 @@ commandParser =
         <*> pathsParser
     listParser = DelCommandList <$> trashParser
     statsParser = DelCommandStats <$> trashParser
+
+forceParser :: Parser Bool
+forceParser =
+  OA.switch $
+    mconcat
+      [ OA.long "force",
+        OA.short 'f',
+        OA.help helpTxt
+      ]
+  where
+    helpTxt = "If enabled, will not ask before deleting each path."
 
 trashParser :: Parser (Maybe FilePath)
 trashParser =

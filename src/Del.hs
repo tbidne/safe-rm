@@ -69,39 +69,45 @@ del mtrash paths = do
 -- | Permanently deletes the paths from the trash.
 --
 -- @since 0.1
-permDel :: Maybe FilePath -> HashSet FilePath -> IO ()
-permDel mtrash paths = do
+permDel :: Maybe FilePath -> Bool -> HashSet FilePath -> IO ()
+permDel mtrash force paths = do
   (trashHome, indexPath) <- Utils.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
 
-  -- NOTE:
-  -- - No buffering on input so we can read a single char w/o requiring a
-  --   newline to end the input (which then gets passed to getChar, which
-  --   interferes with subsequent calls).
-  --
-  -- - No buffering on output so the "Permanently delete..." string gets
-  --   printed w/o the newline.
-  IO.hSetBuffering IO.stdin NoBuffering
-  IO.hSetBuffering IO.stdout NoBuffering
-
   toDelete <- Index.searchIndex False trashHome paths index
-
   deletedPathsRef <- newIORef Map.empty
 
   -- move trash paths back to original location
-  let deletePathsFn = for_ toDelete $ \pd -> do
-        let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
-        putStrLn $ T.unpack pdStr
-        -- TODO: add a "-f" override
-        putStr "Permanently delete (y/n)? "
-        c <- Ch.toLower <$> IO.getChar
-        if
-            | c == 'y' -> do
-                Dir.removePathForcibly (trashHome </> (pd ^. #fileName))
-                modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
-                putStrLn ""
-            | c == 'n' -> putStrLn ""
-            | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
+  deletePathsFn <-
+    if force
+      then do
+        pure $ for_ toDelete $ \pd -> do
+          Dir.removePathForcibly (trashHome </> (pd ^. #fileName))
+          modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+      else do
+        -- NOTE:
+        -- - No buffering on input so we can read a single char w/o requiring a
+        --   newline to end the input (which then gets passed to getChar, which
+        --   interferes with subsequent calls).
+        --
+        -- - No buffering on output so the "Permanently delete..." string gets
+        --   printed w/o the newline.
+        IO.hSetBuffering IO.stdin NoBuffering
+        IO.hSetBuffering IO.stdout NoBuffering
+
+        pure $ for_ toDelete $ \pd -> do
+          let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
+          putStrLn $ T.unpack pdStr
+          -- TODO: add a "-f" override
+          putStr "Permanently delete (y/n)? "
+          c <- Ch.toLower <$> IO.getChar
+          if
+              | c == 'y' -> do
+                  Dir.removePathForcibly (trashHome </> (pd ^. #fileName))
+                  modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+                  putStrLn ""
+              | c == 'n' -> putStrLn ""
+              | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
   -- override old index
   deletePathsFn `finally` do
