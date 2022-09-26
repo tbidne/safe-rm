@@ -23,7 +23,7 @@ import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Del.Data.Index (Index (..))
-import Del.Data.PathData (PathData (..))
+import Del.Data.PathData (PathData (..), toPathData)
 import Del.Data.Statistics (Statistics (..))
 import Del.Data.Timestamp (getCurrentLocalTime)
 import Del.Internal qualified as I
@@ -47,9 +47,9 @@ del mtrash paths = do
 
   -- move path to trash
   let delPathsFn = for_ paths $ \fp -> do
-        pd <- I.toPathData currTime trashHome fp
-        I.mvToTrash pd
-        modifyIORef' deletedPathsRef (Map.insert (pd ^. #trashPath) pd)
+        pd <- toPathData currTime trashHome fp
+        I.mvToTrash trashHome pd
+        modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
 
   -- override old index
   delPathsFn `finally` do
@@ -83,7 +83,7 @@ permDel mtrash paths = do
   IO.hSetBuffering IO.stdin NoBuffering
   IO.hSetBuffering IO.stdout NoBuffering
 
-  toDelete <- I.searchIndexForPermDel trashHome paths index
+  toDelete <- I.searchIndexForPermDel paths index
 
   deletedPathsRef <- newIORef Map.empty
 
@@ -96,8 +96,8 @@ permDel mtrash paths = do
         c <- Ch.toLower <$> IO.getChar
         if
             | c == 'y' -> do
-                Dir.removePathForcibly (pd ^. #trashPath)
-                modifyIORef' deletedPathsRef (Map.insert (pd ^. #trashPath) pd)
+                Dir.removePathForcibly (pd ^. #fileName)
+                modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
                 putStrLn ""
             | c == 'n' -> putStrLn ""
             | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
@@ -136,7 +136,7 @@ restore mtrash paths = do
   trashHome <- I.trashOrDefault mtrash
   let indexPath = I.getIndexPath trashHome
   index@(MkIndex indexMap) <- I.readIndex indexPath
-  toRestore <- I.searchIndexForRestore trashHome paths index
+  toRestore <- I.searchIndexForRestore paths index
 
   restoredPathsRef <- newIORef Map.empty
 
@@ -144,9 +144,9 @@ restore mtrash paths = do
   let restorePathsFn = for_ toRestore $ \pd -> do
         I.pathTypeToRenameFn
           (pd ^. #pathType)
-          (pd ^. #trashPath)
+          (pd ^. #fileName)
           (pd ^. #originalPath)
-        modifyIORef' restoredPathsRef (Map.insert (pd ^. #trashPath) pd)
+        modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
 
   -- override old index
   restorePathsFn `finally` do
