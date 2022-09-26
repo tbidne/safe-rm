@@ -137,7 +137,7 @@ version = OA.infoOption txt (OA.long "version" <> OA.short 'v')
         ]
 
 versNum :: String
-versNum = "Version: " <> $$(PV.packageVersionStringTH "dir.cabal")
+versNum = "Version: " <> $$(PV.packageVersionStringTH "del.cabal")
 
 commandParser :: Parser DelCommand
 commandParser =
