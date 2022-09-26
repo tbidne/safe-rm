@@ -94,6 +94,8 @@ searchIndex ::
   -- | If true, errors if there is a collision between a found trash path
   -- and its original path.
   Bool ->
+  -- | Trash home. Used to verify that found trash paths actually exist.
+  FilePath ->
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
   --
   -- REVIEW: Should this be a non-empty set?
@@ -102,7 +104,7 @@ searchIndex ::
   Index ->
   -- | The trash data matching the input keys.
   IO (HashSet PathData)
-searchIndex errIfOrigCollision keys (MkIndex index) =
+searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
@@ -113,6 +115,8 @@ searchIndex errIfOrigCollision keys (MkIndex index) =
       case Map.lookup trashKey index of
         Nothing -> throwIO $ MkPathNotFoundError trashKey
         Just pd -> do
+          trashPathExists trashHome pd
+
           -- optional collision detection
           mCollisionErr pd
           pure $ Set.insert pd acc

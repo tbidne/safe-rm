@@ -71,7 +71,7 @@ del mtrash paths = do
 -- @since 0.1
 permDel :: Maybe FilePath -> HashSet FilePath -> IO ()
 permDel mtrash paths = do
-  indexPath <- view _2 <$> Utils.getTrashAndIndex mtrash
+  (trashHome, indexPath) <- Utils.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
 
   -- NOTE:
@@ -84,7 +84,7 @@ permDel mtrash paths = do
   IO.hSetBuffering IO.stdin NoBuffering
   IO.hSetBuffering IO.stdout NoBuffering
 
-  toDelete <- Index.searchIndex False paths index
+  toDelete <- Index.searchIndex False trashHome paths index
 
   deletedPathsRef <- newIORef Map.empty
 
@@ -97,7 +97,7 @@ permDel mtrash paths = do
         c <- Ch.toLower <$> IO.getChar
         if
             | c == 'y' -> do
-                Dir.removePathForcibly (pd ^. #fileName)
+                Dir.removePathForcibly (trashHome </> (pd ^. #fileName))
                 modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
                 putStrLn ""
             | c == 'n' -> putStrLn ""
@@ -132,9 +132,9 @@ getStatistics = Utils.getTrashAndIndex >=> Stats.getStats . view _1
 -- @since 0.1
 restore :: Maybe FilePath -> HashSet FilePath -> IO ()
 restore mtrash paths = do
-  indexPath <- view _2 <$> Utils.getTrashAndIndex mtrash
+  (trashHome, indexPath) <- Utils.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
-  toRestore <- Index.searchIndex True paths index
+  toRestore <- Index.searchIndex True trashHome paths index
 
   restoredPathsRef <- newIORef Map.empty
 
@@ -142,7 +142,7 @@ restore mtrash paths = do
   let restorePathsFn = for_ toRestore $ \pd -> do
         PathType.pathTypeToRenameFn
           (pd ^. #pathType)
-          (pd ^. #fileName)
+          (trashHome </> pd ^. #fileName)
           (pd ^. #originalPath)
         modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
 
