@@ -62,8 +62,6 @@ newtype Index = MkIndex
 
 -- | @since 0.1
 instance Pretty Index where
-  -- TODO: the order here is unstable. We should probably either try
-  -- to preserve the original order, or allow some kind of sorting
   pretty =
     vsep
       . fmap pretty

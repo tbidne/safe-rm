@@ -11,14 +11,6 @@ import Del.Exceptions (PathNotFoundError)
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
 
--- TODO: the order of the captured output (del l) is unstable due to the
--- hashmap: cabal test and make functional do not always produce
--- the same output. This obviously makes the test flaky since currently we
--- depend on the order.
---
--- We should change the impl so that the order always matches the index file
--- or make it configurable.
-
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
 tests args =
