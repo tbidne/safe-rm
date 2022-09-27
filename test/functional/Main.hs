@@ -4,6 +4,7 @@
 module Main (main) where
 
 import Functional.Commands.D qualified as D
+import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
@@ -23,7 +24,8 @@ specs args =
   testGroup
     "Functional Tests"
     [ D.tests args,
-      X.tests args
+      X.tests args,
+      R.tests args
     ]
 
 setup :: IO TestArgs

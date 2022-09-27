@@ -150,7 +150,7 @@ restore mtrash paths = do
 
   -- move trash paths back to original location
   let restorePathsFn = for_ toRestore $ \pd -> do
-        PathData.mvOriginalToTrash trashHome pd
+        PathData.mvTrashToOriginal trashHome pd
         modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
 
   -- override old index
