@@ -122,8 +122,8 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   -- file assertions
   assertFilesDoNotExist
     ( (trashDir </>)
-        <$> (filesToDelete)
-          <> (filesToDelete)
+        <$> filesToDelete
+          <> filesToDelete
     )
   assertDirectoriesDoNotExist
     ((testDir </>) <$> ["dir1", "dir2/dir3"] <> dirsToDelete)
