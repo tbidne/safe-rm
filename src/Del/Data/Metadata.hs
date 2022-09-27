@@ -1,9 +1,9 @@
--- | Provides types.
+-- | Provides metadata functionality.
 --
 -- @since 0.1
-module Del.Data.Statistics
-  ( Statistics (..),
-    getStats,
+module Del.Data.Metadata
+  ( Metadata (..),
+    getMetadata,
   )
 where
 
@@ -15,10 +15,10 @@ import Del.Exceptions (PathNotFoundError (..))
 import Del.Prelude
 import System.Directory qualified as Dir
 
--- | Holds trash statistics.
+-- | Holds trash metadata.
 --
 -- @since 0.1
-data Statistics = MkStatistics
+data Metadata = MkMetadata
   { -- | Number of top level entries in the trash index. This should be the
     -- same as the index length.
     --
@@ -47,7 +47,7 @@ data Statistics = MkStatistics
     )
 
 -- | @since 0.1
-instance Pretty Statistics where
+instance Pretty Metadata where
   pretty stats = vsep strs <+> line
     where
       strs =
@@ -63,8 +63,8 @@ instance Pretty Statistics where
 -- | Returns stats on the trash directory.
 --
 -- @since 0.1
-getStats :: PathI TrashHome -> IO Statistics
-getStats (MkPathI trashHome) = do
+getMetadata :: PathI TrashHome -> IO Metadata
+getMetadata (MkPathI trashHome) = do
   -- TODO: This _should_ be the same as the index length (corresponds exactly
   -- to top-level paths except .index.csv). We do this instead of parsing
   -- the entire index for performance.
@@ -77,7 +77,7 @@ getStats (MkPathI trashHome) = do
   let numFiles = length allFiles - 1
       normalized = Bytes.normalize (MkBytes @B allSizes)
   pure $
-    MkStatistics
+    MkMetadata
       { numEntries = toNat numEntries,
         numFiles = toNat numFiles,
         size = normalized

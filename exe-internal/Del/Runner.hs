@@ -17,9 +17,9 @@ import Del.Args
       ( DelCommandDelete,
         DelCommandEmpty,
         DelCommandList,
+        DelCommandMetadata,
         DelCommandPermDelete,
-        DelCommandRestore,
-        DelCommandStats
+        DelCommandRestore
       ),
     getArgs,
   )
@@ -48,13 +48,13 @@ runDelHandler handler = do
     DelCommandList mtrash -> do
       listIndex handler mtrash
       printStats handler mtrash
-    DelCommandStats mtrash -> printStats handler mtrash
+    DelCommandMetadata mtrash -> printStats handler mtrash
 
 listIndex :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
 listIndex = prettyDel Del.getIndex
 
 printStats :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
-printStats = prettyDel Del.getStatistics
+printStats = prettyDel Del.getMetadata
 
 prettyDel :: Pretty b => (a -> IO b) -> (Text -> IO c) -> a -> IO c
 prettyDel f handler =

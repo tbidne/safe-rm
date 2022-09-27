@@ -13,9 +13,9 @@ module Del
     restore,
 
     -- * Information
-    Statistics (..),
+    Metadata (..),
     getIndex,
-    getStatistics,
+    getMetadata,
   )
 where
 
@@ -24,6 +24,8 @@ import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Del.Data.Index (Index (..))
 import Del.Data.Index qualified as Index
+import Del.Data.Metadata (Metadata (..))
+import Del.Data.Metadata qualified as Metadata
 import Del.Data.PathData (PathData (..))
 import Del.Data.PathData qualified as PathData
 import Del.Data.Paths
@@ -32,8 +34,6 @@ import Del.Data.Paths
     _MkPathI,
   )
 import Del.Data.Paths qualified as Paths
-import Del.Data.Statistics (Statistics (..))
-import Del.Data.Statistics qualified as Stats
 import Del.Data.Timestamp qualified as Timestamp
 import Del.Prelude
 import Del.Utils qualified as Utils
@@ -129,11 +129,11 @@ getIndex mtrash = do
     True -> Index.readIndex indexPath
     False -> pure mempty
 
--- | Retrieves statistics for the trash directory.
+-- | Retrieves metadata for the trash directory.
 --
 -- @since 0.1
-getStatistics :: Maybe (PathI TrashHome) -> IO Statistics
-getStatistics = Paths.getTrashAndIndex >=> Stats.getStats . view _1
+getMetadata :: Maybe (PathI TrashHome) -> IO Metadata
+getMetadata = Paths.getTrashAndIndex >=> Metadata.getMetadata . view _1
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location

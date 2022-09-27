@@ -38,10 +38,10 @@ library
   exposed-modules:
     Del
     Del.Data.Index
+    Del.Data.Metadata
     Del.Data.PathData
     Del.Data.Paths
     Del.Data.PathType
-    Del.Data.Statistics
     Del.Data.Timestamp
     Del.Exceptions
     Del.Prelude

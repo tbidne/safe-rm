@@ -75,7 +75,7 @@ data DelCommand
   | -- | Prints trash size.
     --
     -- @since 0.1
-    DelCommandStats !(Maybe (PathI TrashHome))
+    DelCommandMetadata !(Maybe (PathI TrashHome))
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -165,7 +165,7 @@ commandParser =
     <|> OA.hsubparser
       ( mconcat
           [ mkCommand "l" listParser listTxt,
-            mkCommand "s" statsParser statsTxt,
+            mkCommand "m" metadataParser metadataTxt,
             OA.commandGroup "Information Commands",
             OA.hidden
           ]
@@ -177,8 +177,8 @@ commandParser =
     restoreTxt =
       OA.progDesc
         "Restores the trash path(s) to their original location."
-    listTxt = OA.progDesc "Lists all trash contents."
-    statsTxt = OA.progDesc "Prints trash statistics."
+    listTxt = OA.progDesc "Lists all trash contents and metadata."
+    metadataTxt = OA.progDesc "Prints trash metadata."
 
     delParser =
       DelCommandDelete
@@ -195,7 +195,7 @@ commandParser =
         <$> trashParser
         <*> pathsParser
     listParser = DelCommandList <$> trashParser
-    statsParser = DelCommandStats <$> trashParser
+    metadataParser = DelCommandMetadata <$> trashParser
 
 forceParser :: Parser Bool
 forceParser =
