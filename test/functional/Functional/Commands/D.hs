@@ -33,6 +33,7 @@ deletesOne args = testCase "Deletes a single file" $ do
   -- setup
   clearDirectory testDir
   createFiles [f1]
+  assertFilesExist [f1]
 
   runDel argList
 
@@ -42,6 +43,7 @@ deletesOne args = testCase "Deletes a single file" $ do
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
+  assertFilesDoNotExist [f1]
   assertDirectoriesExist [trashDir]
   where
     expected =
@@ -69,6 +71,8 @@ deletesMany args = testCase "Deletes several paths" $ do
   createDirectories ((testDir </>) <$> ["dir1", "dir2/dir3"])
   -- test w/ a file in dir
   createFiles ((testDir </> "dir2/dir3/foo") : filesToDelete)
+  assertFilesExist filesToDelete
+  assertDirectoriesExist dirsToDelete
 
   runDel argList
 
@@ -81,6 +85,8 @@ deletesMany args = testCase "Deletes several paths" $ do
     ( (trashDir </>)
         <$> [".index.csv", "f1", "f2", "f3", "dir2/dir3/foo"]
     )
+  assertFilesDoNotExist filesToDelete
+  assertDirectoriesDoNotExist dirsToDelete
   assertDirectoriesExist ((trashDir </>) <$> ["", "dir1", "dir2", "dir2/dir3"])
   where
     expected =
@@ -147,8 +153,11 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
 
   -- create and delete twice
   createFiles [file]
+  assertFilesExist [file]
   runDel argList
+
   createFiles [file]
+  assertFilesExist [file]
   runDel argList
 
   result <- captureDel ["l", "-t", trashDir]
@@ -157,6 +166,7 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
   -- file assertions
   assertFilesExist
     [trashDir </> "f11", trashDir </> "f1", trashDir </> ".index.csv"]
+  assertFilesDoNotExist [file]
   assertDirectoriesExist [trashDir]
   where
     expected =

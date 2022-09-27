@@ -33,6 +33,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
 
   clearDirectory testDir
   createFiles [f1]
+  assertFilesExist [f1]
 
   -- delete to trash first
   runDel delArgList
@@ -43,6 +44,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
+  assertFilesDoNotExist [f1]
   assertDirectoriesExist [trashDir]
 
   -- PERMANENT DELETE
@@ -56,9 +58,8 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
 
   -- file assertions
   assertFilesExist [trashDir </> ".index.csv"]
-  assertFilesDoNotExist [trashDir </> "f1"]
+  assertFilesDoNotExist [f1, trashDir </> "f1"]
   assertDirectoriesExist [trashDir]
-
   where
     expectedDel =
       [ Exact "type:      File",
@@ -90,6 +91,8 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   createDirectories ((testDir </>) <$> ["dir1", "dir2/dir3"])
   -- test w/ a file in dir
   createFiles ((testDir </> "dir2/dir3/foo") : filesToDelete)
+  assertFilesExist filesToDelete
+  assertDirectoriesExist dirsToDelete
 
   runDel delArgList
 
@@ -102,6 +105,8 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
     ( (trashDir </>)
         <$> [".index.csv", "f1", "f2", "f3", "dir2/dir3/foo"]
     )
+  assertFilesDoNotExist filesToDelete
+  assertDirectoriesDoNotExist dirsToDelete
   assertDirectoriesExist ((trashDir </>) <$> ["", "dir1", "dir2", "dir2/dir3"])
 
   -- PERMANENT DELETE
@@ -115,8 +120,14 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   assertMatches expectedPermDel permDelResult
 
   -- file assertions
+  assertFilesDoNotExist
+    ( (trashDir </>)
+        <$> (filesToDelete)
+          <> (filesToDelete)
+    )
+  assertDirectoriesDoNotExist
+    ((testDir </>) <$> ["dir1", "dir2/dir3"] <> dirsToDelete)
   assertFilesExist [trashDir </> ".index.csv"]
-  assertFilesDoNotExist ((trashDir </>) <$> (filesToDelete <> dirsToDelete))
   assertDirectoriesExist [trashDir]
   where
     expectedDel =
@@ -170,6 +181,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   -- failure only.
   clearDirectory testDir
   createFiles [f1]
+  assertFilesExist [f1]
 
   -- delete to trash first
   runDel delArgList
@@ -180,6 +192,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
+  assertFilesDoNotExist [f1]
   assertDirectoriesExist [trashDir]
 
   -- PERMANENT DELETE

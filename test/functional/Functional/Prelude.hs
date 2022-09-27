@@ -14,6 +14,7 @@ module Functional.Prelude
     assertFilesExist,
     assertFilesDoNotExist,
     assertDirectoriesExist,
+    assertDirectoriesDoNotExist,
 
     -- ** Text
     TextMatch (..),
@@ -104,6 +105,15 @@ assertDirectoriesExist paths = do
   for_ paths $ \p -> do
     exists <- Dir.doesDirectoryExist p
     assertBool ("Expected directory to exist: " <> p) exists
+
+-- | Asserts that directories do not exist.
+--
+-- @since 0.1
+assertDirectoriesDoNotExist :: [FilePath] -> IO ()
+assertDirectoriesDoNotExist paths = do
+  for_ paths $ \p -> do
+    exists <- Dir.doesDirectoryExist p
+    assertBool ("Expected directory not to exist: " <> p) (not exists)
 
 -- | Data type used for testing text matches.
 --
