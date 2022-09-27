@@ -42,6 +42,10 @@ data ExceptionIndex
     --
     -- @since 0.1
     RestoreCollision
+  | -- | The size of the trash index and number of entries does not match.
+    --
+    -- @since 0.1
+    TrashIndexSizeMismatch
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -66,6 +70,7 @@ type family ExceptionF e where
   ExceptionF DuplicateIndexPath = (PathI TrashIndex, PathI TrashName)
   ExceptionF TrashPathNotFound = (PathI TrashHome, PathI TrashName)
   ExceptionF RestoreCollision = (PathI TrashName, PathI OriginalName)
+  ExceptionF TrashIndexSizeMismatch = (PathI TrashHome, Int, Int)
 
 -- | Indexed 'Exception' for simplifying the interface for throwing different
 -- types of exceptions.
@@ -143,4 +148,16 @@ instance Exception (ExceptionI RestoreCollision) where
         trashName,
         "' as one exists at the original location: ",
         originalPath
+      ]
+
+-- | @since 0.1
+instance Exception (ExceptionI TrashIndexSizeMismatch) where
+  displayException (MkExceptionI ((MkPathI trashHome), dirSize, indexSize)) =
+    mconcat
+      [ "Size mismatch between index size (",
+        show indexSize,
+        ") and number of entries (",
+        show dirSize,
+        ") in trash: ",
+        trashHome
       ]

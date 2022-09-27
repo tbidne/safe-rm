@@ -10,8 +10,14 @@ where
 import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
-import Del.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import Del.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (PathNotFound))
+import Data.HashMap.Strict qualified as Map
+import Del.Data.Index (Index (MkIndex))
+import Del.Data.Index qualified as Index
+import Del.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
+import Del.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
+  )
 import Del.Prelude
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import System.Directory qualified as Dir
@@ -73,19 +79,26 @@ instance Pretty Metadata where
 -- | Returns stats on the trash directory.
 --
 -- @since 0.1
-getMetadata :: PathI TrashHome -> IO Metadata
-getMetadata (MkPathI trashHome) = do
-  -- TODO: This _should_ be the same as the index length (corresponds exactly
-  -- to top-level paths except .index.csv). We do this instead of parsing
-  -- the entire index for performance.
-  --
-  -- We may want to actually verify this invariant here, failing if there is
-  -- a mismatch.
-  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory trashHome
-  allFiles <- getAllFiles trashHome
+getMetadata :: (PathI TrashHome, PathI TrashIndex) -> IO Metadata
+getMetadata (trashHome@(MkPathI th), trashIndex) = do
+  (MkIndex index) <- Index.readIndex trashIndex
+  let numIndex = Map.size index
+  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
+  allFiles <- getAllFiles th
   allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
   let numFiles = length allFiles - 1
       normalized = Bytes.normalize (MkBytes @B allSizes)
+
+  -- NOTE: Verify that sizes are the same. Because reading the index verifies
+  -- that there are no duplicate entries and each entry corresponds to a real
+  --- trash path, this guarantees that the index exactly corresponds to the
+  -- trash state.
+  if numEntries /= numIndex
+    then
+      throwIO $
+        MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
+    else pure ()
+
   pure $
     MkMetadata
       { numEntries = toNat numEntries,
