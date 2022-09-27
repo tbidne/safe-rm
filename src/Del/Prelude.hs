@@ -34,6 +34,7 @@ import Data.HashSet as X (HashSet)
 import Data.Hashable as X (Hashable (hashWithSalt))
 import Data.IORef as X (IORef, modifyIORef', newIORef, readIORef)
 import Data.Int as X (Int)
+import Data.Kind as X (Type)
 import Data.List as X (zipWith)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.Maybe as X (Maybe (Just, Nothing), maybe)
@@ -54,7 +55,7 @@ import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (fromIntegral)
 import GHC.Stack as X (HasCallStack)
-import Optics.Core as X (Iso', iso, view, (^.), _1, _2)
+import Optics.Core as X (Iso', iso, review, view, (%), (^.), _1, _2)
 import Prettyprinter as X
   ( Pretty (pretty),
     layoutCompact,

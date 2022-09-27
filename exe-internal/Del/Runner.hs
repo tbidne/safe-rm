@@ -23,6 +23,7 @@ import Del.Args
       ),
     getArgs,
   )
+import Del.Data.Paths (PathI, PathIndex (..))
 import Del.Prelude
 
 -- | Reads cli args and prints the results to stdout.
@@ -38,21 +39,21 @@ runDelHandler :: (Text -> IO ()) -> IO ()
 runDelHandler handler = do
   command <- view #command <$> getArgs
   case command of
-    DelCommandDelete mtrash paths -> Del.del mtrash (setToMap paths)
+    DelCommandDelete mtrash paths -> Del.del mtrash (listToSet paths)
     DelCommandPermDelete mtrash force paths ->
-      Del.permDel mtrash force (setToMap paths)
+      Del.permDel mtrash force (listToSet paths)
     DelCommandEmpty mtrash -> Del.empty mtrash
     DelCommandRestore mtrash paths ->
-      Del.restore mtrash (setToMap paths)
+      Del.restore mtrash (listToSet paths)
     DelCommandList mtrash -> do
       listIndex handler mtrash
       printStats handler mtrash
     DelCommandStats mtrash -> printStats handler mtrash
 
-listIndex :: (Text -> IO a) -> Maybe FilePath -> IO a
+listIndex :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
 listIndex = prettyDel Del.getIndex
 
-printStats :: (Text -> IO a) -> Maybe FilePath -> IO a
+printStats :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
 printStats = prettyDel Del.getStatistics
 
 prettyDel :: Pretty b => (a -> IO b) -> (Text -> IO c) -> a -> IO c
@@ -63,5 +64,5 @@ prettyDel f handler =
     . pretty
     <=< f
 
-setToMap :: Hashable a => NonEmpty a -> HashSet a
-setToMap = Set.fromList . NE.toList
+listToSet :: Hashable a => NonEmpty a -> HashSet a
+listToSet = Set.fromList . NE.toList

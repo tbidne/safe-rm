@@ -13,6 +13,7 @@ where
 import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
+import Del.Data.Paths (PathI, PathIndex (..))
 import Del.Prelude
 import Development.GitRev qualified as GitRev
 import Options.Applicative
@@ -49,27 +50,32 @@ data DelCommand
   = -- | Deletes a path.
     --
     -- @since 0.1
-    DelCommandDelete !(Maybe FilePath) !(NonEmpty FilePath)
+    DelCommandDelete
+      !(Maybe (PathI TrashHome))
+      !(NonEmpty (PathI OriginalName))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
-    DelCommandPermDelete !(Maybe FilePath) !Bool !(NonEmpty FilePath)
+    DelCommandPermDelete
+      !(Maybe (PathI TrashHome))
+      !Bool
+      !(NonEmpty (PathI TrashName))
   | -- | Empties the trash.
     --
     -- @since 0.1
-    DelCommandEmpty !(Maybe FilePath)
+    DelCommandEmpty !(Maybe (PathI TrashHome))
   | -- | Restores a path.
     --
     -- @since 0.1
-    DelCommandRestore !(Maybe FilePath) !(NonEmpty FilePath)
+    DelCommandRestore !(Maybe (PathI TrashHome)) !(NonEmpty (PathI TrashName))
   | -- | List all trash contents.
     --
     -- @since 0.1
-    DelCommandList !(Maybe FilePath)
+    DelCommandList !(Maybe (PathI TrashHome))
   | -- | Prints trash size.
     --
     -- @since 0.1
-    DelCommandStats !(Maybe FilePath)
+    DelCommandStats !(Maybe (PathI TrashHome))
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -202,7 +208,7 @@ forceParser =
   where
     helpTxt = "If enabled, will not ask before deleting each path."
 
-trashParser :: Parser (Maybe FilePath)
+trashParser :: Parser (Maybe (PathI TrashHome))
 trashParser =
   A.optional
     $ OA.option
@@ -220,7 +226,7 @@ trashParser =
           "XDG/.trash e.g. ~/.trash."
         ]
 
-pathsParser :: Parser (NonEmpty FilePath)
+pathsParser :: IsString a => Parser (NonEmpty a)
 pathsParser =
   -- NOTE: _should_ be safe because OA.some only succeeds for non-zero input.
   -- We do this rather than using NonEmpty's some1 because otherwise the CLI

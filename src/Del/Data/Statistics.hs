@@ -10,6 +10,7 @@ where
 import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
+import Del.Data.Paths (PathI (..), PathIndex (..))
 import Del.Exceptions (PathNotFoundError (..))
 import Del.Prelude
 import System.Directory qualified as Dir
@@ -62,16 +63,16 @@ instance Pretty Statistics where
 -- | Returns stats on the trash directory.
 --
 -- @since 0.1
-getStats :: FilePath -> IO Statistics
-getStats fp = do
+getStats :: PathI TrashHome -> IO Statistics
+getStats (MkPathI trashHome) = do
   -- TODO: This _should_ be the same as the index length (corresponds exactly
   -- to top-level paths except .index.csv). We do this instead of parsing
   -- the entire index for performance.
   --
   -- We may want to actually verify this invariant here, failing if there is
   -- a mismatch.
-  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory fp
-  allFiles <- getAllFiles fp
+  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory trashHome
+  allFiles <- getAllFiles trashHome
   allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
   let numFiles = length allFiles - 1
       normalized = Bytes.normalize (MkBytes @B allSizes)

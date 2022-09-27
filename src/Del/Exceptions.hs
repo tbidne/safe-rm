@@ -7,10 +7,11 @@ module Del.Exceptions
     ReadIndexError (..),
     DuplicateIndexPathsError (..),
     TrashPathNotFoundError (..),
-    PathExistsError (..),
+    RestoreCollisionError (..),
   )
 where
 
+import Del.Data.Paths (PathI (..), PathIndex (..))
 import Del.Prelude
 
 -- | Error when searching for a path.
@@ -37,7 +38,7 @@ instance Exception PathNotFoundError where
 -- | Error when attempting to rename a duplicate path.
 --
 -- @since 0.1
-newtype RenameDuplicateError = MkRenameDuplicateError FilePath
+newtype RenameDuplicateError = MkRenameDuplicateError (PathI TrashName)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -53,13 +54,13 @@ newtype RenameDuplicateError = MkRenameDuplicateError FilePath
 
 -- | @since 0.1
 instance Exception RenameDuplicateError where
-  displayException (MkRenameDuplicateError fp) =
+  displayException (MkRenameDuplicateError (MkPathI fp)) =
     "Failed renaming duplicate file: " <> fp
 
 -- | Error when attempting to read the index.
 --
 -- @since 0.1
-newtype ReadIndexError = MkReadIndexError String
+newtype ReadIndexError = MkReadIndexError (PathI TrashIndex, String)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -75,12 +76,19 @@ newtype ReadIndexError = MkReadIndexError String
 
 -- | @since 0.1
 instance Exception ReadIndexError where
-  displayException (MkReadIndexError err) = "Error reading index: " <> err
+  displayException (MkReadIndexError (MkPathI indexPath, err)) =
+    mconcat
+      [ "Error reading index at <",
+        indexPath,
+        ">: ",
+        err
+      ]
 
 -- | Duplicate trash paths found.
 --
 -- @since 0.1
-newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError FilePath
+newtype DuplicateIndexPathsError
+  = MkDuplicateIndexPathsError (PathI TrashIndex, PathI TrashName)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -96,17 +104,21 @@ newtype DuplicateIndexPathsError = MkDuplicateIndexPathsError FilePath
 
 -- | @since 0.1
 instance Exception DuplicateIndexPathsError where
-  displayException (MkDuplicateIndexPathsError fp) =
-    mconcat
-      [ "Trash paths should be unique, but found multiple entries for the ",
-        "following path: ",
-        fp
-      ]
+  displayException
+    (MkDuplicateIndexPathsError (MkPathI trashIndex, MkPathI dupName)) =
+      mconcat
+        [ "Trash paths should be unique, but found multiple entries in the ",
+          "trash index <",
+          trashIndex,
+          "> for the following path: ",
+          dupName
+        ]
 
 -- | Path not found in trash.
 --
 -- @since 0.1
-newtype TrashPathNotFoundError = MkTrashPathsNotFoundError FilePath
+newtype TrashPathNotFoundError
+  = MkTrashPathNotFoundError (PathI TrashHome, PathI TrashName)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -123,17 +135,20 @@ newtype TrashPathNotFoundError = MkTrashPathsNotFoundError FilePath
 -- | @since 0.1
 instance Exception TrashPathNotFoundError where
   -- TODO: mention commands for fixing these (e.g. empty, new 'fix' command)
-  displayException (MkTrashPathsNotFoundError fp) =
-    mconcat
-      [ "The following path was listed in the trash index but was not found ",
-        "in the trash directory: ",
-        fp
-      ]
+  displayException
+    (MkTrashPathNotFoundError (MkPathI trashHome, MkPathI notFound)) =
+      mconcat
+        [ "The path <",
+          notFound,
+          "> was not found in the trash directory <",
+          trashHome,
+          "> despite being listed in the trash index."
+        ]
 
 -- | Path already exists.
 --
 -- @since 0.1
-newtype PathExistsError = MkPathExistsError FilePath
+newtype RestoreCollisionError = MkRestoreCollisionError (PathI OriginalName)
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -148,6 +163,7 @@ newtype PathExistsError = MkPathExistsError FilePath
     )
 
 -- | @since 0.1
-instance Exception PathExistsError where
-  displayException (MkPathExistsError fp) =
-    "File already exists at the original path: " <> fp
+instance Exception RestoreCollisionError where
+  displayException (MkRestoreCollisionError (MkPathI fp)) =
+    "Cannot restore the file as one exists at the original location: "
+      <> fp
