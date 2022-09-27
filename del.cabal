@@ -48,6 +48,7 @@ library
     Del.Utils
 
   build-depends:
+    , algebra-simple        ^>=0.1
     , base                  >=4.14.0.0  && <4.17
     , byte-types            ^>=0.1
     , bytestring            >=0.10.10.0 && <0.12
@@ -102,6 +103,7 @@ test-suite functional
   main-is:          Main.hs
   other-modules:
     Functional.Commands.D
+    Functional.Commands.E
     Functional.Commands.M
     Functional.Commands.R
     Functional.Commands.X

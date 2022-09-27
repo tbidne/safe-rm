@@ -133,7 +133,11 @@ getIndex mtrash = do
 --
 -- @since 0.1
 getMetadata :: Maybe (PathI TrashHome) -> IO Metadata
-getMetadata = Paths.getTrashAndIndex >=> Metadata.getMetadata . view _1
+getMetadata mtrash = do
+  trashHome <- view _1 <$> Paths.getTrashAndIndex mtrash
+  Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
+    True -> Metadata.getMetadata trashHome
+    False -> pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
 -- location. If @trash@ is not given then we look in the default location

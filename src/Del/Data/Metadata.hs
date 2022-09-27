@@ -13,6 +13,7 @@ import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Del.Data.Paths (PathI (..), PathIndex (..))
 import Del.Exceptions (PathNotFoundError (..))
 import Del.Prelude
+import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import System.Directory qualified as Dir
 
 -- | Holds trash metadata.
@@ -45,6 +46,15 @@ data Metadata = MkMetadata
     ( -- | @since 0.1
       NFData
     )
+
+-- | @since 0.1
+instance Semigroup Metadata where
+  MkMetadata a b c <> MkMetadata a' b' c' =
+    MkMetadata (a + a') (b + b') (c .+. c')
+
+-- | @since 0.1
+instance Monoid Metadata where
+  mempty = MkMetadata 0 0 zero
 
 -- | @since 0.1
 instance Pretty Metadata where
