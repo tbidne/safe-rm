@@ -193,8 +193,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList =
-        ["r", "bad file", "-t", trashDir]
+  let restoreArgList = ["r", "bad file", "-t", trashDir]
 
   -- assert exception
   result <-
@@ -242,8 +241,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList =
-        ["r", "f1", "-t", trashDir]
+  let restoreArgList = ["r", "f1", "-t", trashDir]
 
   -- assert exception
   result <-
