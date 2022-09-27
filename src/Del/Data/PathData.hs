@@ -39,11 +39,19 @@ import Data.Csv
   )
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
-import Del.Data.PathType (PathType (..))
-import Del.Data.Paths (PathI (..), PathIndex (..), (<//>), _MkPathI)
+import Del.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
+import Del.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (OriginalName, TrashHome, TrashName, TrashPath),
+    (<//>),
+    _MkPathI,
+  )
 import Del.Data.Paths qualified as Paths
-import Del.Data.Timestamp (Timestamp (..))
-import Del.Exceptions (PathNotFoundError (..), RenameDuplicateError (..))
+import Del.Data.Timestamp (Timestamp)
+import Del.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (PathNotFound, RenameDuplicate),
+  )
 import Del.Prelude
 import GHC.Exts (IsList (Item))
 import System.Directory qualified as Dir
@@ -172,7 +180,7 @@ toPathData currTime trashHome originalPath = do
                 pathType = PathTypeDirectory,
                 created = currTime
               }
-        else throwIO $ MkPathNotFoundError (origPath ^. _MkPathI)
+        else throwIO $ MkExceptionI @PathNotFound (origPath ^. _MkPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -192,7 +200,7 @@ mkUniqPath fp = do
   where
     go :: Word16 -> IO (PathI TrashName)
     go !counter
-      | counter == maxBound = throwIO $ MkRenameDuplicateError fp
+      | counter == maxBound = throwIO $ MkExceptionI @RenameDuplicate fp
       | otherwise = do
           let fp' = fp <> MkPathI (show counter)
           b <- Paths.applyPathI Dir.doesPathExist fp'

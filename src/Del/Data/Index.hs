@@ -22,16 +22,23 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Data.Vector qualified as V
-import Del.Data.PathData (PathData (..), sortDefault)
+import Del.Data.PathData (PathData, sortDefault)
 import Del.Data.PathData qualified as PathData
-import Del.Data.Paths (PathI (..), PathIndex (..), _MkPathI)
+import Del.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (TrashHome, TrashIndex, TrashName),
+    _MkPathI,
+  )
 import Del.Data.Paths qualified as Paths
 import Del.Exceptions
-  ( DuplicateIndexPathsError (..),
-    PathNotFoundError (..),
-    ReadIndexError (..),
-    RestoreCollisionError (..),
-    TrashPathNotFoundError (..),
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex
+      ( DuplicateIndexPath,
+        PathNotFound,
+        ReadIndex,
+        RestoreCollision,
+        TrashPathNotFound
+      ),
   )
 import Del.Prelude
 import System.FilePath qualified as FP
@@ -116,7 +123,7 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
     foldKeys macc trashKey = do
       acc <- macc
       case Map.lookup trashKey index of
-        Nothing -> throwIO $ MkPathNotFoundError (view _MkPathI trashKey)
+        Nothing -> throwIO $ MkExceptionI @PathNotFound (view _MkPathI trashKey)
         Just pd -> do
           throwIfTrashNonExtant trashHome pd
 
@@ -145,7 +152,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
   where
     decode = Csv.decode HasHeader . BSL.fromStrict
     runFold = \case
-      Left err -> throwIO $ MkReadIndexError (indexPath, err)
+      Left err -> throwIO $ MkExceptionI @ReadIndex (indexPath, err)
       Right vec -> V.foldl' foldFn (pure mempty) vec
 
 -- | Verifies that the 'PathData''s 'originalPath' does not collide with
@@ -156,9 +163,10 @@ throwIfOrigCollision :: PathData -> IO ()
 throwIfOrigCollision pd = do
   exists <- PathData.originalPathExists pd
   if exists
-    then throwIO $ MkRestoreCollisionError originalPath
+    then throwIO $ MkExceptionI @RestoreCollision (trashName, originalPath)
     else pure ()
   where
+    trashName = pd ^. #fileName
     originalPath = pd ^. #originalPath
 
 -- | Verifies that the 'PathData''s 'fileName' does not exist in the
@@ -172,7 +180,7 @@ throwIfDuplicates ::
   IO ()
 throwIfDuplicates indexPath trashMap pd =
   if fileName `Map.member` trashMap
-    then throwIO $ MkDuplicateIndexPathsError (indexPath, fileName)
+    then throwIO $ MkExceptionI @DuplicateIndexPath (indexPath, fileName)
     else pure ()
   where
     fileName = pd ^. #fileName
@@ -184,7 +192,7 @@ throwIfTrashNonExtant :: PathI TrashHome -> PathData -> IO ()
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
   if not exists
-    then throwIO $ MkTrashPathNotFoundError (trashHome, filePath)
+    then throwIO $ MkExceptionI @TrashPathNotFound (trashHome, filePath)
     else pure ()
   where
     filePath = pd ^. #fileName

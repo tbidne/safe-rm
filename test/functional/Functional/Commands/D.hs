@@ -7,9 +7,9 @@ module Functional.Commands.D
 where
 
 import Data.Text qualified as T
-import Del.Exceptions (PathNotFoundError)
+import Del.Exceptions (ExceptionI, ExceptionIndex (PathNotFound))
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (..))
+import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -133,7 +133,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   -- assert exception
   result <-
     (runDel argList $> Nothing)
-      `catch` \(e :: PathNotFoundError) -> pure (Just e)
+      `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
     Just ex -> assertMatches expected [T.pack $ displayException ex]

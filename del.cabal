@@ -31,6 +31,7 @@ common common-exts
     MultiWayIf
     OverloadedLabels
     OverloadedStrings
+    TypeFamilies
     NoFieldSelectors
 
 library

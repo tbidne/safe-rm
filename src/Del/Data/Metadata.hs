@@ -10,8 +10,8 @@ where
 import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
-import Del.Data.Paths (PathI (..), PathIndex (..))
-import Del.Exceptions (PathNotFoundError (..))
+import Del.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
+import Del.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (PathNotFound))
 import Del.Prelude
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import System.Directory qualified as Dir
@@ -112,4 +112,4 @@ getAllFiles fp =
           Dir.listDirectory fp
             >>= fmap join
               . traverse (getAllFiles . (fp </>))
-        False -> throwIO $ MkPathNotFoundError fp
+        False -> throwIO $ MkExceptionI @PathNotFound fp

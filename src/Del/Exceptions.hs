@@ -1,23 +1,47 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides exceptions used by Del.
 --
 -- @since 0.1
 module Del.Exceptions
-  ( PathNotFoundError (..),
-    RenameDuplicateError (..),
-    ReadIndexError (..),
-    DuplicateIndexPathsError (..),
-    TrashPathNotFoundError (..),
-    RestoreCollisionError (..),
+  ( ExceptionI (..),
+    _MkExceptionI,
+    ExceptionIndex (..),
+    ExceptionF,
   )
 where
 
 import Del.Data.Paths (PathI (..), PathIndex (..))
 import Del.Prelude
 
--- | Error when searching for a path.
+-- | Types of exceptions thrown.
 --
 -- @since 0.1
-newtype PathNotFoundError = MkPathNotFoundError FilePath
+data ExceptionIndex
+  = -- | Path not found.
+    --
+    -- @since 0.1
+    PathNotFound
+  | -- | Renaming duplicate filename failed.
+    --
+    -- @since 0.1
+    RenameDuplicate
+  | -- | Reading index failed.
+    --
+    -- @since 0.1
+    ReadIndex
+  | -- | Duplicate index paths found.
+    --
+    -- @since 0.1
+    DuplicateIndexPath
+  | -- | Trash path not found.
+    --
+    -- @since 0.1
+    TrashPathNotFound
+  | -- | Collision when restoring original path.
+    --
+    -- @since 0.1
+    RestoreCollision
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -31,139 +55,92 @@ newtype PathNotFoundError = MkPathNotFoundError FilePath
       NFData
     )
 
--- | @since 0.1
-instance Exception PathNotFoundError where
-  displayException (MkPathNotFoundError fp) = "Path not found: " <> fp
-
--- | Error when attempting to rename a duplicate path.
+-- | Associates an 'ExceptionIndex' to its exception data type.
 --
 -- @since 0.1
-newtype RenameDuplicateError = MkRenameDuplicateError (PathI TrashName)
+type ExceptionF :: ExceptionIndex -> Type
+type family ExceptionF e where
+  ExceptionF PathNotFound = FilePath
+  ExceptionF RenameDuplicate = PathI TrashName
+  ExceptionF ReadIndex = (PathI TrashIndex, String)
+  ExceptionF DuplicateIndexPath = (PathI TrashIndex, PathI TrashName)
+  ExceptionF TrashPathNotFound = (PathI TrashHome, PathI TrashName)
+  ExceptionF RestoreCollision = (PathI TrashName, PathI OriginalName)
+
+-- | Indexed 'Exception' for simplifying the interface for throwing different
+-- types of exceptions.
+--
+-- @since 0.1
+type ExceptionI :: ExceptionIndex -> Type
+newtype ExceptionI i = MkExceptionI (ExceptionF i)
   deriving stock
     ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
+      Generic
     )
 
 -- | @since 0.1
-instance Exception RenameDuplicateError where
-  displayException (MkRenameDuplicateError (MkPathI fp)) =
+deriving stock instance Eq (ExceptionF i) => Eq (ExceptionI i)
+
+-- | @since 0.1
+deriving stock instance Show (ExceptionF i) => Show (ExceptionI i)
+
+-- | @since 0.1
+deriving anyclass instance NFData (ExceptionF i) => NFData (ExceptionI i)
+
+-- | @since 0.1
+_MkExceptionI :: Iso' (ExceptionI i) (ExceptionF i)
+_MkExceptionI = iso (\(MkExceptionI e) -> e) MkExceptionI
+
+-- | @since 0.1
+instance Exception (ExceptionI PathNotFound) where
+  displayException (MkExceptionI fp) = "Path not found: " <> fp
+
+-- | @since 0.1
+instance Exception (ExceptionI RenameDuplicate) where
+  displayException (MkExceptionI (MkPathI fp)) =
     "Failed renaming duplicate file: " <> fp
 
--- | Error when attempting to read the index.
---
--- @since 0.1
-newtype ReadIndexError = MkReadIndexError (PathI TrashIndex, String)
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
 -- | @since 0.1
-instance Exception ReadIndexError where
-  displayException (MkReadIndexError (MkPathI indexPath, err)) =
+instance Exception (ExceptionI ReadIndex) where
+  displayException (MkExceptionI (MkPathI indexPath, err)) =
     mconcat
-      [ "Error reading index at <",
+      [ "Error reading index at '",
         indexPath,
-        ">: ",
+        "': ",
         err
       ]
 
--- | Duplicate trash paths found.
---
--- @since 0.1
-newtype DuplicateIndexPathsError
-  = MkDuplicateIndexPathsError (PathI TrashIndex, PathI TrashName)
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
 -- | @since 0.1
-instance Exception DuplicateIndexPathsError where
+instance Exception (ExceptionI DuplicateIndexPath) where
   displayException
-    (MkDuplicateIndexPathsError (MkPathI trashIndex, MkPathI dupName)) =
+    (MkExceptionI (MkPathI trashIndex, MkPathI dupName)) =
       mconcat
         [ "Trash paths should be unique, but found multiple entries in the ",
-          "trash index <",
+          "trash index '",
           trashIndex,
-          "> for the following path: ",
+          "' for the following path: ",
           dupName
         ]
 
--- | Path not found in trash.
---
--- @since 0.1
-newtype TrashPathNotFoundError
-  = MkTrashPathNotFoundError (PathI TrashHome, PathI TrashName)
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
 -- | @since 0.1
-instance Exception TrashPathNotFoundError where
+instance Exception (ExceptionI TrashPathNotFound) where
   -- TODO: mention commands for fixing these (e.g. empty, new 'fix' command)
   displayException
-    (MkTrashPathNotFoundError (MkPathI trashHome, MkPathI notFound)) =
+    (MkExceptionI (MkPathI trashHome, MkPathI notFound)) =
       mconcat
-        [ "The path <",
+        [ "The path '",
           notFound,
-          "> was not found in the trash directory <",
+          "' was not found in the trash directory '",
           trashHome,
-          "> despite being listed in the trash index."
+          "' despite being listed in the trash index."
         ]
 
--- | Path already exists.
---
--- @since 0.1
-newtype RestoreCollisionError = MkRestoreCollisionError (PathI OriginalName)
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      NFData
-    )
-
 -- | @since 0.1
-instance Exception RestoreCollisionError where
-  displayException (MkRestoreCollisionError (MkPathI fp)) =
-    "Cannot restore the file as one exists at the original location: "
-      <> fp
+instance Exception (ExceptionI RestoreCollision) where
+  displayException (MkExceptionI (MkPathI trashName, MkPathI originalPath)) =
+    mconcat
+      [ "Cannot restore the trash file '",
+        trashName,
+        "' as one exists at the original location: ",
+        originalPath
+      ]

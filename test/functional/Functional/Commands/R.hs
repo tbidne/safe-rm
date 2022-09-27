@@ -7,9 +7,12 @@ module Functional.Commands.R
 where
 
 import Data.Text qualified as T
-import Del.Exceptions (PathNotFoundError, RestoreCollisionError)
+import Del.Exceptions
+  ( ExceptionI,
+    ExceptionIndex (PathNotFound, RestoreCollision),
+  )
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (..))
+import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -198,7 +201,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   -- assert exception
   result <-
     (runDel restoreArgList $> Nothing)
-      `catch` \(e :: PathNotFoundError) -> pure (Just e)
+      `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
     Just ex -> assertMatches expectedRestore [T.pack $ displayException ex]
@@ -246,7 +249,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   -- assert exception
   result <-
     (runDel restoreArgList $> Nothing)
-      `catch` \(e :: RestoreCollisionError) -> pure (Just e)
+      `catch` \(e :: ExceptionI RestoreCollision) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
     Just ex -> assertMatches expectedRestore [T.pack $ displayException ex]
@@ -263,6 +266,8 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
       ]
     expectedRestore =
       [ Outfix
-          "Cannot restore the file as one exists at the original location:"
+          ( "Cannot restore the trash file 'f1' as one exists at the "
+              <> "original location:"
+          )
           "/del/r4/f1"
       ]
