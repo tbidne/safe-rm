@@ -12,6 +12,7 @@ module Functional.Prelude
 
     -- * Assertions
     assertFilesExist,
+    assertFilesDoNotExist,
     assertDirectoriesExist,
 
     -- ** Text
@@ -85,6 +86,15 @@ assertFilesExist paths = do
   for_ paths $ \p -> do
     exists <- Dir.doesFileExist p
     assertBool ("Expected file to exist: " <> p) exists
+
+-- | Asserts that files do not exist.
+--
+-- @since 0.1
+assertFilesDoNotExist :: [FilePath] -> IO ()
+assertFilesDoNotExist paths = do
+  for_ paths $ \p -> do
+    exists <- Dir.doesFileExist p
+    assertBool ("Expected file not to exist: " <> p) (not exists)
 
 -- | Asserts that directories exist.
 --

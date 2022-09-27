@@ -70,6 +70,7 @@ import System.IO as X
   ( BufferMode (NoBuffering),
     FilePath,
     IO,
+    print,
     putStr,
     putStrLn,
   )

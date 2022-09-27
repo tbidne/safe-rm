@@ -102,6 +102,7 @@ test-suite functional
   main-is:          Main.hs
   other-modules:
     Functional.Commands.D
+    Functional.Commands.X
     Functional.Prelude
     Functional.TestArgs
 

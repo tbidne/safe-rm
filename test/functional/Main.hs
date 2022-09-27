@@ -4,6 +4,7 @@
 module Main (main) where
 
 import Functional.Commands.D qualified as D
+import Functional.Commands.X qualified as X
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
 import System.Directory qualified as Dir
@@ -21,7 +22,8 @@ specs :: IO TestArgs -> TestTree
 specs args =
   testGroup
     "Functional Tests"
-    [ D.tests args
+    [ D.tests args,
+      X.tests args
     ]
 
 setup :: IO TestArgs
