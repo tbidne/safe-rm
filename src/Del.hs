@@ -82,13 +82,15 @@ permDel mtrash force paths = do
   toDelete <- Index.searchIndex False trashHome paths index
   deletedPathsRef <- newIORef Map.empty
 
+  let deleteFn pd = do
+        PathData.deletePathData trashHome pd
+        modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+
   -- move trash paths back to original location
   deletePathsFn <-
     if force
       then do
-        pure $ for_ toDelete $ \pd -> do
-          PathData.deletePathData trashHome pd
-          modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+        pure $ for_ toDelete deleteFn
       else do
         -- NOTE:
         -- - No buffering on input so we can read a single char w/o requiring a
@@ -106,10 +108,7 @@ permDel mtrash force paths = do
           putStr "Permanently delete (y/n)? "
           c <- Ch.toLower <$> IO.getChar
           if
-              | c == 'y' -> do
-                  PathData.deletePathData trashHome pd
-                  modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
-                  putStrLn ""
+              | c == 'y' -> deleteFn pd *> putStrLn ""
               | c == 'n' -> putStrLn ""
               | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
