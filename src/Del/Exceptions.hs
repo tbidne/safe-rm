@@ -152,7 +152,7 @@ instance Exception (ExceptionI RestoreCollision) where
 
 -- | @since 0.1
 instance Exception (ExceptionI TrashIndexSizeMismatch) where
-  displayException (MkExceptionI ((MkPathI trashHome), dirSize, indexSize)) =
+  displayException (MkExceptionI (MkPathI trashHome, dirSize, indexSize)) =
     mconcat
       [ "Size mismatch between index size (",
         show indexSize,
