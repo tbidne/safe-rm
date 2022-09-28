@@ -16,6 +16,7 @@ import Control.Exception as X
   ( Exception (displayException, fromException, toException),
     SomeAsyncException (SomeAsyncException),
     SomeException,
+    bracket,
     catch,
     finally,
     throwIO,

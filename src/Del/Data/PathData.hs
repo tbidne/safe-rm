@@ -24,6 +24,7 @@ module Del.Data.PathData
     sortName,
 
     -- * Miscellaneous
+    headerNames,
     pathDataToTrashPath,
   )
 where
@@ -133,6 +134,9 @@ instance Pretty PathData where
           \x -> x <> ":  " <+> pretty (pd ^. #created)
         ]
 
+-- | Header names.
+--
+-- @since 0.1
 headerNames :: (IsList a, IsString (Item a)) => a
 headerNames = ["type", "name", "original", "created"]
 

@@ -8,6 +8,9 @@ package del
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
     -Wno-unticked-promoted-constructors -Wprepositive-qualified-module
 
+  benchmark-options:
+    +RTS -T --nonmoving-gc -RTS --csv benchmarks/bench.csv --svg benchmarks/bench.svg
+
 optimization: 2
 test-show-details: direct
 

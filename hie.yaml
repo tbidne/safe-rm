@@ -11,3 +11,6 @@ cradle:
 
     - path: "./test/functional"
       component: "del:test:functional"
+
+    - path: "./benchmarks/Main.hs"
+      component: "del:bench:benchmarks"

@@ -125,3 +125,23 @@ test-suite functional
 
   hs-source-dirs:   test/functional
   default-language: GHC2021
+
+benchmark benchmarks
+  import:           common-exts
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  other-modules:
+    Benchmarks.Prelude
+    Benchmarks.ReadIndex
+
+  build-depends:
+    , base
+    , bytestring
+    , del
+    , directory
+    , env-guard
+    , tasty-bench  ^>=0.3
+
+  ghc-options:      -Wno-unused-packages
+  hs-source-dirs:   benchmarks
+  default-language: GHC2021
