@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Provides the 'Command' type.</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Runner.Command</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Runner.Command.html#Command"><span class="hs-identifier">Command</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_Delete"><span class="hs-identifier">_Delete</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_DeletePerm"><span class="hs-identifier">_DeletePerm</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_Empty"><span class="hs-identifier">_Empty</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_Restore"><span class="hs-identifier">_Restore</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_List"><span class="hs-identifier">_List</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Command.html#_Metadata"><span class="hs-identifier">_Metadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html"><span class="hs-identifier">SafeRm.Data.Paths</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier">PathI</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier">PathIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#OriginalPath"><span class="hs-identifier">OriginalPath</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier">TrashName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html"><span class="hs-identifier">SafeRm.Data.UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier">UniqueSeq</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | Action to run.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="Command"><span class="annot"><a href="SafeRm.Runner.Command.html#Command"><span class="hs-identifier hs-var">Command</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Deletes a path.</span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-28"></span><span>    </span><span id="Delete"><span class="annot"><a href="SafeRm.Runner.Command.html#Delete"><span class="hs-identifier hs-var">Delete</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#OriginalPath"><span class="hs-identifier hs-type">OriginalPath</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Permanently deletes a path from the trash.</span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-32"></span><span>    </span><span id="DeletePerm"><span class="annot"><a href="SafeRm.Runner.Command.html#DeletePerm"><span class="hs-identifier hs-var">DeletePerm</span></a></span></span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Empties the trash.</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-38"></span><span>    </span><span id="Empty"><span class="annot"><a href="SafeRm.Runner.Command.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Restores a path.</span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-42"></span><span>    </span><span id="Restore"><span class="annot"><a href="SafeRm.Runner.Command.html#Restore"><span class="hs-identifier hs-var">Restore</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | List all trash contents.</span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-46"></span><span>    </span><span id="List"><span class="annot"><a href="SafeRm.Runner.Command.html#List"><span class="hs-identifier hs-var">List</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Prints trash metadata.</span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-50"></span><span>    </span><span id="Metadata"><span class="annot"><a href="SafeRm.Runner.Command.html#Metadata"><span class="hs-identifier hs-var">Metadata</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621679296778"><span id="local-6989586621679296789"><span class="annot"><span class="annottext">Command -&gt; Command -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Command -&gt; Command -&gt; Bool
+$c/= :: Command -&gt; Command -&gt; Bool
+== :: Command -&gt; Command -&gt; Bool
+$c== :: Command -&gt; Command -&gt; Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621679296756"><span id="local-6989586621679296758"><span id="local-6989586621679296774"><span class="annot"><span class="annottext">Int -&gt; Command -&gt; ShowS
+[Command] -&gt; ShowS
+Command -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Command] -&gt; ShowS
+$cshowList :: [Command] -&gt; ShowS
+show :: Command -&gt; String
+$cshow :: Command -&gt; String
+showsPrec :: Int -&gt; Command -&gt; ShowS
+$cshowsPrec :: Int -&gt; Command -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-56"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span id="_Metadata"><span id="_List"><span id="_Restore"><span id="_Empty"><span id="_DeletePerm"><span id="_Delete"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Command</span></span></span></span></span></span></span><span>
+</span><span id="line-59"></span></pre></body></html>

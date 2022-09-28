@@ -1,0 +1,1138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Provides exceptions used by SafeRm.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Exception</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Specific</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#PathNotFoundE"><span class="hs-identifier">PathNotFoundE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#RenameDuplicateE"><span class="hs-identifier">RenameDuplicateE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#ReadIndexE"><span class="hs-identifier">ReadIndexE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#DuplicateIndexPathE"><span class="hs-identifier">DuplicateIndexPathE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#TrashPathNotFoundE"><span class="hs-identifier">TrashPathNotFoundE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#RestoreCollisionE"><span class="hs-identifier">RestoreCollisionE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#IndexSizeMismatchE"><span class="hs-identifier">IndexSizeMismatchE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#TomlDecodeE"><span class="hs-identifier">TomlDecodeE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#ArbitraryE"><span class="hs-identifier">ArbitraryE</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Aggregating</span></span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#Exceptions"><span class="hs-identifier">Exceptions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#withStackTracing"><span class="hs-identifier">withStackTracing</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#displayTraceIf"><span class="hs-identifier">displayTraceIf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#displayTrace"><span class="hs-identifier">displayTrace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Optics</span></span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkPathNotFoundE"><span class="hs-identifier">_MkPathNotFoundE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkRenameDuplicateE"><span class="hs-identifier">_MkRenameDuplicateE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkReadIndexE"><span class="hs-identifier">_MkReadIndexE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkDuplicateIndexPathE"><span class="hs-identifier">_MkDuplicateIndexPathE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkTrashPathNotFoundE"><span class="hs-identifier">_MkTrashPathNotFoundE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkRestoreCollisionE"><span class="hs-identifier">_MkRestoreCollisionE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkIndexSizeMismatchE"><span class="hs-identifier">_MkIndexSizeMismatchE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkTomlDecodeE"><span class="hs-identifier">_MkTomlDecodeE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#_MkArbitraryE"><span class="hs-identifier">_MkArbitraryE</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Lazy.html"><span class="hs-identifier">Data.Text.Lazy</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TL</span></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Lazy.Builder.html"><span class="hs-identifier">Data.Text.Lazy.Builder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#Builder"><span class="hs-identifier">Builder</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Lazy.Builder.html"><span class="hs-identifier">Data.Text.Lazy.Builder</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TLB</span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html"><span class="hs-identifier">SafeRm.Data.Paths</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier">PathI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier">PathIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#OriginalPath"><span class="hs-identifier">OriginalPath</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier">TrashHome</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier">TrashIndex</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier">TrashName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html"><span class="hs-identifier">SafeRm.Effects.MonadCallStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier">MonadCallStack</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier">throwCallStack</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.html"><span class="hs-identifier">TOML</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Error.html#TOMLError"><span class="hs-identifier">TOMLError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Error.html#renderTOMLError"><span class="hs-identifier">renderTOMLError</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- | Path is not found.</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">data</span><span> </span><span id="PathNotFoundE"><span class="annot"><a href="SafeRm.Exception.html#PathNotFoundE"><span class="hs-identifier hs-var">PathNotFoundE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkPathNotFoundE"><span class="annot"><a href="SafeRm.Exception.html#MkPathNotFoundE"><span class="hs-identifier hs-var">MkPathNotFoundE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621679292992"><span id="local-6989586621679292994"><span id="local-6989586621679293003"><span class="annot"><span class="annottext">Int -&gt; PathNotFoundE -&gt; ShowS
+[PathNotFoundE] -&gt; ShowS
+PathNotFoundE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PathNotFoundE] -&gt; ShowS
+$cshowList :: [PathNotFoundE] -&gt; ShowS
+show :: PathNotFoundE -&gt; FilePath
+$cshow :: PathNotFoundE -&gt; FilePath
+showsPrec :: Int -&gt; PathNotFoundE -&gt; ShowS
+$cshowsPrec :: Int -&gt; PathNotFoundE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-64"></span><span id="_MkPathNotFoundE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PathNotFoundE</span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292977"><span id="local-6989586621679292979"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#PathNotFoundE"><span class="hs-identifier hs-type">PathNotFoundE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679292963"><span class="annot"><span class="annottext">displayException :: PathNotFoundE -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Path not found: &quot;</span></span><span> </span><span class="hs-operator">&lt;&gt;</span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (is :: IxList) (s :: OpticKind)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' PathNotFoundE (FilePath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkPathNotFoundE"><span class="hs-identifier hs-var">_MkPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Could not rename file due to duplicate names.</span><span>
+</span><span id="line-73"></span><span class="hs-comment">--</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-75"></span><span class="hs-keyword">data</span><span> </span><span id="RenameDuplicateE"><span class="annot"><a href="SafeRm.Exception.html#RenameDuplicateE"><span class="hs-identifier hs-var">RenameDuplicateE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkRenameDuplicateE"><span class="annot"><a href="SafeRm.Exception.html#MkRenameDuplicateE"><span class="hs-identifier hs-var">MkRenameDuplicateE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-78"></span><span>      </span><span id="local-6989586621679292947"><span id="local-6989586621679292949"><span id="local-6989586621679292955"><span class="annot"><span class="annottext">Int -&gt; RenameDuplicateE -&gt; ShowS
+[RenameDuplicateE] -&gt; ShowS
+RenameDuplicateE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RenameDuplicateE] -&gt; ShowS
+$cshowList :: [RenameDuplicateE] -&gt; ShowS
+show :: RenameDuplicateE -&gt; FilePath
+$cshow :: RenameDuplicateE -&gt; FilePath
+showsPrec :: Int -&gt; RenameDuplicateE -&gt; ShowS
+$cshowsPrec :: Int -&gt; RenameDuplicateE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-82"></span><span id="_MkRenameDuplicateE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RenameDuplicateE</span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292935"><span id="local-6989586621679292937"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#RenameDuplicateE"><span class="hs-identifier hs-type">RenameDuplicateE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621679292909"><span class="annot"><span class="annottext">displayException :: RenameDuplicateE -&gt; FilePath
+</span><a href="#local-6989586621679292909"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Failed renaming duplicate file: &quot;</span></span><span> </span><span class="hs-operator">&lt;&gt;</span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (is :: IxList) (s :: OpticKind)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' RenameDuplicateE (PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkRenameDuplicateE"><span class="hs-identifier hs-var">_MkRenameDuplicateE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- | Error reading the index.</span><span>
+</span><span id="line-91"></span><span class="hs-comment">--</span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-93"></span><span class="hs-keyword">data</span><span> </span><span id="ReadIndexE"><span class="annot"><a href="SafeRm.Exception.html#ReadIndexE"><span class="hs-identifier hs-var">ReadIndexE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkReadIndexE"><span class="annot"><a href="SafeRm.Exception.html#MkReadIndexE"><span class="hs-identifier hs-var">MkReadIndexE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#String"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-96"></span><span>      </span><span id="local-6989586621679292897"><span id="local-6989586621679292899"><span id="local-6989586621679292906"><span class="annot"><span class="annottext">Int -&gt; ReadIndexE -&gt; ShowS
+[ReadIndexE] -&gt; ShowS
+ReadIndexE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ReadIndexE] -&gt; ShowS
+$cshowList :: [ReadIndexE] -&gt; ShowS
+show :: ReadIndexE -&gt; FilePath
+$cshow :: ReadIndexE -&gt; FilePath
+showsPrec :: Int -&gt; ReadIndexE -&gt; ShowS
+$cshowsPrec :: Int -&gt; ReadIndexE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-100"></span><span id="_MkReadIndexE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ReadIndexE</span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292883"><span id="local-6989586621679292885"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#ReadIndexE"><span class="hs-identifier hs-type">ReadIndexE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621679292853"><span class="annot"><span class="annottext">displayException :: ReadIndexE -&gt; FilePath
+</span><a href="#local-6989586621679292853"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679292852"><span class="annot"><span class="annottext">ReadIndexE
+</span><a href="#local-6989586621679292852"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-106"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Error reading index at '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>        </span><span class="annot"><span class="annottext">ReadIndexE
+</span><a href="#local-6989586621679292852"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso' ReadIndexE (PathI 'TrashIndex, FilePath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkReadIndexE"><span class="hs-identifier hs-var">_MkReadIndexE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;': &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">ReadIndexE
+</span><a href="#local-6989586621679292852"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso' ReadIndexE (PathI 'TrashIndex, FilePath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkReadIndexE"><span class="hs-identifier hs-var">_MkReadIndexE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- | Duplicate paths found in index file.</span><span>
+</span><span id="line-113"></span><span class="hs-comment">--</span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-115"></span><span class="hs-keyword">data</span><span> </span><span id="DuplicateIndexPathE"><span class="annot"><a href="SafeRm.Exception.html#DuplicateIndexPathE"><span class="hs-identifier hs-var">DuplicateIndexPathE</span></a></span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MkDuplicateIndexPathE"><span class="annot"><a href="SafeRm.Exception.html#MkDuplicateIndexPathE"><span class="hs-identifier hs-var">MkDuplicateIndexPathE</span></a></span></span><span>
+</span><span id="line-117"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-121"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-122"></span><span>      </span><span id="local-6989586621679292839"><span id="local-6989586621679292841"><span id="local-6989586621679292847"><span class="annot"><span class="annottext">Int -&gt; DuplicateIndexPathE -&gt; ShowS
+[DuplicateIndexPathE] -&gt; ShowS
+DuplicateIndexPathE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [DuplicateIndexPathE] -&gt; ShowS
+$cshowList :: [DuplicateIndexPathE] -&gt; ShowS
+show :: DuplicateIndexPathE -&gt; FilePath
+$cshow :: DuplicateIndexPathE -&gt; FilePath
+showsPrec :: Int -&gt; DuplicateIndexPathE -&gt; ShowS
+$cshowsPrec :: Int -&gt; DuplicateIndexPathE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-123"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-126"></span><span id="_MkDuplicateIndexPathE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DuplicateIndexPathE</span></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292825"><span id="local-6989586621679292827"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#DuplicateIndexPathE"><span class="hs-identifier hs-type">DuplicateIndexPathE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621679292786"><span class="annot"><span class="annottext">displayException :: DuplicateIndexPathE -&gt; FilePath
+</span><a href="#local-6989586621679292786"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679292785"><span class="annot"><span class="annottext">DuplicateIndexPathE
+</span><a href="#local-6989586621679292785"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Trash paths should be unique, but found multiple entries in the &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;trash index '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>        </span><span class="annot"><span class="annottext">DuplicateIndexPathE
+</span><a href="#local-6989586621679292785"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  DuplicateIndexPathE
+  (PathI 'TrashIndex, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkDuplicateIndexPathE"><span class="hs-identifier hs-var">_MkDuplicateIndexPathE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;' for the following path: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>        </span><span class="annot"><span class="annottext">DuplicateIndexPathE
+</span><a href="#local-6989586621679292785"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  DuplicateIndexPathE
+  (PathI 'TrashIndex, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkDuplicateIndexPathE"><span class="hs-identifier hs-var">_MkDuplicateIndexPathE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span>
+</span><span id="line-137"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="hs-comment">-- | Path not found in trash error.</span><span>
+</span><span id="line-140"></span><span class="hs-comment">--</span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-142"></span><span class="hs-keyword">data</span><span> </span><span id="TrashPathNotFoundE"><span class="annot"><a href="SafeRm.Exception.html#TrashPathNotFoundE"><span class="hs-identifier hs-var">TrashPathNotFoundE</span></a></span></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MkTrashPathNotFoundE"><span class="annot"><a href="SafeRm.Exception.html#MkTrashPathNotFoundE"><span class="hs-identifier hs-var">MkTrashPathNotFoundE</span></a></span></span><span>
+</span><span id="line-144"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-type">TrashHome</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-149"></span><span>      </span><span id="local-6989586621679292774"><span id="local-6989586621679292776"><span id="local-6989586621679292782"><span class="annot"><span class="annottext">Int -&gt; TrashPathNotFoundE -&gt; ShowS
+[TrashPathNotFoundE] -&gt; ShowS
+TrashPathNotFoundE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TrashPathNotFoundE] -&gt; ShowS
+$cshowList :: [TrashPathNotFoundE] -&gt; ShowS
+show :: TrashPathNotFoundE -&gt; FilePath
+$cshow :: TrashPathNotFoundE -&gt; FilePath
+showsPrec :: Int -&gt; TrashPathNotFoundE -&gt; ShowS
+$cshowsPrec :: Int -&gt; TrashPathNotFoundE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-153"></span><span id="_MkTrashPathNotFoundE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TrashPathNotFoundE</span></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-156"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292760"><span id="local-6989586621679292762"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#TrashPathNotFoundE"><span class="hs-identifier hs-type">TrashPathNotFoundE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-157"></span><span>  </span><span id="local-6989586621679292719"><span class="annot"><span class="annottext">displayException :: TrashPathNotFoundE -&gt; FilePath
+</span><a href="#local-6989586621679292719"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679292718"><span class="annot"><span class="annottext">TrashPathNotFoundE
+</span><a href="#local-6989586621679292718"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;The path '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>        </span><span class="annot"><span class="annottext">TrashPathNotFoundE
+</span><a href="#local-6989586621679292718"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  TrashPathNotFoundE (PathI 'TrashHome, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkTrashPathNotFoundE"><span class="hs-identifier hs-var">_MkTrashPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;' was not found in the trash directory '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>        </span><span class="annot"><span class="annottext">TrashPathNotFoundE
+</span><a href="#local-6989586621679292718"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  TrashPathNotFoundE (PathI 'TrashHome, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkTrashPathNotFoundE"><span class="hs-identifier hs-var">_MkTrashPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;' despite being listed in the trash index. This can be fixed by &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;manually deleting the entry from the index or deleting everything &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-165"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;(i.e. sr e).&quot;</span></span><span>
+</span><span id="line-166"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-167"></span><span>
+</span><span id="line-168"></span><span class="hs-comment">-- | Collision with existing file when attempting a restore.</span><span>
+</span><span id="line-169"></span><span class="hs-comment">--</span><span>
+</span><span id="line-170"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-171"></span><span class="hs-keyword">data</span><span> </span><span id="RestoreCollisionE"><span class="annot"><a href="SafeRm.Exception.html#RestoreCollisionE"><span class="hs-identifier hs-var">RestoreCollisionE</span></a></span></span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MkRestoreCollisionE"><span class="annot"><a href="SafeRm.Exception.html#MkRestoreCollisionE"><span class="hs-identifier hs-var">MkRestoreCollisionE</span></a></span></span><span>
+</span><span id="line-173"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#OriginalPath"><span class="hs-identifier hs-type">OriginalPath</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-178"></span><span>      </span><span id="local-6989586621679292707"><span id="local-6989586621679292709"><span id="local-6989586621679292715"><span class="annot"><span class="annottext">Int -&gt; RestoreCollisionE -&gt; ShowS
+[RestoreCollisionE] -&gt; ShowS
+RestoreCollisionE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RestoreCollisionE] -&gt; ShowS
+$cshowList :: [RestoreCollisionE] -&gt; ShowS
+show :: RestoreCollisionE -&gt; FilePath
+$cshow :: RestoreCollisionE -&gt; FilePath
+showsPrec :: Int -&gt; RestoreCollisionE -&gt; ShowS
+$cshowsPrec :: Int -&gt; RestoreCollisionE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-179"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-182"></span><span id="_MkRestoreCollisionE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RestoreCollisionE</span></span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292693"><span id="local-6989586621679292695"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#RestoreCollisionE"><span class="hs-identifier hs-type">RestoreCollisionE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-186"></span><span>  </span><span id="local-6989586621679292655"><span class="annot"><span class="annottext">displayException :: RestoreCollisionE -&gt; FilePath
+</span><a href="#local-6989586621679292655"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679292654"><span class="annot"><span class="annottext">RestoreCollisionE
+</span><a href="#local-6989586621679292654"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-187"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-188"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Cannot restore the trash file '&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-189"></span><span>        </span><span class="annot"><span class="annottext">RestoreCollisionE
+</span><a href="#local-6989586621679292654"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  RestoreCollisionE
+  (PathI 'TrashName, PathI 'OriginalPath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkRestoreCollisionE"><span class="hs-identifier hs-var">_MkRestoreCollisionE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">,</span><span>
+</span><span id="line-190"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;' as one exists at the original location: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">RestoreCollisionE
+</span><a href="#local-6989586621679292654"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso'
+  RestoreCollisionE
+  (PathI 'TrashName, PathI 'OriginalPath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkRestoreCollisionE"><span class="hs-identifier hs-var">_MkRestoreCollisionE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span>
+</span><span id="line-192"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span class="hs-comment">-- | Index size did not match the trash directory.</span><span>
+</span><span id="line-195"></span><span class="hs-comment">--</span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-197"></span><span class="hs-keyword">data</span><span> </span><span id="IndexSizeMismatchE"><span class="annot"><a href="SafeRm.Exception.html#IndexSizeMismatchE"><span class="hs-identifier hs-var">IndexSizeMismatchE</span></a></span></span><span>
+</span><span id="line-198"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MkIndexSizeMismatchE"><span class="annot"><a href="SafeRm.Exception.html#MkIndexSizeMismatchE"><span class="hs-identifier hs-var">MkIndexSizeMismatchE</span></a></span></span><span>
+</span><span id="line-199"></span><span>      </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-type">TrashHome</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-200"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-201"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Int"><span class="hs-identifier hs-type">Int</span></a></span><span>
+</span><span id="line-202"></span><span>      </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-203"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-204"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-205"></span><span>      </span><span id="local-6989586621679292641"><span id="local-6989586621679292643"><span id="local-6989586621679292651"><span class="annot"><span class="annottext">Int -&gt; IndexSizeMismatchE -&gt; ShowS
+[IndexSizeMismatchE] -&gt; ShowS
+IndexSizeMismatchE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [IndexSizeMismatchE] -&gt; ShowS
+$cshowList :: [IndexSizeMismatchE] -&gt; ShowS
+show :: IndexSizeMismatchE -&gt; FilePath
+$cshow :: IndexSizeMismatchE -&gt; FilePath
+showsPrec :: Int -&gt; IndexSizeMismatchE -&gt; ShowS
+$cshowsPrec :: Int -&gt; IndexSizeMismatchE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-206"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-207"></span><span>
+</span><span id="line-208"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-209"></span><span id="_MkIndexSizeMismatchE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IndexSizeMismatchE</span></span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-212"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292625"><span id="local-6989586621679292627"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#IndexSizeMismatchE"><span class="hs-identifier hs-type">IndexSizeMismatchE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-213"></span><span>  </span><span id="local-6989586621679292587"><span class="annot"><span class="annottext">displayException :: IndexSizeMismatchE -&gt; FilePath
+</span><a href="#local-6989586621679292587"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span id="local-6989586621679292586"><span class="annot"><span class="annottext">IndexSizeMismatchE
+</span><a href="#local-6989586621679292586"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-215"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Size mismatch between index size (&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>        </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Show a =&gt; a -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IndexSizeMismatchE
+</span><a href="#local-6989586621679292586"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso' IndexSizeMismatchE (PathI 'TrashHome, Int, Int, CallStack)
+</span><a href="SafeRm.Exception.html#_MkIndexSizeMismatchE"><span class="hs-identifier hs-var">_MkIndexSizeMismatchE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field3 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_3"><span class="hs-identifier hs-var">_3</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;) and number of entries (&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-218"></span><span>        </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Show a =&gt; a -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#show"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IndexSizeMismatchE
+</span><a href="#local-6989586621679292586"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso' IndexSizeMismatchE (PathI 'TrashHome, Int, Int, CallStack)
+</span><a href="SafeRm.Exception.html#_MkIndexSizeMismatchE"><span class="hs-identifier hs-var">_MkIndexSizeMismatchE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-219"></span><span>        </span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;) in trash: &quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-220"></span><span>        </span><span class="annot"><span class="annottext">IndexSizeMismatchE
+</span><a href="#local-6989586621679292586"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">Iso' IndexSizeMismatchE (PathI 'TrashHome, Int, Int, CallStack)
+</span><a href="SafeRm.Exception.html#_MkIndexSizeMismatchE"><span class="hs-identifier hs-var">_MkIndexSizeMismatchE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span>
+</span><span id="line-221"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-222"></span><span>
+</span><span id="line-223"></span><span class="hs-comment">-- | Error decoding TOML file.</span><span>
+</span><span id="line-224"></span><span class="hs-comment">--</span><span>
+</span><span id="line-225"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-226"></span><span class="hs-keyword">data</span><span> </span><span id="TomlDecodeE"><span class="annot"><a href="SafeRm.Exception.html#TomlDecodeE"><span class="hs-identifier hs-var">TomlDecodeE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkTomlDecodeE"><span class="annot"><a href="SafeRm.Exception.html#MkTomlDecodeE"><span class="hs-identifier hs-var">MkTomlDecodeE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Error.html#TOMLError"><span class="hs-identifier hs-type">TOMLError</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-228"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-229"></span><span>      </span><span id="local-6989586621679292573"><span id="local-6989586621679292575"><span id="local-6989586621679292581"><span class="annot"><span class="annottext">Int -&gt; TomlDecodeE -&gt; ShowS
+[TomlDecodeE] -&gt; ShowS
+TomlDecodeE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TomlDecodeE] -&gt; ShowS
+$cshowList :: [TomlDecodeE] -&gt; ShowS
+show :: TomlDecodeE -&gt; FilePath
+$cshow :: TomlDecodeE -&gt; FilePath
+showsPrec :: Int -&gt; TomlDecodeE -&gt; ShowS
+$cshowsPrec :: Int -&gt; TomlDecodeE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-230"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span>
+</span><span id="line-232"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-233"></span><span id="_MkTomlDecodeE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TomlDecodeE</span></span><span>
+</span><span id="line-234"></span><span>
+</span><span id="line-235"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-236"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292561"><span id="local-6989586621679292563"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#TomlDecodeE"><span class="hs-identifier hs-type">TomlDecodeE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-237"></span><span>  </span><span id="local-6989586621679292551"><span class="annot"><span class="annottext">displayException :: TomlDecodeE -&gt; FilePath
+</span><a href="#local-6989586621679292551"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-238"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Error decoding toml: &quot;</span></span><span> </span><span class="hs-operator">&lt;&gt;</span><span class="hs-special">)</span><span>
+</span><span id="line-239"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span>
+</span><span id="line-240"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">TOMLError -&gt; Text
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Error.html#renderTOMLError"><span class="hs-identifier hs-var">renderTOMLError</span></a></span><span>
+</span><span id="line-241"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (is :: IxList) (s :: OpticKind)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' TomlDecodeE (TOMLError, CallStack)
+</span><a href="SafeRm.Exception.html#_MkTomlDecodeE"><span class="hs-identifier hs-var">_MkTomlDecodeE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-242"></span><span>
+</span><span id="line-243"></span><span class="hs-comment">-- | Arbitrary exception. 'SomeException' with 'CallStack'.</span><span>
+</span><span id="line-244"></span><span class="hs-comment">--</span><span>
+</span><span id="line-245"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-246"></span><span class="hs-keyword">data</span><span> </span><span id="ArbitraryE"><span class="annot"><a href="SafeRm.Exception.html#ArbitraryE"><span class="hs-identifier hs-var">ArbitraryE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkArbitraryE"><span class="annot"><a href="SafeRm.Exception.html#MkArbitraryE"><span class="hs-identifier hs-var">MkArbitraryE</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span>
+</span><span id="line-247"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-248"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-249"></span><span>      </span><span id="local-6989586621679292539"><span id="local-6989586621679292541"><span id="local-6989586621679292547"><span class="annot"><span class="annottext">Int -&gt; ArbitraryE -&gt; ShowS
+[ArbitraryE] -&gt; ShowS
+ArbitraryE -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ArbitraryE] -&gt; ShowS
+$cshowList :: [ArbitraryE] -&gt; ShowS
+show :: ArbitraryE -&gt; FilePath
+$cshow :: ArbitraryE -&gt; FilePath
+showsPrec :: Int -&gt; ArbitraryE -&gt; ShowS
+$cshowsPrec :: Int -&gt; ArbitraryE -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-250"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-251"></span><span>
+</span><span id="line-252"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-253"></span><span id="_MkArbitraryE"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ArbitraryE</span></span><span>
+</span><span id="line-254"></span><span>
+</span><span id="line-255"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-256"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292527"><span id="local-6989586621679292529"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#ArbitraryE"><span class="hs-identifier hs-type">ArbitraryE</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-257"></span><span>  </span><span id="local-6989586621679292516"><span class="annot"><span class="annottext">displayException :: ArbitraryE -&gt; FilePath
+</span><a href="#local-6989586621679292516"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-258"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><span class="hs-string">&quot;Exception:&quot;</span></span><span> </span><span class="hs-operator">&lt;&gt;</span><span class="hs-special">)</span><span>
+</span><span id="line-259"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span>
+</span><span id="line-260"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (is :: IxList) (s :: OpticKind)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' ArbitraryE (SomeException, CallStack)
+</span><a href="SafeRm.Exception.html#_MkArbitraryE"><span class="hs-identifier hs-var">_MkArbitraryE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field1 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-261"></span><span>
+</span><span id="line-262"></span><span class="hs-comment">-- | Aggregates multiple exceptions.</span><span>
+</span><span id="line-263"></span><span class="hs-comment">--</span><span>
+</span><span id="line-264"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-265"></span><span class="hs-keyword">newtype</span><span> </span><span id="Exceptions"><span class="annot"><a href="SafeRm.Exception.html#Exceptions"><span class="hs-identifier hs-var">Exceptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkExceptions"><span class="annot"><a href="SafeRm.Exception.html#MkExceptions"><span class="hs-identifier hs-var">MkExceptions</span></a></span></span><span>
+</span><span id="line-266"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-267"></span><span>    </span><span id="%24sel%3AunExceptions%3AMkExceptions"><span class="annot"><span class="annottext">Exceptions -&gt; NonEmpty SomeException
+</span><a href="SafeRm.Exception.html#%24sel%3AunExceptions%3AMkExceptions"><span class="hs-identifier hs-var hs-var">unExceptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#NonEmpty"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span>
+</span><span id="line-268"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-269"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-270"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-271"></span><span>      </span><span id="local-6989586621679292504"><span id="local-6989586621679292506"><span id="local-6989586621679292512"><span class="annot"><span class="annottext">Int -&gt; Exceptions -&gt; ShowS
+[Exceptions] -&gt; ShowS
+Exceptions -&gt; FilePath
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Exceptions] -&gt; ShowS
+$cshowList :: [Exceptions] -&gt; ShowS
+show :: Exceptions -&gt; FilePath
+$cshow :: Exceptions -&gt; FilePath
+showsPrec :: Int -&gt; Exceptions -&gt; ShowS
+$cshowsPrec :: Int -&gt; Exceptions -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-272"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-273"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-274"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-275"></span><span>      </span><span id="local-6989586621679292491"><span id="local-6989586621679292497"><span id="local-6989586621679292502"><span class="annot"><span class="annottext">NonEmpty Exceptions -&gt; Exceptions
+Exceptions -&gt; Exceptions -&gt; Exceptions
+forall (b :: OpticKind).
+Integral b =&gt;
+b -&gt; Exceptions -&gt; Exceptions
+forall (a :: OpticKind).
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall (b :: OpticKind). Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+stimes :: forall (b :: OpticKind).
+Integral b =&gt;
+b -&gt; Exceptions -&gt; Exceptions
+$cstimes :: forall (b :: OpticKind).
+Integral b =&gt;
+b -&gt; Exceptions -&gt; Exceptions
+sconcat :: NonEmpty Exceptions -&gt; Exceptions
+$csconcat :: NonEmpty Exceptions -&gt; Exceptions
+&lt;&gt; :: Exceptions -&gt; Exceptions -&gt; Exceptions
+$c&lt;&gt; :: Exceptions -&gt; Exceptions -&gt; Exceptions
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></a></span></span></span></span><span>
+</span><span id="line-276"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-277"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#NonEmpty"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span>
+</span><span id="line-278"></span><span>
+</span><span id="line-279"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-280"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679292477"><span id="local-6989586621679292479"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="SafeRm.Exception.html#Exceptions"><span class="hs-identifier hs-type">Exceptions</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-281"></span><span>  </span><span id="local-6989586621679292471"><span class="annot"><span class="annottext">displayException :: Exceptions -&gt; FilePath
+</span><a href="#local-6989586621679292471"><span class="hs-identifier hs-var hs-var hs-var hs-var">displayException</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind).
+(IsString a, Monoid a) =&gt;
+(SomeException -&gt; a) -&gt; Exceptions -&gt; a
+</span><a href="SafeRm.Exception.html#displayExceptions"><span class="hs-identifier hs-var">displayExceptions</span></a></span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span>
+</span><span id="line-282"></span><span>
+</span><span id="line-283"></span><span class="hs-comment">-- | Tries the monadic action. If an exception is encountered, it is wrapped</span><span>
+</span><span id="line-284"></span><span class="hs-comment">-- in an 'ArbitraryE' and rethrown.</span><span>
+</span><span id="line-285"></span><span class="hs-comment">--</span><span>
+</span><span id="line-286"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-287"></span><span id="local-6989586621679293198"><span id="local-6989586621679293201"><span class="annot"><a href="SafeRm.Exception.html#withStackTracing"><span class="hs-identifier hs-type">withStackTracing</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-288"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-289"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier hs-type">MonadCallStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-290"></span><span>    </span><span class="annot"><a href="file:///nix/store/bxq9j5gs109r9hsk1856fwbn5zhqzn69-unliftio-core-0.2.0.1-doc/share/doc/unliftio-core-0.2.0.1/html/src/Control.Monad.IO.Unlift.html#MonadUnliftIO"><span class="hs-identifier hs-type">MonadUnliftIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293201"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-292"></span><span>  </span><span class="annot"><a href="#local-6989586621679293201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293198"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-293"></span><span>  </span><span class="annot"><a href="#local-6989586621679293201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293198"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-294"></span><span id="withStackTracing"><span class="annot"><span class="annottext">withStackTracing :: forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+(HasCallStack, MonadCallStack m, MonadUnliftIO m) =&gt;
+m a -&gt; m a
+</span><a href="SafeRm.Exception.html#withStackTracing"><span class="hs-identifier hs-var hs-var">withStackTracing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-295"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+MonadUnliftIO m =&gt;
+m a -&gt; m (Either SomeException a)
+</span><a href="file:///nix/store/smv0bjih6fh6klcs4cwm4ak4dy74hvmn-unliftio-0.2.22.0-doc/share/doc/unliftio-0.2.22.0/html/src/UnliftIO.Exception.html#tryAny"><span class="hs-identifier hs-var">tryAny</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind) (c :: OpticKind).
+Monad m =&gt;
+(a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.html#%3E%3D%3E"><span class="hs-operator hs-var">&gt;=&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-296"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Left"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621679292450"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292450"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: OpticKind -&gt; OpticKind) (e :: OpticKind)
+       (a :: OpticKind).
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="SafeRm.Exception.html#ArbitraryE"><span class="hs-identifier hs-type">ArbitraryE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SomeException -&gt; CallStack -&gt; ArbitraryE
+</span><a href="SafeRm.Exception.html#MkArbitraryE"><span class="hs-identifier hs-var">MkArbitraryE</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292450"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-297"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Right"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621679292449"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679292449"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+Applicative f =&gt;
+a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679292449"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-298"></span><span>
+</span><span id="line-299"></span><span class="hs-comment">-- | If 'True', uses 'displayTrace'; otherwise uses 'displayException'.</span><span>
+</span><span id="line-300"></span><span class="hs-comment">--</span><span>
+</span><span id="line-301"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-302"></span><span id="local-6989586621679293180"><span class="annot"><a href="SafeRm.Exception.html#displayTraceIf"><span class="hs-identifier hs-type">displayTraceIf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293180"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679293180"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span></span><span>
+</span><span id="line-303"></span><span id="displayTraceIf"><span class="annot"><span class="annottext">displayTraceIf :: forall (e :: OpticKind). Exception e =&gt; Bool -&gt; e -&gt; Text
+</span><a href="SafeRm.Exception.html#displayTraceIf"><span class="hs-identifier hs-var hs-var">displayTraceIf</span></a></span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span>
+</span><span id="line-304"></span><span class="annot"><a href="SafeRm.Exception.html#displayTraceIf"><span class="hs-identifier hs-var">displayTraceIf</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; Text
+</span><a href="SafeRm.Exception.html#displayTrace"><span class="hs-identifier hs-var">displayTrace</span></a></span><span>
+</span><span id="line-305"></span><span>
+</span><span id="line-306"></span><span class="hs-comment">-- | Like 'displayException', except we attempt to match the exceptions</span><span>
+</span><span id="line-307"></span><span class="hs-comment">-- specified in this module, and -- if found -- include the stack trace</span><span>
+</span><span id="line-308"></span><span class="hs-comment">-- in the display text. If we do fail to match, simply uses</span><span>
+</span><span id="line-309"></span><span class="hs-comment">-- 'displayException'.</span><span>
+</span><span id="line-310"></span><span class="hs-comment">--</span><span>
+</span><span id="line-311"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-312"></span><span id="local-6989586621679293178"><span class="annot"><a href="SafeRm.Exception.html#displayTrace"><span class="hs-identifier hs-type">displayTrace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293178"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679293178"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span></span><span>
+</span><span id="line-313"></span><span id="displayTrace"><span class="annot"><span class="annottext">displayTrace :: forall (e :: OpticKind). Exception e =&gt; e -&gt; Text
+</span><a href="SafeRm.Exception.html#displayTrace"><span class="hs-identifier hs-var hs-var">displayTrace</span></a></span></span><span> </span><span id="local-6989586621679292439"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679292439"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Text
+</span><a href="#local-6989586621679292438"><span class="hs-identifier hs-var">builderToStrict</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; SomeException -&gt; Maybe e
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#fromException"><span class="hs-identifier hs-var">fromException</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="SafeRm.Exception.html#Exceptions"><span class="hs-identifier hs-type">Exceptions</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292436"><span class="hs-identifier hs-var">someEx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-314"></span><span>  </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679292435"><span class="annot"><span class="annottext">Exceptions
+</span><a href="#local-6989586621679292435"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind).
+(IsString a, Monoid a) =&gt;
+(SomeException -&gt; a) -&gt; Exceptions -&gt; a
+</span><a href="SafeRm.Exception.html#displayExceptions"><span class="hs-identifier hs-var">displayExceptions</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Builder
+</span><a href="SafeRm.Exception.html#traceSomeException"><span class="hs-identifier hs-var">traceSomeException</span></a></span><span> </span><span class="annot"><span class="annottext">Exceptions
+</span><a href="#local-6989586621679292435"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-315"></span><span>  </span><span class="annot"><span class="annottext">Maybe Exceptions
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Builder
+</span><a href="SafeRm.Exception.html#traceSomeException"><span class="hs-identifier hs-var">traceSomeException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292436"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-316"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-317"></span><span>    </span><span id="local-6989586621679292436"><span class="annot"><span class="annottext">someEx :: SomeException
+</span><a href="#local-6989586621679292436"><span class="hs-identifier hs-var hs-var">someEx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; SomeException
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#toException"><span class="hs-identifier hs-var">toException</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679292439"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-318"></span><span>    </span><span id="local-6989586621679292438"><span class="annot"><span class="annottext">builderToStrict :: Builder -&gt; Text
+</span><a href="#local-6989586621679292438"><span class="hs-identifier hs-var hs-var">builderToStrict</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Lazy.html#toStrict"><span class="hs-identifier hs-var">TL.toStrict</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: OpticKind) (c :: OpticKind) (a :: OpticKind).
+(b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#toLazyText"><span class="hs-identifier hs-var">TLB.toLazyText</span></a></span><span>
+</span><span id="line-319"></span><span>
+</span><span id="line-320"></span><span class="hs-comment">-- | Transforms the SomeException into a Text Builder, appending CallStack</span><span>
+</span><span id="line-321"></span><span class="hs-comment">-- data if we find it.</span><span>
+</span><span id="line-322"></span><span class="annot"><a href="SafeRm.Exception.html#traceSomeException"><span class="hs-identifier hs-type">traceSomeException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#Builder"><span class="hs-identifier hs-type">Builder</span></a></span><span>
+</span><span id="line-323"></span><span id="traceSomeException"><span class="annot"><span class="annottext">traceSomeException :: SomeException -&gt; Builder
+</span><a href="SafeRm.Exception.html#traceSomeException"><span class="hs-identifier hs-var hs-var">traceSomeException</span></a></span></span><span> </span><span id="local-6989586621679292430"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292430"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; Either CallStack ()
+</span><a href="SafeRm.Exception.html#tryGetCallStack"><span class="hs-identifier hs-var">tryGetCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292430"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-324"></span><span>  </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Left"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621679292428"><span class="annot"><span class="annottext">CallStack
+</span><a href="#local-6989586621679292428"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-325"></span><span>    </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-326"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Builder
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#fromString"><span class="hs-identifier hs-var">TLB.fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292430"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-327"></span><span>        </span><span class="annot"><span class="annottext">CallStack -&gt; Builder
+</span><a href="SafeRm.Exception.html#appendPrettyCs"><span class="hs-identifier hs-var">appendPrettyCs</span></a></span><span> </span><span class="annot"><span class="annottext">CallStack
+</span><a href="#local-6989586621679292428"><span class="hs-identifier hs-var">cs</span></a></span><span>
+</span><span id="line-328"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-329"></span><span>  </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Right"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span class="annot"><span class="annottext">()
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Builder
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#fromString"><span class="hs-identifier hs-var">TLB.fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; e -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#displayException"><span class="hs-identifier hs-var">displayException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292430"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-330"></span><span>
+</span><span id="line-331"></span><span class="hs-comment">-- | Attempts to convert the SomeException into an exception type known to</span><span>
+</span><span id="line-332"></span><span class="hs-comment">-- have a CallStack field.</span><span>
+</span><span id="line-333"></span><span class="annot"><a href="SafeRm.Exception.html#tryGetCallStack"><span class="hs-identifier hs-type">tryGetCallStack</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Either"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-334"></span><span id="tryGetCallStack"><span class="annot"><span class="annottext">tryGetCallStack :: SomeException -&gt; Either CallStack ()
+</span><a href="SafeRm.Exception.html#tryGetCallStack"><span class="hs-identifier hs-var hs-var">tryGetCallStack</span></a></span></span><span> </span><span id="local-6989586621679292425"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-335"></span><span>  </span><span class="hs-comment">-- NOTE: Somewhat gross, but is simple and works. We take advantage</span><span>
+</span><span id="line-336"></span><span>  </span><span class="hs-comment">-- of Left's early exit so the nesting does not reach Lovecraftian levels.</span><span>
+</span><span id="line-337"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' PathNotFoundE (FilePath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkPathNotFoundE"><span class="hs-identifier hs-var">_MkPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-338"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' RenameDuplicateE (PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkRenameDuplicateE"><span class="hs-identifier hs-var">_MkRenameDuplicateE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-339"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' ReadIndexE (PathI 'TrashIndex, FilePath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkReadIndexE"><span class="hs-identifier hs-var">_MkReadIndexE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field3 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_3"><span class="hs-identifier hs-var">_3</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-340"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso'
+  DuplicateIndexPathE
+  (PathI 'TrashIndex, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkDuplicateIndexPathE"><span class="hs-identifier hs-var">_MkDuplicateIndexPathE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field3 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_3"><span class="hs-identifier hs-var">_3</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-341"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso'
+  TrashPathNotFoundE (PathI 'TrashHome, PathI 'TrashName, CallStack)
+</span><a href="SafeRm.Exception.html#_MkTrashPathNotFoundE"><span class="hs-identifier hs-var">_MkTrashPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field3 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_3"><span class="hs-identifier hs-var">_3</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-342"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso'
+  RestoreCollisionE
+  (PathI 'TrashName, PathI 'OriginalPath, CallStack)
+</span><a href="SafeRm.Exception.html#_MkRestoreCollisionE"><span class="hs-identifier hs-var">_MkRestoreCollisionE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field3 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_3"><span class="hs-identifier hs-var">_3</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-343"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' IndexSizeMismatchE (PathI 'TrashHome, Int, Int, CallStack)
+</span><a href="SafeRm.Exception.html#_MkIndexSizeMismatchE"><span class="hs-identifier hs-var">_MkIndexSizeMismatchE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field4 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_4"><span class="hs-identifier hs-var">_4</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-344"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' TomlDecodeE (TOMLError, CallStack)
+</span><a href="SafeRm.Exception.html#_MkTomlDecodeE"><span class="hs-identifier hs-var">_MkTomlDecodeE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-345"></span><span>  </span><span class="annot"><span class="annottext">forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Iso' ArbitraryE (SomeException, CallStack)
+</span><a href="SafeRm.Exception.html#_MkArbitraryE"><span class="hs-identifier hs-var">_MkArbitraryE</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (l :: OpticKind) (m :: OpticKind)
+       (is :: IxList) (js :: IxList) (ks :: IxList) (s :: OpticKind)
+       (t :: OpticKind) (u :: OpticKind) (v :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall (s :: OpticKind) (t :: OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Field2 s t a b =&gt;
+Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_2"><span class="hs-identifier hs-var">_2</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292425"><span class="hs-identifier hs-var">someEx</span></a></span><span>
+</span><span id="line-346"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-347"></span><span>    </span><span class="annot"><a href="#local-6989586621679292424"><span class="hs-identifier hs-type">go</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-348"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679293172"><span class="annot"><a href="#local-6989586621679293172"><span class="hs-identifier hs-type">e</span></a></span></span><span> </span><span id="local-6989586621679293171"><span class="annot"><a href="#local-6989586621679293171"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621679293170"><span class="annot"><a href="#local-6989586621679293170"><span class="hs-identifier hs-type">i</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-349"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#Exception"><span class="hs-identifier hs-type">Exception</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293172"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.Subtyping.html#Is"><span class="hs-identifier hs-type">Is</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293171"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.Types.html#A_Getter"><span class="hs-identifier hs-type">A_Getter</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-350"></span><span>      </span><span class="annot"><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#Optic%27"><span class="hs-identifier hs-type">Optic'</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293171"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293170"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293172"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-351"></span><span>      </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-352"></span><span>      </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Either"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-353"></span><span>    </span><span id="local-6989586621679292424"><span class="annot"><span class="annottext">go :: forall (e :: OpticKind) (k :: OpticKind) (i :: IxList).
+(Exception e, Is k A_Getter) =&gt;
+Optic' k i e CallStack -&gt; SomeException -&gt; Either CallStack ()
+</span><a href="#local-6989586621679292424"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621679292418"><span class="annot"><span class="annottext">Optic' k i e CallStack
+</span><a href="#local-6989586621679292418"><span class="hs-identifier hs-var">getCs</span></a></span></span><span> </span><span id="local-6989586621679292417"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292417"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (e :: OpticKind). Exception e =&gt; SomeException -&gt; Maybe e
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#fromException"><span class="hs-identifier hs-var">fromException</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679293172"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292417"><span class="hs-identifier hs-var">ex</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-354"></span><span>      </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679292416"><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679292416"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) (b :: OpticKind). a -&gt; Either a b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Left"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (is :: IxList) (s :: OpticKind)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Optic' k i e CallStack
+</span><a href="#local-6989586621679292418"><span class="hs-identifier hs-var">getCs</span></a></span><span> </span><span class="annot"><span class="annottext">e
+</span><a href="#local-6989586621679292416"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-355"></span><span>      </span><span class="annot"><span class="annottext">Maybe e
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind) (b :: OpticKind). b -&gt; Either a b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Right"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-356"></span><span>
+</span><span id="line-357"></span><span id="local-6989586621679293203"><span class="annot"><a href="SafeRm.Exception.html#displayExceptions"><span class="hs-identifier hs-type">displayExceptions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-358"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.String.html#IsString"><span class="hs-identifier hs-type">IsString</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293203"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679293203"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-359"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.Type.html#SomeException"><span class="hs-identifier hs-type">SomeException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679293203"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-360"></span><span>  </span><span class="annot"><a href="SafeRm.Exception.html#Exceptions"><span class="hs-identifier hs-type">Exceptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-361"></span><span>  </span><span class="annot"><a href="#local-6989586621679293203"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-362"></span><span id="displayExceptions"><span class="annot"><span class="annottext">displayExceptions :: forall (a :: OpticKind).
+(IsString a, Monoid a) =&gt;
+(SomeException -&gt; a) -&gt; Exceptions -&gt; a
+</span><a href="SafeRm.Exception.html#displayExceptions"><span class="hs-identifier hs-var hs-var">displayExceptions</span></a></span></span><span> </span><span id="local-6989586621679292403"><span class="annot"><span class="annottext">SomeException -&gt; a
+</span><a href="#local-6989586621679292403"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Exception.html#MkExceptions"><span class="hs-identifier hs-type">MkExceptions</span></a></span><span> </span><span id="local-6989586621679292402"><span class="annot"><span class="annottext">NonEmpty SomeException
+</span><a href="#local-6989586621679292402"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-363"></span><span>  </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-364"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;Exceptions:&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: OpticKind -&gt; OpticKind) (b :: OpticKind)
+       (a :: OpticKind).
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Foldable.html#foldl%27"><span class="hs-identifier hs-var">foldl'</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; SomeException -&gt; a
+</span><a href="#local-6989586621679292400"><span class="hs-identifier hs-var">foldExs</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty SomeException
+</span><a href="#local-6989586621679292402"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-366"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-367"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-368"></span><span>    </span><span id="local-6989586621679292400"><span class="annot"><span class="annottext">foldExs :: a -&gt; SomeException -&gt; a
+</span><a href="#local-6989586621679292400"><span class="hs-identifier hs-var hs-var">foldExs</span></a></span></span><span> </span><span id="local-6989586621679292399"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679292399"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679292398"><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292398"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;\n\n- &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException -&gt; a
+</span><a href="#local-6989586621679292403"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
+</span><a href="#local-6989586621679292398"><span class="hs-identifier hs-var">ex</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679292399"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-369"></span><span>
+</span><span id="line-370"></span><span class="annot"><a href="SafeRm.Exception.html#appendPrettyCs"><span class="hs-identifier hs-type">appendPrettyCs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#CallStack"><span class="hs-identifier hs-type">CallStack</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#Builder"><span class="hs-identifier hs-type">Builder</span></a></span><span>
+</span><span id="line-371"></span><span id="appendPrettyCs"><span class="annot"><span class="annottext">appendPrettyCs :: CallStack -&gt; Builder
+</span><a href="SafeRm.Exception.html#appendPrettyCs"><span class="hs-identifier hs-var hs-var">appendPrettyCs</span></a></span></span><span> </span><span id="local-6989586621679292397"><span class="annot"><span class="annottext">CallStack
+</span><a href="#local-6989586621679292397"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-372"></span><span>  </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-373"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Builder
+</span><span class="hs-string">&quot;\n\n&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-374"></span><span>      </span><span class="annot"><span class="annottext">FilePath -&gt; Builder
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Internal.Builder.html#fromString"><span class="hs-identifier hs-var">TLB.fromString</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CallStack -&gt; FilePath
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Exception.html#prettyCallStack"><span class="hs-identifier hs-var">prettyCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">CallStack
+</span><a href="#local-6989586621679292397"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-375"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-376"></span></pre></body></html>

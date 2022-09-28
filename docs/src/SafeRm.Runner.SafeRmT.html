@@ -1,0 +1,528 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Provides the 'SafeRmT' type for running SafeRm.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Runner.SafeRmT</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier">SafeRmT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#runSafeRmT"><span class="hs-identifier">runSafeRmT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#usingSafeRmT"><span class="hs-identifier">usingSafeRmT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html"><span class="hs-identifier">SafeRm.Effects.MonadCallStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier">MonadCallStack</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html"><span class="hs-identifier">SafeRm.Effects.MonadFsReader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#MonadFsReader"><span class="hs-identifier">MonadFsReader</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html"><span class="hs-identifier">SafeRm.Effects.MonadFsWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier">MonadFsWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#hPut"><span class="hs-identifier">hPut</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html"><span class="hs-identifier">SafeRm.Effects.MonadLoggerContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#MonadLoggerContext"><span class="hs-identifier">MonadLoggerContext</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html"><span class="hs-identifier">SafeRm.Effects.MonadLoggerContext</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Logger</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadSystemTime.html"><span class="hs-identifier">SafeRm.Effects.MonadSystemTime</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadSystemTime.html#MonadSystemTime"><span class="hs-identifier">MonadSystemTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadTerminal.html"><span class="hs-identifier">SafeRm.Effects.MonadTerminal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadTerminal.html#MonadTerminal"><span class="hs-identifier">MonadTerminal</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html"><span class="hs-identifier">SafeRm.Runner.Env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Runner.Env.html#Env"><span class="hs-identifier">Env</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#LogFile"><span class="hs-identifier">LogFile</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#%24sel%3Ahandle%3AMkLogFile"><span class="hs-identifier">handle</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#%24sel%3AlogLevel%3AMkLogFile"><span class="hs-identifier">logLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | `SafeRmT` is the main application type that runs shell commands.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-type">SafeRmT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">newtype</span><span> </span><span id="SafeRmT"><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-var">SafeRmT</span></a></span></span><span> </span><span id="local-6989586621679298427"><span class="annot"><a href="#local-6989586621679298427"><span class="hs-identifier hs-type">env</span></a></span></span><span> </span><span id="local-6989586621679298428"><span class="annot"><a href="#local-6989586621679298428"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679298172"><span class="annot"><a href="#local-6989586621679298172"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkSafeRmT"><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#MkSafeRmT"><span class="hs-identifier hs-var">MkSafeRmT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/transformers-0.5.6.2/src/Control.Monad.Trans.Reader.html#ReaderT"><span class="hs-identifier hs-type">ReaderT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298427"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298428"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298172"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621679298163"><span id="local-6989586621679298168"><span class="annot"><span class="annottext">forall a b. a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+forall a b. (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+forall env (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+forall env (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b. a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+$c&lt;$ :: forall env (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+fmap :: forall a b. (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+$cfmap :: forall env (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621679298136"><span id="local-6989586621679298140"><span id="local-6989586621679298144"><span id="local-6989586621679298148"><span id="local-6989586621679298153"><span class="annot"><span class="annottext">forall a. a -&gt; SafeRmT env m a
+forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+forall a b.
+SafeRmT env m (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m c
+forall {env} {m :: * -&gt; *}.
+Applicative m =&gt;
+Functor (SafeRmT env m)
+forall env (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; SafeRmT env m a
+forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+forall env (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+$c&lt;* :: forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m a
+*&gt; :: forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+$c*&gt; :: forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+liftA2 :: forall a b c.
+(a -&gt; b -&gt; c)
+-&gt; SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m c
+$cliftA2 :: forall env (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; c)
+-&gt; SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m c
+&lt;*&gt; :: forall a b.
+SafeRmT env m (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+$c&lt;*&gt; :: forall env (m :: * -&gt; *) a b.
+Applicative m =&gt;
+SafeRmT env m (a -&gt; b) -&gt; SafeRmT env m a -&gt; SafeRmT env m b
+pure :: forall a. a -&gt; SafeRmT env m a
+$cpure :: forall env (m :: * -&gt; *) a. Applicative m =&gt; a -&gt; SafeRmT env m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Applicative"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621679298067"><span id="local-6989586621679298076"><span id="local-6989586621679298085"><span id="local-6989586621679298094"><span id="local-6989586621679298103"><span id="local-6989586621679298112"><span id="local-6989586621679298122"><span class="annot"><span class="annottext">HasCallStack =&gt; FilePath -&gt; SafeRmT env m Bool
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m FilePath
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m [FilePath]
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m ByteString
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m (Bytes 'B Natural)
+forall {env} {m :: * -&gt; *}.
+MonadFsReader m =&gt;
+Monad (SafeRmT env m)
+forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m Bool
+forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m FilePath
+forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m [FilePath]
+forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ByteString
+forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m (Bytes 'B Natural)
+forall (m :: * -&gt; *).
+Monad m
+-&gt; (HasCallStack =&gt; FilePath -&gt; m (Bytes 'B Natural))
+-&gt; (HasCallStack =&gt; FilePath -&gt; m ByteString)
+-&gt; (HasCallStack =&gt; FilePath -&gt; m Bool)
+-&gt; (HasCallStack =&gt; FilePath -&gt; m Bool)
+-&gt; (HasCallStack =&gt; FilePath -&gt; m Bool)
+-&gt; (HasCallStack =&gt; FilePath -&gt; m FilePath)
+-&gt; (HasCallStack =&gt; FilePath -&gt; m [FilePath])
+-&gt; MonadFsReader m
+listDirectory :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m [FilePath]
+$clistDirectory :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m [FilePath]
+canonicalizePath :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m FilePath
+$ccanonicalizePath :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m FilePath
+doesPathExist :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m Bool
+$cdoesPathExist :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m Bool
+doesDirectoryExist :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m Bool
+$cdoesDirectoryExist :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m Bool
+doesFileExist :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m Bool
+$cdoesFileExist :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m Bool
+readFile :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m ByteString
+$creadFile :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ByteString
+getFileSize :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m (Bytes 'B Natural)
+$cgetFileSize :: forall env (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m (Bytes 'B Natural)
+</span><a href="SafeRm.Effects.MonadFsReader.html#C%3AMonadFsReader"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadFsReader</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621679297980"><span id="local-6989586621679297989"><span id="local-6989586621679297998"><span id="local-6989586621679298007"><span id="local-6989586621679298016"><span id="local-6989586621679298022"><span id="local-6989586621679298026"><span id="local-6989586621679298030"><span id="local-6989586621679298034"><span id="local-6989586621679298041"><span id="local-6989586621679298051"><span class="annot"><span class="annottext">HasCallStack =&gt; Bool -&gt; FilePath -&gt; SafeRmT env m ()
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+HasCallStack =&gt; FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+HasCallStack =&gt; FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+FilePath -&gt; IOMode -&gt; SafeRmT env m Handle
+Handle -&gt; SafeRmT env m ()
+Handle -&gt; ByteString -&gt; SafeRmT env m ()
+forall {env} {m :: * -&gt; *}.
+MonadFsWriter m =&gt;
+Monad (SafeRmT env m)
+forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+Bool -&gt; FilePath -&gt; SafeRmT env m ()
+forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+FilePath -&gt; IOMode -&gt; SafeRmT env m Handle
+forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; SafeRmT env m ()
+forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; ByteString -&gt; SafeRmT env m ()
+forall (m :: * -&gt; *).
+Monad m
+-&gt; (HasCallStack =&gt; FilePath -&gt; ByteString -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; ByteString -&gt; m ())
+-&gt; (FilePath -&gt; IOMode -&gt; m Handle)
+-&gt; (Handle -&gt; ByteString -&gt; m ())
+-&gt; (Handle -&gt; m ())
+-&gt; (Handle -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; FilePath -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; FilePath -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; m ())
+-&gt; (HasCallStack =&gt; Bool -&gt; FilePath -&gt; m ())
+-&gt; MonadFsWriter m
+createDirectoryIfMissing :: HasCallStack =&gt; Bool -&gt; FilePath -&gt; SafeRmT env m ()
+$ccreateDirectoryIfMissing :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+Bool -&gt; FilePath -&gt; SafeRmT env m ()
+removeDirectoryRecursive :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+$cremoveDirectoryRecursive :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+removePathForcibly :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+$cremovePathForcibly :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+renameDirectory :: HasCallStack =&gt; FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+$crenameDirectory :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+renameFile :: HasCallStack =&gt; FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+$crenameFile :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; FilePath -&gt; SafeRmT env m ()
+hFlush :: Handle -&gt; SafeRmT env m ()
+$chFlush :: forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; SafeRmT env m ()
+hClose :: Handle -&gt; SafeRmT env m ()
+$chClose :: forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; SafeRmT env m ()
+hPut :: Handle -&gt; ByteString -&gt; SafeRmT env m ()
+$chPut :: forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; ByteString -&gt; SafeRmT env m ()
+openFile :: FilePath -&gt; IOMode -&gt; SafeRmT env m Handle
+$copenFile :: forall env (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+FilePath -&gt; IOMode -&gt; SafeRmT env m Handle
+appendFile :: HasCallStack =&gt; FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+$cappendFile :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+writeFile :: HasCallStack =&gt; FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+$cwriteFile :: forall env (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+FilePath -&gt; ByteString -&gt; SafeRmT env m ()
+</span><a href="SafeRm.Effects.MonadFsWriter.html#C%3AMonadFsWriter"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadFsWriter</span></a></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621679297957"><span id="local-6989586621679297961"><span id="local-6989586621679297966"><span class="annot"><span class="annottext">forall a. a -&gt; SafeRmT env m a
+forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+forall a b.
+SafeRmT env m a -&gt; (a -&gt; SafeRmT env m b) -&gt; SafeRmT env m b
+forall {env} {m :: * -&gt; *}. Monad m =&gt; Applicative (SafeRmT env m)
+forall env (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SafeRmT env m a
+forall env (m :: * -&gt; *) a b.
+Monad m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+forall env (m :: * -&gt; *) a b.
+Monad m =&gt;
+SafeRmT env m a -&gt; (a -&gt; SafeRmT env m b) -&gt; SafeRmT env m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: forall a. a -&gt; SafeRmT env m a
+$creturn :: forall env (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SafeRmT env m a
+&gt;&gt; :: forall a b. SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+$c&gt;&gt; :: forall env (m :: * -&gt; *) a b.
+Monad m =&gt;
+SafeRmT env m a -&gt; SafeRmT env m b -&gt; SafeRmT env m b
+&gt;&gt;= :: forall a b.
+SafeRmT env m a -&gt; (a -&gt; SafeRmT env m b) -&gt; SafeRmT env m b
+$c&gt;&gt;= :: forall env (m :: * -&gt; *) a b.
+Monad m =&gt;
+SafeRmT env m a -&gt; (a -&gt; SafeRmT env m b) -&gt; SafeRmT env m b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monad"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621679297945"><span class="annot"><span class="annottext">HasCallStack =&gt; SafeRmT env m CallStack
+forall {env} {m :: * -&gt; *}.
+MonadCallStack m =&gt;
+Monad (SafeRmT env m)
+forall env (m :: * -&gt; *).
+(MonadCallStack m, HasCallStack) =&gt;
+SafeRmT env m CallStack
+forall (m :: * -&gt; *).
+Monad m -&gt; (HasCallStack =&gt; m CallStack) -&gt; MonadCallStack m
+getCallStack :: HasCallStack =&gt; SafeRmT env m CallStack
+$cgetCallStack :: forall env (m :: * -&gt; *).
+(MonadCallStack m, HasCallStack) =&gt;
+SafeRmT env m CallStack
+</span><a href="SafeRm.Effects.MonadCallStack.html#C%3AMonadCallStack"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadCallStack</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621679297922"><span id="local-6989586621679297926"><span id="local-6989586621679297931"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#MonadReader"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298427"><span class="hs-identifier hs-type">env</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621679297912"><span class="annot"><span class="annottext">forall a. IO a -&gt; SafeRmT env m a
+forall {env} {m :: * -&gt; *}. MonadIO m =&gt; Monad (SafeRmT env m)
+forall env (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; SafeRmT env m a
+forall (m :: * -&gt; *).
+Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
+liftIO :: forall a. IO a -&gt; SafeRmT env m a
+$cliftIO :: forall env (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; SafeRmT env m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.IO.Class.html#C%3AMonadIO"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-44"></span><span>      </span><span id="local-6989586621679297881"><span id="local-6989586621679297888"><span id="local-6989586621679297898"><span class="annot"><span class="annottext">SafeRmT env m Char
+HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+forall {env} {m :: * -&gt; *}.
+MonadTerminal m =&gt;
+Monad (SafeRmT env m)
+forall env (m :: * -&gt; *). MonadTerminal m =&gt; SafeRmT env m Char
+forall env (m :: * -&gt; *).
+(MonadTerminal m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+forall (m :: * -&gt; *).
+Monad m
+-&gt; (HasCallStack =&gt; FilePath -&gt; m ())
+-&gt; (HasCallStack =&gt; FilePath -&gt; m ())
+-&gt; m Char
+-&gt; MonadTerminal m
+getChar :: SafeRmT env m Char
+$cgetChar :: forall env (m :: * -&gt; *). MonadTerminal m =&gt; SafeRmT env m Char
+putStrLn :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+$cputStrLn :: forall env (m :: * -&gt; *).
+(MonadTerminal m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+putStr :: HasCallStack =&gt; FilePath -&gt; SafeRmT env m ()
+$cputStr :: forall env (m :: * -&gt; *).
+(MonadTerminal m, HasCallStack) =&gt;
+FilePath -&gt; SafeRmT env m ()
+</span><a href="SafeRm.Effects.MonadTerminal.html#C%3AMonadTerminal"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadTerminal</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621679297868"><span class="annot"><span class="annottext">HasCallStack =&gt; SafeRmT env m Timestamp
+forall {env} {m :: * -&gt; *}.
+MonadSystemTime m =&gt;
+Monad (SafeRmT env m)
+forall env (m :: * -&gt; *).
+(MonadSystemTime m, HasCallStack) =&gt;
+SafeRmT env m Timestamp
+forall (m :: * -&gt; *).
+Monad m -&gt; (HasCallStack =&gt; m Timestamp) -&gt; MonadSystemTime m
+getSystemTime :: HasCallStack =&gt; SafeRmT env m Timestamp
+$cgetSystemTime :: forall env (m :: * -&gt; *).
+(MonadSystemTime m, HasCallStack) =&gt;
+SafeRmT env m Timestamp
+</span><a href="SafeRm.Effects.MonadSystemTime.html#C%3AMonadSystemTime"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadSystemTime</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621679297853"><span class="annot"><span class="annottext">forall b.
+((forall a. SafeRmT env m a -&gt; IO a) -&gt; IO b) -&gt; SafeRmT env m b
+forall {env} {m :: * -&gt; *}.
+MonadUnliftIO m =&gt;
+MonadIO (SafeRmT env m)
+forall env (m :: * -&gt; *) b.
+MonadUnliftIO m =&gt;
+((forall a. SafeRmT env m a -&gt; IO a) -&gt; IO b) -&gt; SafeRmT env m b
+forall (m :: * -&gt; *).
+MonadIO m
+-&gt; (forall b. ((forall a. m a -&gt; IO a) -&gt; IO b) -&gt; m b)
+-&gt; MonadUnliftIO m
+withRunInIO :: forall b.
+((forall a. SafeRmT env m a -&gt; IO a) -&gt; IO b) -&gt; SafeRmT env m b
+$cwithRunInIO :: forall env (m :: * -&gt; *) b.
+MonadUnliftIO m =&gt;
+((forall a. SafeRmT env m a -&gt; IO a) -&gt; IO b) -&gt; SafeRmT env m b
+</span><a href="file:///nix/store/bxq9j5gs109r9hsk1856fwbn5zhqzn69-unliftio-core-0.2.0.1-doc/share/doc/unliftio-core-0.2.0.1/html/src/Control.Monad.IO.Unlift.html#C%3AMonadUnliftIO"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadUnliftIO</span></a></span></span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/transformers-0.5.6.2/src/Control.Monad.Trans.Reader.html#ReaderT"><span class="hs-identifier hs-type">ReaderT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298427"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298428"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621679298311"><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier hs-type">MonadFsWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298311"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadSystemTime.html#MonadSystemTime"><span class="hs-identifier hs-type">MonadSystemTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298311"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="file:///nix/store/apjdmhsgn8n4f6nl2fh67n32hwib7hxh-monad-logger-0.3.37-doc/share/doc/monad-logger-0.3.37/html/src/Control.Monad.Logger.html#MonadLogger"><span class="hs-identifier hs-type">MonadLogger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-type">SafeRmT</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#Env"><span class="hs-identifier hs-type">Env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298311"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621679297773"><span class="annot"><span class="annottext">monadLoggerLog :: forall msg.
+ToLogStr msg =&gt;
+Loc -&gt; LogSource -&gt; LogLevel -&gt; msg -&gt; SafeRmT Env m ()
+</span><a href="file:///nix/store/apjdmhsgn8n4f6nl2fh67n32hwib7hxh-monad-logger-0.3.37-doc/share/doc/monad-logger-0.3.37/html/src/Control.Monad.Logger.html#monadLoggerLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">monadLoggerLog</span></a></span></span><span> </span><span id="local-6989586621679297771"><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621679297771"><span class="hs-identifier hs-var">loc</span></a></span></span><span> </span><span id="local-6989586621679297770"><span class="annot"><span class="annottext">LogSource
+</span><a href="#local-6989586621679297770"><span class="hs-identifier hs-var">_src</span></a></span></span><span> </span><span id="local-6989586621679297769"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297769"><span class="hs-identifier hs-var">lvl</span></a></span></span><span> </span><span id="local-6989586621679297768"><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679297768"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679297767"><span class="annot"><span class="annottext">Maybe (Handle, LogLevel)
+</span><a href="#local-6989586621679297767"><span class="hs-identifier hs-var">mhandle</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k An_AffineFold =&gt;
+Optic' k is s a -&gt; s -&gt; Maybe a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.AffineFold.html#preview"><span class="hs-identifier hs-var">preview</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logEnv&quot; a =&gt; a
+</span><span class="">#logEnv</span></span><span> </span><span class="annot"><span class="annottext">forall k l m (is :: IxList) (js :: IxList) (ks :: IxList) s t u v a
+       b.
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logFile&quot; a =&gt; a
+</span><span class="">#logFile</span></span><span> </span><span class="annot"><span class="annottext">forall (is :: IxList) (js :: IxList) (ks :: IxList) k k' l m s t u
+       v a b.
+(AppendIndices is js ks, JoinKinds k A_Prism k',
+ JoinKinds k' l m) =&gt;
+Optic k is s t (Maybe u) (Maybe v)
+-&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Maybe.Optics.html#%25%3F"><span class="hs-operator hs-var">%?</span></a></span><span> </span><span class="annot"><span class="annottext">Lens' LogFile (Handle, LogLevel)
+</span><a href="#local-6989586621679297762"><span class="hs-identifier hs-var">handleAndLevel</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Handle, LogLevel)
+</span><a href="#local-6989586621679297767"><span class="hs-identifier hs-var">mhandle</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Handle, LogLevel)
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679297761"><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679297761"><span class="hs-identifier hs-var">handle</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679297760"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297760"><span class="hs-identifier hs-var">logLevel</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#when"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297760"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#%3C%3D"><span class="hs-operator hs-var">&lt;=</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297769"><span class="hs-identifier hs-var">lvl</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>          </span><span id="local-6989586621679297757"><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679297757"><span class="hs-identifier hs-var">formatted</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) msg.
+(HasCallStack, MonadLoggerContext m, MonadSystemTime m,
+ ToLogStr msg) =&gt;
+Bool -&gt; Loc -&gt; LogLevel -&gt; msg -&gt; m LogStr
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#formatLog"><span class="hs-identifier hs-var">Logger.formatLog</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#True"><span class="hs-identifier hs-var">True</span></a></span><span> </span><span class="annot"><span class="annottext">Loc
+</span><a href="#local-6989586621679297771"><span class="hs-identifier hs-var">loc</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297769"><span class="hs-identifier hs-var">lvl</span></a></span><span> </span><span class="annot"><span class="annottext">msg
+</span><a href="#local-6989586621679297768"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><span id="line-64"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679297755"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679297755"><span class="hs-identifier hs-var hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogStr -&gt; ByteString
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#logStrToBs"><span class="hs-identifier hs-var">Logger.logStrToBs</span></a></span><span> </span><span class="annot"><span class="annottext">LogStr
+</span><a href="#local-6989586621679297757"><span class="hs-identifier hs-var">formatted</span></a></span><span>
+</span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+Handle -&gt; ByteString -&gt; m ()
+</span><a href="SafeRm.Effects.MonadFsWriter.html#hPut"><span class="hs-identifier hs-var">hPut</span></a></span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679297761"><span class="hs-identifier hs-var">handle</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679297755"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><a href="#local-6989586621679297762"><span class="hs-identifier hs-type">handleAndLevel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Lens.html#Lens%27"><span class="hs-identifier hs-type">Lens'</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#LogFile"><span class="hs-identifier hs-type">LogFile</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.Handle.Types.html#Handle"><span class="hs-identifier hs-type">Handle</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/apjdmhsgn8n4f6nl2fh67n32hwib7hxh-monad-logger-0.3.37-doc/share/doc/monad-logger-0.3.37/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621679297762"><span class="annot"><span class="annottext">handleAndLevel :: Lens' LogFile (Handle, LogLevel)
+</span><a href="#local-6989586621679297762"><span class="hs-identifier hs-var hs-var">handleAndLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Lens.html#lens"><span class="hs-identifier hs-var">lens</span></a></span><span>
+</span><span id="line-70"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679297752"><span class="annot"><span class="annottext">LogFile
+</span><a href="#local-6989586621679297752"><span class="hs-identifier hs-var">lf</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) a b c d.
+Bifunctor p =&gt;
+(a -&gt; b) -&gt; (c -&gt; d) -&gt; p a c -&gt; p b d
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Bifunctor.html#bimap"><span class="hs-identifier hs-var">bimap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;handle&quot; a =&gt; a
+</span><span class="">#handle</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logLevel&quot; a =&gt; a
+</span><span class="">#logLevel</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogFile
+</span><a href="#local-6989586621679297752"><span class="hs-identifier hs-var">lf</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">LogFile
+</span><a href="#local-6989586621679297752"><span class="hs-identifier hs-var">lf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679297749"><span class="annot"><span class="annottext">LogFile
+</span><a href="#local-6989586621679297749"><span class="hs-identifier hs-var">lf</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679297748"><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679297748"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679297747"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297747"><span class="hs-identifier hs-var">ll</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LogFile
+</span><a href="#local-6989586621679297749"><span class="hs-identifier hs-var">lf</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:logLevel:MkLogFile :: LogLevel
+</span><a href="SafeRm.Runner.Env.html#%24sel%3AlogLevel%3AMkLogFile"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621679297747"><span class="hs-identifier hs-var">ll</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:handle:MkLogFile :: Handle
+</span><a href="SafeRm.Runner.Env.html#%24sel%3Ahandle%3AMkLogFile"><span class="hs-identifier hs-var">handle</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679297748"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679298267"><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier hs-type">MonadFsWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298267"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadSystemTime.html#MonadSystemTime"><span class="hs-identifier hs-type">MonadSystemTime</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298267"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#MonadLoggerContext"><span class="hs-identifier hs-type">MonadLoggerContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-type">SafeRmT</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Env.html#Env"><span class="hs-identifier hs-type">Env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298267"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>  </span><span id="local-6989586621679297719"><span class="annot"><span class="annottext">getNamespace :: HasCallStack =&gt; SafeRmT Env m Namespace
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#getNamespace"><span class="hs-identifier hs-var hs-var hs-var hs-var">getNamespace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#asks"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logEnv&quot; a =&gt; a
+</span><span class="">#logEnv</span></span><span> </span><span class="annot"><span class="annottext">forall k l m (is :: IxList) (js :: IxList) (ks :: IxList) s t u v a
+       b.
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logNamespace&quot; a =&gt; a
+</span><span class="">#logNamespace</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621679297698"><span class="annot"><span class="annottext">localNamespace :: forall a.
+HasCallStack =&gt;
+(Namespace -&gt; Namespace) -&gt; SafeRmT Env m a -&gt; SafeRmT Env m a
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#localNamespace"><span class="hs-identifier hs-var hs-var hs-var hs-var">localNamespace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/mtl-2.2.2/src/Control.Monad.Reader.Class.html#local"><span class="hs-identifier hs-var">local</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s t a b.
+Is k A_Setter =&gt;
+Optic k is s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Setter.html#over%27"><span class="hs-identifier hs-var">over'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logEnv&quot; a =&gt; a
+</span><span class="">#logEnv</span></span><span> </span><span class="annot"><span class="annottext">forall k l m (is :: IxList) (js :: IxList) (ks :: IxList) s t u v a
+       b.
+(JoinKinds k l m, AppendIndices is js ks) =&gt;
+Optic k is s t u v -&gt; Optic l js u v a b -&gt; Optic m ks s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Internal.Optic.html#%25"><span class="hs-operator hs-var">%</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;logNamespace&quot; a =&gt; a
+</span><span class="">#logNamespace</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- | Runs a 'SafeRmT' with the given @env@.</span><span>
+</span><span id="line-82"></span><span class="hs-comment">--</span><span>
+</span><span id="line-83"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-84"></span><span id="local-6989586621679298190"><span id="local-6989586621679298191"><span id="local-6989586621679298192"><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#runSafeRmT"><span class="hs-identifier hs-type">runSafeRmT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-type">SafeRmT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298192"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298191"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298190"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679298192"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679298191"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298190"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-85"></span><span id="runSafeRmT"><span class="annot"><span class="annottext">runSafeRmT :: forall env (m :: * -&gt; *) a. SafeRmT env m a -&gt; env -&gt; m a
+</span><a href="SafeRm.Runner.SafeRmT.html#runSafeRmT"><span class="hs-identifier hs-var hs-var">runSafeRmT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#MkSafeRmT"><span class="hs-identifier hs-type">MkSafeRmT</span></a></span><span> </span><span id="local-6989586621679297693"><span class="annot"><span class="annottext">ReaderT env m a
+</span><a href="#local-6989586621679297693"><span class="hs-identifier hs-var">rdr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/transformers-0.5.6.2/src/Control.Monad.Trans.Reader.html#runReaderT"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT env m a
+</span><a href="#local-6989586621679297693"><span class="hs-identifier hs-var">rdr</span></a></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- | Flipped 'runSafeRmT'</span><span>
+</span><span id="line-88"></span><span class="hs-comment">--</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-90"></span><span id="local-6989586621679298181"><span id="local-6989586621679298182"><span id="local-6989586621679298183"><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#usingSafeRmT"><span class="hs-identifier hs-type">usingSafeRmT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679298183"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Runner.SafeRmT.html#SafeRmT"><span class="hs-identifier hs-type">SafeRmT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298183"><span class="hs-identifier hs-type">env</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298182"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298181"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679298182"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679298181"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-91"></span><span id="usingSafeRmT"><span class="annot"><span class="annottext">usingSafeRmT :: forall env (m :: * -&gt; *) a. env -&gt; SafeRmT env m a -&gt; m a
+</span><a href="SafeRm.Runner.SafeRmT.html#usingSafeRmT"><span class="hs-identifier hs-var hs-var">usingSafeRmT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#flip"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall env (m :: * -&gt; *) a. SafeRmT env m a -&gt; env -&gt; m a
+</span><a href="SafeRm.Runner.SafeRmT.html#runSafeRmT"><span class="hs-identifier hs-var">runSafeRmT</span></a></span><span>
+</span><span id="line-92"></span></pre></body></html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Provides TOML configuration.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Runner.Toml</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier">TomlConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="SafeRm.Runner.Toml.html#mergeConfigs"><span class="hs-identifier">mergeConfigs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html"><span class="hs-identifier">SafeRm.Data.Paths</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier">PathI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier">MkPathI</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier">PathIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier">TrashHome</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html"><span class="hs-identifier">SafeRm.Effects.MonadLoggerContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#readLogLevel"><span class="hs-identifier">readLogLevel</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Runner.Args.html"><span class="hs-identifier">SafeRm.Runner.Args</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Runner.Args.html#Args"><span class="hs-identifier">Args</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.html"><span class="hs-identifier">TOML</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier">DecodeTOML</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier">getFieldOptWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- | Holds TOML configuration.</span><span>
+</span><span id="line-23"></span><span class="hs-comment">--</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-25"></span><span id="local-6989586621679298605"><span id="local-6989586621679298606"></span></span><span class="hs-keyword">data</span><span> </span><span id="TomlConfig"><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-var">TomlConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkTomlConfig"><span class="annot"><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-var">MkTomlConfig</span></a></span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AtrashHome%3AMkTomlConfig"><span class="annot"><span class="annottext">TomlConfig -&gt; Maybe (PathI 'TrashHome)
+</span><a href="SafeRm.Runner.Toml.html#%24sel%3AtrashHome%3AMkTomlConfig"><span class="hs-identifier hs-var hs-var">trashHome</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-type">TrashHome</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="%24sel%3AlogLevel%3AMkTomlConfig"><span class="annot"><span class="annottext">TomlConfig -&gt; Maybe (Maybe LogLevel)
+</span><a href="SafeRm.Runner.Toml.html#%24sel%3AlogLevel%3AMkTomlConfig"><span class="hs-identifier hs-var hs-var">logLevel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/apjdmhsgn8n4f6nl2fh67n32hwib7hxh-monad-logger-0.3.37-doc/share/doc/monad-logger-0.3.37/html/src/Control.Monad.Logger.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span id="%24sel%3AshowTrace%3AMkTomlConfig"><span class="annot"><span class="annottext">TomlConfig -&gt; Maybe Bool
+</span><a href="SafeRm.Runner.Toml.html#%24sel%3AshowTrace%3AMkTomlConfig"><span class="hs-identifier hs-var hs-var">showTrace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Maybe"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Bool"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621679298590"><span id="local-6989586621679298599"><span class="annot"><span class="annottext">TomlConfig -&gt; TomlConfig -&gt; Bool
+forall (a :: OpticKind).
+(a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TomlConfig -&gt; TomlConfig -&gt; Bool
+$c/= :: TomlConfig -&gt; TomlConfig -&gt; Bool
+== :: TomlConfig -&gt; TomlConfig -&gt; Bool
+$c== :: TomlConfig -&gt; TomlConfig -&gt; Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">forall (x :: OpticKind). Rep TomlConfig x -&gt; TomlConfig
+forall (x :: OpticKind). TomlConfig -&gt; Rep TomlConfig x
+forall (a :: OpticKind).
+(forall (x :: OpticKind). a -&gt; Rep a x)
+-&gt; (forall (x :: OpticKind). Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall (x :: OpticKind). Rep TomlConfig x -&gt; TomlConfig
+$cfrom :: forall (x :: OpticKind). TomlConfig -&gt; Rep TomlConfig x
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621679298566"><span id="local-6989586621679298568"><span id="local-6989586621679298579"><span class="annot"><span class="annottext">Int -&gt; TomlConfig -&gt; ShowS
+[TomlConfig] -&gt; ShowS
+TomlConfig -&gt; String
+forall (a :: OpticKind).
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [TomlConfig] -&gt; ShowS
+$cshowList :: [TomlConfig] -&gt; ShowS
+show :: TomlConfig -&gt; String
+$cshow :: TomlConfig -&gt; String
+showsPrec :: Int -&gt; TomlConfig -&gt; ShowS
+$cshowsPrec :: Int -&gt; TomlConfig -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621679298546"><span id="local-6989586621679298551"><span id="local-6989586621679298556"><span id="local-6989586621679298700"><span id="local-6989586621679298701"><span id="local-6989586621679298702"><span id="local-6989586621679298703"><span id="local-6989586621679298704"><span id="local-6989586621679298705"><span id="local-6989586621679298706"><span id="local-6989586621679298707"><span id="local-6989586621679298708"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">TomlConfig</span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679298502"><span id="local-6989586621679298504"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-type">Semigroup</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-type">MkTomlConfig</span></a></span><span> </span><span id="local-6989586621679298496"><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+</span><a href="#local-6989586621679298496"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679298495"><span class="annot"><span class="annottext">Maybe (Maybe LogLevel)
+</span><a href="#local-6989586621679298495"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679298494"><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621679298494"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621679298493"><span class="annot"><span class="annottext">&lt;&gt; :: TomlConfig -&gt; TomlConfig -&gt; TomlConfig
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></a></span></span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-type">MkTomlConfig</span></a></span><span> </span><span id="local-6989586621679298492"><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+</span><a href="#local-6989586621679298492"><span class="hs-identifier hs-var">a'</span></a></span></span><span> </span><span id="local-6989586621679298491"><span class="annot"><span class="annottext">Maybe (Maybe LogLevel)
+</span><a href="#local-6989586621679298491"><span class="hs-identifier hs-var">b'</span></a></span></span><span> </span><span id="local-6989586621679298490"><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621679298490"><span class="hs-identifier hs-var">c'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+-&gt; Maybe (Maybe LogLevel) -&gt; Maybe Bool -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-var">MkTomlConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+</span><a href="#local-6989586621679298496"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+Alternative f =&gt;
+f a -&gt; f a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%7C%3E"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+</span><a href="#local-6989586621679298492"><span class="hs-identifier hs-var">a'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (Maybe LogLevel)
+</span><a href="#local-6989586621679298495"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+Alternative f =&gt;
+f a -&gt; f a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%7C%3E"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Maybe LogLevel)
+</span><a href="#local-6989586621679298491"><span class="hs-identifier hs-var">b'</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621679298494"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind).
+Alternative f =&gt;
+f a -&gt; f a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%7C%3E"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621679298490"><span class="hs-identifier hs-var">c'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679298482"><span id="local-6989586621679298484"><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621679298480"><span class="annot"><span class="annottext">mempty :: TomlConfig
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+-&gt; Maybe (Maybe LogLevel) -&gt; Maybe Bool -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-var">MkTomlConfig</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Maybe a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- | @since 0.5</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#DecodeTOML"><span class="hs-identifier hs-type">DecodeTOML</span></a></span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621679298471"><span class="annot"><span class="annottext">tomlDecoder :: Decoder TomlConfig
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var hs-var hs-var hs-var">tomlDecoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">Maybe (PathI 'TrashHome)
+-&gt; Maybe (Maybe LogLevel) -&gt; Maybe Bool -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-var">MkTomlConfig</span></a></span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Functor f =&gt;
+(a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall {i :: PathIndex}. Decoder (Maybe (PathI i))
+</span><a href="#local-6989586621679298468"><span class="hs-identifier hs-var">decodeTrashHome</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe (Maybe LogLevel))
+</span><a href="#local-6989586621679298467"><span class="hs-identifier hs-var">decodeLogLevel</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Applicative f =&gt;
+f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%2A%3E"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Decoder (Maybe Bool)
+</span><a href="#local-6989586621679298466"><span class="hs-identifier hs-var">decodeShowTrace</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621679298468"><span class="annot"><span class="annottext">decodeTrashHome :: Decoder (Maybe (PathI i))
+</span><a href="#local-6989586621679298468"><span class="hs-identifier hs-var hs-var">decodeTrashHome</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Functor f =&gt;
+(a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex). String -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Functor f =&gt;
+(a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Functor.html#%3C%24%3E"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;trash-home&quot;</span></span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621679298467"><span class="annot"><span class="annottext">decodeLogLevel :: Decoder (Maybe (Maybe LogLevel))
+</span><a href="#local-6989586621679298467"><span class="hs-identifier hs-var hs-var">decodeLogLevel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (a :: OpticKind). DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: OpticKind -&gt; OpticKind) (a :: OpticKind)
+       (b :: OpticKind).
+Monad m =&gt;
+m a -&gt; (a -&gt; m b) -&gt; m b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3E%3E%3D"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: OpticKind -&gt; OpticKind).
+MonadFail m =&gt;
+Text -&gt; m (Maybe LogLevel)
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#readLogLevel"><span class="hs-identifier hs-var">readLogLevel</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;log-level&quot;</span></span><span>
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621679298466"><span class="annot"><span class="annottext">decodeShowTrace :: Decoder (Maybe Bool)
+</span><a href="#local-6989586621679298466"><span class="hs-identifier hs-var hs-var">decodeShowTrace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">forall (a :: OpticKind). Decoder a -&gt; Text -&gt; Decoder (Maybe a)
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#getFieldOptWith"><span class="hs-identifier hs-var">getFieldOptWith</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). DecodeTOML a =&gt; Decoder a
+</span><a href="file:///nix/store/djnxmjhpn66gm73mxnn95pzd1zyli6vv-toml-reader-0.1.0.0-doc/share/doc/toml-reader-0.1.0.0/html/src/TOML.Decode.html#tomlDecoder"><span class="hs-identifier hs-var">tomlDecoder</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;show-trace&quot;</span></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- | Merges the args and toml config into a single toml config. If some field</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- F is specified by both args and toml config, then args takes precedence.</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-69"></span><span class="annot"><a href="SafeRm.Runner.Toml.html#mergeConfigs"><span class="hs-identifier hs-type">mergeConfigs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Runner.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span><span>
+</span><span id="line-70"></span><span id="mergeConfigs"><span class="annot"><span class="annottext">mergeConfigs :: Args -&gt; TomlConfig -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#mergeConfigs"><span class="hs-identifier hs-var hs-var">mergeConfigs</span></a></span></span><span> </span><span id="local-6989586621679298448"><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298448"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Args -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#argsToTomlConfig"><span class="hs-identifier hs-var">argsToTomlConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298448"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="hs-operator">&lt;&gt;</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="annot"><a href="SafeRm.Runner.Toml.html#argsToTomlConfig"><span class="hs-identifier hs-type">argsToTomlConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Runner.Args.html#Args"><span class="hs-identifier hs-type">Args</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Runner.Toml.html#TomlConfig"><span class="hs-identifier hs-type">TomlConfig</span></a></span><span>
+</span><span id="line-73"></span><span id="argsToTomlConfig"><span class="annot"><span class="annottext">argsToTomlConfig :: Args -&gt; TomlConfig
+</span><a href="SafeRm.Runner.Toml.html#argsToTomlConfig"><span class="hs-identifier hs-var hs-var">argsToTomlConfig</span></a></span></span><span> </span><span id="local-6989586621679298446"><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298446"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="SafeRm.Runner.Toml.html#MkTomlConfig"><span class="hs-identifier hs-type">MkTomlConfig</span></a></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:trashHome:MkTomlConfig :: Maybe (PathI 'TrashHome)
+</span><a href="SafeRm.Runner.Toml.html#%24sel%3AtrashHome%3AMkTomlConfig"><span class="hs-identifier hs-var">trashHome</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298446"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;trashHome&quot; a =&gt; a
+</span><span class="">#trashHome</span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">$sel:logLevel:MkTomlConfig :: Maybe (Maybe LogLevel)
+</span><a href="SafeRm.Runner.Toml.html#%24sel%3AlogLevel%3AMkTomlConfig"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298446"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;logLevel&quot; a =&gt; a
+</span><span class="">#logLevel</span></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">Maybe Bool
+showTrace :: Maybe Bool
+$sel:showTrace:MkTomlConfig :: Maybe Bool
+</span><a href="#local-6989586621679298444"><span class="hs-identifier hs-var hs-var">showTrace</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- noShowTrace overrides showTrace</span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621679298444"><span class="annot"><span class="annottext">showTrace :: Maybe Bool
+</span><a href="#local-6989586621679298444"><span class="hs-identifier hs-var hs-var">showTrace</span></a></span></span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298446"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;noShowTrace&quot; a =&gt; a
+</span><span class="">#noShowTrace</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). a -&gt; Maybe a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#False"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#otherwise"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Args
+</span><a href="#local-6989586621679298446"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="annot"><span class="annottext">forall (k :: OpticKind) (s :: OpticKind) (is :: IxList)
+       (a :: OpticKind).
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (a :: OpticKind). IsLabel &quot;showTrace&quot; a =&gt; a
+</span><span class="">#showTrace</span></span><span>
+</span><span id="line-84"></span></pre></body></html>

@@ -1,0 +1,337 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Provides functionality for distinguishing path types.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Data.Paths</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier">PathI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier">PathIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Functions</span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Specific</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#indexToHome"><span class="hs-identifier">indexToHome</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** General</span></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- $general</span></span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#reindex"><span class="hs-identifier">reindex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#%3C%2F%2F%3E"><span class="hs-operator">(&lt;//&gt;)</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#applyPathI"><span class="hs-identifier">applyPathI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathI"><span class="hs-identifier">liftPathI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathI%27"><span class="hs-identifier">liftPathI'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathIF"><span class="hs-identifier">liftPathIF</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathIF%27"><span class="hs-identifier">liftPathIF'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.html"><span class="hs-identifier">Data.Csv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Conversion.html#FromField"><span class="hs-identifier">FromField</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Conversion.html#ToField"><span class="hs-identifier">ToField</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/filepath-1.4.2.2/src/System.FilePath.html"><span class="hs-identifier">System.FilePath</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FP</span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | Types of filepaths used in SafeRm.</span><span>
+</span><span id="line-34"></span><span class="hs-comment">--</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">data</span><span> </span><span id="PathIndex"><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier hs-var">PathIndex</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | The trash directory.</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-40"></span><span>    </span><span id="TrashHome"><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-var">TrashHome</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The trash index file.</span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-44"></span><span>    </span><span id="TrashIndex"><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-var">TrashIndex</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The name corresponding to some file/directory in the trash directory.</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-48"></span><span>    </span><span id="TrashName"><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-var">TrashName</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The original path for some file/directory in the trash directory.</span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-52"></span><span>    </span><span id="OriginalPath"><span class="annot"><a href="SafeRm.Data.Paths.html#OriginalPath"><span class="hs-identifier hs-var">OriginalPath</span></a></span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The full trash path i.e. @'TrashHome' '&lt;/&gt;' 'TrashName'@</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-56"></span><span>    </span><span id="TrashPath"><span class="annot"><a href="SafeRm.Data.Paths.html#TrashPath"><span class="hs-identifier hs-var">TrashPath</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The trash log file.</span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-60"></span><span>    </span><span id="TrashLog"><span class="annot"><a href="SafeRm.Data.Paths.html#TrashLog"><span class="hs-identifier hs-var">TrashLog</span></a></span></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- | Indexed 'FilePath' so that we can prevent mixing up different filepaths.</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-65"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier hs-type">PathIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Types.html#Type"><span class="hs-identifier hs-type">Type</span></a></span><span>
+</span><span id="line-66"></span><span id="local-6989586621679292185"><span id="local-6989586621679292186"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PathI"><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-var">PathI</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679292378"><span class="annot"><a href="#local-6989586621679292378"><span class="hs-identifier hs-type">i</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier hs-type">PathIndex</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkPathI"><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AunPathI%3AMkPathI"><span class="annot"><span class="annottext">forall (i :: PathIndex). PathI i -&gt; FilePath
+</span><a href="SafeRm.Data.Paths.html#%24sel%3AunPathI%3AMkPathI"><span class="hs-identifier hs-var hs-var">unPathI</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621679292176"><span id="local-6989586621679292181"><span class="annot"><span class="annottext">PathI i -&gt; PathI i -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+/= :: PathI i -&gt; PathI i -&gt; Bool
+$c/= :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+== :: PathI i -&gt; PathI i -&gt; Bool
+$c== :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621679292150"><span id="local-6989586621679292152"><span id="local-6989586621679292155"><span id="local-6989586621679292158"><span id="local-6989586621679292161"><span id="local-6989586621679292165"><span id="local-6989586621679292170"><span class="annot"><span class="annottext">PathI i -&gt; PathI i -&gt; Bool
+PathI i -&gt; PathI i -&gt; Ordering
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall (i :: PathIndex). Eq (PathI i)
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Ordering
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+min :: PathI i -&gt; PathI i -&gt; PathI i
+$cmin :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+max :: PathI i -&gt; PathI i -&gt; PathI i
+$cmax :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+&gt;= :: PathI i -&gt; PathI i -&gt; Bool
+$c&gt;= :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+&gt; :: PathI i -&gt; PathI i -&gt; Bool
+$c&gt; :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+&lt;= :: PathI i -&gt; PathI i -&gt; Bool
+$c&lt;= :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+&lt; :: PathI i -&gt; PathI i -&gt; Bool
+$c&lt; :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Bool
+compare :: PathI i -&gt; PathI i -&gt; Ordering
+$ccompare :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; Ordering
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#Ord"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (i :: PathIndex) x. Rep (PathI i) x -&gt; PathI i
+forall (i :: PathIndex) x. PathI i -&gt; Rep (PathI i) x
+$cto :: forall (i :: PathIndex) x. Rep (PathI i) x -&gt; PathI i
+$cfrom :: forall (i :: PathIndex) x. PathI i -&gt; Rep (PathI i) x
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621679292134"><span id="local-6989586621679292136"><span id="local-6989586621679292143"><span class="annot"><span class="annottext">Int -&gt; PathI i -&gt; ShowS
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; FilePath) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall (i :: PathIndex). Int -&gt; PathI i -&gt; ShowS
+forall (i :: PathIndex). [PathI i] -&gt; ShowS
+forall (i :: PathIndex). PathI i -&gt; FilePath
+showList :: [PathI i] -&gt; ShowS
+$cshowList :: forall (i :: PathIndex). [PathI i] -&gt; ShowS
+show :: PathI i -&gt; FilePath
+$cshow :: forall (i :: PathIndex). PathI i -&gt; FilePath
+showsPrec :: Int -&gt; PathI i -&gt; ShowS
+$cshowsPrec :: forall (i :: PathIndex). Int -&gt; PathI i -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621679292126"><span id="local-6989586621679292128"><span class="annot"><span class="annottext">forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+forall (i :: PathIndex). Eq (PathI i)
+forall (i :: PathIndex). Int -&gt; PathI i -&gt; Int
+forall (i :: PathIndex). PathI i -&gt; Int
+hash :: PathI i -&gt; Int
+$chash :: forall (i :: PathIndex). PathI i -&gt; Int
+hashWithSalt :: Int -&gt; PathI i -&gt; Int
+$chashWithSalt :: forall (i :: PathIndex). Int -&gt; PathI i -&gt; Int
+</span><a href="file:///nix/store/mj4wskcdhi2iv9bffav190wc52rfqsb8-hashable-1.4.1.0-doc/share/doc/hashable-1.4.1.0/html/src/Data.Hashable.Class.html#C%3AHashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-83"></span><span>      </span><span id="local-6989586621679292123"><span class="annot"><span class="annottext">forall a. (a -&gt; ()) -&gt; NFData a
+forall (i :: PathIndex). PathI i -&gt; ()
+rnf :: PathI i -&gt; ()
+$crnf :: forall (i :: PathIndex). PathI i -&gt; ()
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/deepseq-1.4.6.1/src/Control.DeepSeq.html#C%3ANFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621679292120"><span class="annot"><span class="annottext">Field -&gt; Parser (PathI i)
+forall a. (Field -&gt; Parser a) -&gt; FromField a
+forall (i :: PathIndex). Field -&gt; Parser (PathI i)
+parseField :: Field -&gt; Parser (PathI i)
+$cparseField :: forall (i :: PathIndex). Field -&gt; Parser (PathI i)
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Conversion.html#C%3AFromField"><span class="hs-identifier hs-var hs-var hs-var hs-var">FromField</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621679292113"><span class="annot"><span class="annottext">FilePath -&gt; PathI i
+forall a. (FilePath -&gt; a) -&gt; IsString a
+forall (i :: PathIndex). FilePath -&gt; PathI i
+fromString :: FilePath -&gt; PathI i
+$cfromString :: forall (i :: PathIndex). FilePath -&gt; PathI i
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.String.html#IsString"><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621679292093"><span id="local-6989586621679292097"><span id="local-6989586621679292102"><span class="annot"><span class="annottext">PathI i
+[PathI i] -&gt; PathI i
+PathI i -&gt; PathI i -&gt; PathI i
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+forall {i :: PathIndex}. Semigroup (PathI i)
+forall (i :: PathIndex). PathI i
+forall (i :: PathIndex). [PathI i] -&gt; PathI i
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+mconcat :: [PathI i] -&gt; PathI i
+$cmconcat :: forall (i :: PathIndex). [PathI i] -&gt; PathI i
+mappend :: PathI i -&gt; PathI i -&gt; PathI i
+$cmappend :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+mempty :: PathI i
+$cmempty :: forall (i :: PathIndex). PathI i
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-93"></span><span>      </span><span id="local-6989586621679292076"><span id="local-6989586621679292082"><span id="local-6989586621679292087"><span class="annot"><span class="annottext">NonEmpty (PathI i) -&gt; PathI i
+PathI i -&gt; PathI i -&gt; PathI i
+forall b. Integral b =&gt; b -&gt; PathI i -&gt; PathI i
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+forall (i :: PathIndex). NonEmpty (PathI i) -&gt; PathI i
+forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+forall (i :: PathIndex) b. Integral b =&gt; b -&gt; PathI i -&gt; PathI i
+stimes :: forall b. Integral b =&gt; b -&gt; PathI i -&gt; PathI i
+$cstimes :: forall (i :: PathIndex) b. Integral b =&gt; b -&gt; PathI i -&gt; PathI i
+sconcat :: NonEmpty (PathI i) -&gt; PathI i
+$csconcat :: forall (i :: PathIndex). NonEmpty (PathI i) -&gt; PathI i
+&lt;&gt; :: PathI i -&gt; PathI i -&gt; PathI i
+$c&lt;&gt; :: forall (i :: PathIndex). PathI i -&gt; PathI i -&gt; PathI i
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-95"></span><span>      </span><span id="local-6989586621679292069"><span class="annot"><span class="annottext">PathI i -&gt; Field
+forall a. (a -&gt; Field) -&gt; ToField a
+forall (i :: PathIndex). PathI i -&gt; Field
+toField :: PathI i -&gt; Field
+$ctoField :: forall (i :: PathIndex). PathI i -&gt; Field
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Conversion.html#C%3AToField"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToField</span></a></span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621679292058"><span id="local-6989586621679292327"><span id="local-6989586621679292328"><span id="local-6989586621679292329"><span id="local-6989586621679292330"><span id="local-6989586621679292378"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PathI</span></span></span></span></span></span></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="hs-comment">-- | Modifies the index.</span><span>
+</span><span id="line-102"></span><span class="hs-comment">--</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-104"></span><span id="local-6989586621679292320"><span id="local-6989586621679292321"><span class="annot"><a href="SafeRm.Data.Paths.html#reindex"><span class="hs-identifier hs-type">reindex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292321"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292320"><span class="hs-identifier hs-type">j</span></a></span></span></span><span>
+</span><span id="line-105"></span><span id="reindex"><span class="annot"><span class="annottext">reindex :: forall (i :: PathIndex) (j :: PathIndex). PathI i -&gt; PathI j
+</span><a href="SafeRm.Data.Paths.html#reindex"><span class="hs-identifier hs-var hs-var">reindex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex) (j :: PathIndex).
+ShowS -&gt; PathI i -&gt; PathI j
+</span><a href="SafeRm.Data.Paths.html#liftPathI"><span class="hs-identifier hs-var">liftPathI</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#id"><span class="hs-identifier hs-var">id</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- | Lifts a 'FilePath' transformation to 'PathI', allowing for the index to</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- change.</span><span>
+</span><span id="line-109"></span><span class="hs-comment">--</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-111"></span><span id="local-6989586621679292318"><span id="local-6989586621679292319"><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathI"><span class="hs-identifier hs-type">liftPathI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292319"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292318"><span class="hs-identifier hs-type">j</span></a></span></span></span><span>
+</span><span id="line-112"></span><span id="liftPathI"><span class="annot"><span class="annottext">liftPathI :: forall (i :: PathIndex) (j :: PathIndex).
+ShowS -&gt; PathI i -&gt; PathI j
+</span><a href="SafeRm.Data.Paths.html#liftPathI"><span class="hs-identifier hs-var hs-var">liftPathI</span></a></span></span><span> </span><span id="local-6989586621679292048"><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679292048"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679292047"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292047"><span class="hs-identifier hs-var">fp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex). FilePath -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShowS
+</span><a href="#local-6989586621679292048"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292047"><span class="hs-identifier hs-var">fp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- | 'liftPathI' specialized to the same index. This should be preferred</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- as the former is easier to use incorrectly.</span><span>
+</span><span id="line-116"></span><span class="hs-comment">--</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-118"></span><span id="local-6989586621679292315"><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathI%27"><span class="hs-identifier hs-type">liftPathI'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292315"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292315"><span class="hs-identifier hs-type">i</span></a></span></span><span>
+</span><span id="line-119"></span><span id="liftPathI%27"><span class="annot"><span class="annottext">liftPathI' :: forall (i :: PathIndex). ShowS -&gt; PathI i -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#liftPathI%27"><span class="hs-identifier hs-var hs-var">liftPathI'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex) (j :: PathIndex).
+ShowS -&gt; PathI i -&gt; PathI j
+</span><a href="SafeRm.Data.Paths.html#liftPathI"><span class="hs-identifier hs-var">liftPathI</span></a></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- | Lifts an effectful 'FilePath' transformation to 'PathI'.</span><span>
+</span><span id="line-122"></span><span class="hs-comment">--</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-124"></span><span id="local-6989586621679292311"><span id="local-6989586621679292312"><span id="local-6989586621679292314"><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathIF"><span class="hs-identifier hs-type">liftPathIF</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292314"><span class="hs-identifier hs-type">f</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679292314"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292312"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><a href="#local-6989586621679292314"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292311"><span class="hs-identifier hs-type">j</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-129"></span><span id="liftPathIF"><span class="annot"><span class="annottext">liftPathIF :: forall (f :: * -&gt; *) (i :: PathIndex) (j :: PathIndex).
+(Functor f, HasCallStack) =&gt;
+(HasCallStack =&gt; FilePath -&gt; f FilePath) -&gt; PathI i -&gt; f (PathI j)
+</span><a href="SafeRm.Data.Paths.html#liftPathIF"><span class="hs-identifier hs-var hs-var">liftPathIF</span></a></span></span><span> </span><span id="local-6989586621679292041"><span class="annot"><span class="annottext">HasCallStack =&gt; FilePath -&gt; f FilePath
+</span><a href="#local-6989586621679292041"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex). FilePath -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a (i :: PathIndex).
+HasCallStack =&gt;
+(HasCallStack =&gt; FilePath -&gt; a) -&gt; PathI i -&gt; a
+</span><a href="SafeRm.Data.Paths.html#applyPathI"><span class="hs-identifier hs-var">applyPathI</span></a></span><span> </span><span class="annot"><span class="annottext">HasCallStack =&gt; FilePath -&gt; f FilePath
+</span><a href="#local-6989586621679292041"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- | 'liftPathIF' specialized to the same index. This should be preferred</span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- as the former is easier to use incorrectly.</span><span>
+</span><span id="line-133"></span><span class="hs-comment">--</span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-135"></span><span id="local-6989586621679292298"><span id="local-6989586621679292299"><span class="annot"><a href="SafeRm.Data.Paths.html#liftPathIF%27"><span class="hs-identifier hs-type">liftPathIF'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Functor"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292299"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679292299"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292298"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="#local-6989586621679292299"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292298"><span class="hs-identifier hs-type">i</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-140"></span><span id="liftPathIF%27"><span class="annot"><span class="annottext">liftPathIF' :: forall (f :: * -&gt; *) (i :: PathIndex).
+Functor f =&gt;
+(HasCallStack =&gt; FilePath -&gt; f FilePath) -&gt; PathI i -&gt; f (PathI i)
+</span><a href="SafeRm.Data.Paths.html#liftPathIF%27"><span class="hs-identifier hs-var hs-var">liftPathIF'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) (i :: PathIndex) (j :: PathIndex).
+(Functor f, HasCallStack) =&gt;
+(HasCallStack =&gt; FilePath -&gt; f FilePath) -&gt; PathI i -&gt; f (PathI j)
+</span><a href="SafeRm.Data.Paths.html#liftPathIF"><span class="hs-identifier hs-var">liftPathIF</span></a></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- | Lifts a 'FilePath' function to 'PathI'.</span><span>
+</span><span id="line-143"></span><span class="hs-comment">--</span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-145"></span><span id="local-6989586621679292300"><span id="local-6989586621679292301"><span class="annot"><a href="SafeRm.Data.Paths.html#applyPathI"><span class="hs-identifier hs-type">applyPathI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.IO.html#FilePath"><span class="hs-identifier hs-type">FilePath</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679292301"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292300"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679292301"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-146"></span><span id="applyPathI"><span class="annot"><span class="annottext">applyPathI :: forall a (i :: PathIndex).
+HasCallStack =&gt;
+(HasCallStack =&gt; FilePath -&gt; a) -&gt; PathI i -&gt; a
+</span><a href="SafeRm.Data.Paths.html#applyPathI"><span class="hs-identifier hs-var hs-var">applyPathI</span></a></span></span><span> </span><span id="local-6989586621679292016"><span class="annot"><span class="annottext">HasCallStack =&gt; FilePath -&gt; a
+</span><a href="#local-6989586621679292016"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HasCallStack =&gt; FilePath -&gt; a
+</span><a href="#local-6989586621679292016"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span>
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span class="hs-comment">-- | Returns the trash index's home directory.</span><span>
+</span><span id="line-149"></span><span class="hs-comment">--</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-151"></span><span class="annot"><a href="SafeRm.Data.Paths.html#indexToHome"><span class="hs-identifier hs-type">indexToHome</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-type">TrashHome</span></a></span><span>
+</span><span id="line-152"></span><span id="indexToHome"><span class="annot"><span class="annottext">indexToHome :: PathI 'TrashIndex -&gt; PathI 'TrashHome
+</span><a href="SafeRm.Data.Paths.html#indexToHome"><span class="hs-identifier hs-var hs-var">indexToHome</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679292014"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292014"><span class="hs-identifier hs-var">fp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex). FilePath -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/filepath-1.4.2.2/src/System.FilePath.Posix.html#takeDirectory"><span class="hs-identifier hs-var">FP.takeDirectory</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292014"><span class="hs-identifier hs-var">fp</span></a></span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="hs-comment">-- | '(&lt;/&gt;)' lifted to 'PathI'. Notice the index can change, so take care.</span><span>
+</span><span id="line-155"></span><span class="hs-comment">--</span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-157"></span><span id="local-6989586621679292239"><span id="local-6989586621679292240"><span id="local-6989586621679292241"><span class="annot"><a href="SafeRm.Data.Paths.html#%3C%2F%2F%3E"><span class="hs-operator hs-type">(&lt;//&gt;)</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292241"><span class="hs-identifier hs-type">i1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292240"><span class="hs-identifier hs-type">i2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679292239"><span class="hs-identifier hs-type">i3</span></a></span></span></span></span><span>
+</span><span id="line-158"></span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679292012"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292012"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="%3C%2F%2F%3E"><span class="annot"><span class="annottext">&lt;//&gt; :: forall (i1 :: PathIndex) (i2 :: PathIndex) (i3 :: PathIndex).
+PathI i1 -&gt; PathI i2 -&gt; PathI i3
+</span><a href="SafeRm.Data.Paths.html#%3C%2F%2F%3E"><span class="hs-operator hs-var hs-var">&lt;//&gt;</span></a></span></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679292011"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292011"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (i :: PathIndex). FilePath -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-var">MkPathI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292012"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/filepath-1.4.2.2/src/System.FilePath.Posix.html#%3C%2F%3E"><span class="hs-operator hs-var">&lt;/&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679292011"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="hs-keyword">infixr</span><span> </span><span class="hs-number">5</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#%3C%2F%2F%3E"><span class="hs-operator hs-type">&lt;//&gt;</span></a></span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span class="hs-comment">-- $general</span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- These functions allows for lifting arbitrary 'FilePath' functions onto our</span><span>
+</span><span id="line-164"></span><span class="hs-comment">-- 'PathI'. Note that this can easily invalidate any invariants we would</span><span>
+</span><span id="line-165"></span><span class="hs-comment">-- like to hold (e.g. appending a path can turn a directory into a file),</span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- so caution must be exercised.</span><span>
+</span><span id="line-167"></span></pre></body></html>

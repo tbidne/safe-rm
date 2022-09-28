@@ -1,0 +1,644 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Provides types.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">SafeRm.Data.Index</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier">Index</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Reading</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Index.html#readIndex"><span class="hs-identifier">readIndex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Index.html#searchIndex"><span class="hs-identifier">searchIndex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Writing</span></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Index.html#appendIndex"><span class="hs-identifier">appendIndex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Index.html#writeIndex"><span class="hs-identifier">writeIndex</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.html"><span class="hs-identifier">Data.ByteString</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BSL</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Char8.html"><span class="hs-identifier">Data.ByteString.Char8</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Char8</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.html"><span class="hs-identifier">Data.Csv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Types.html#HasHeader"><span class="hs-identifier">HasHeader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Types.html#HasHeader"><span class="hs-identifier">HasHeader</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.html"><span class="hs-identifier">Data.Csv</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Csv</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html"><span class="hs-identifier">Data.Csv.Streaming</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Records"><span class="hs-identifier">Records</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Cons"><span class="hs-identifier">Cons</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Nil"><span class="hs-identifier">Nil</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html"><span class="hs-identifier">Data.Csv.Streaming</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Csv.Streaming</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HMap</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.List.html"><span class="hs-identifier">Data.List</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Encoding.html"><span class="hs-identifier">Data.Text.Encoding</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TEnc</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Encoding.Error.html"><span class="hs-identifier">Data.Text.Encoding.Error</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TEncError</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html"><span class="hs-identifier">SafeRm.Data.PathData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier">PathData</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#sortDefault"><span class="hs-identifier">sortDefault</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html"><span class="hs-identifier">SafeRm.Data.PathData</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PathData</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html"><span class="hs-identifier">SafeRm.Data.Paths</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier">PathI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier">MkPathI</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathIndex"><span class="hs-identifier">PathIndex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier">TrashHome</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier">TrashIndex</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier">TrashName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html"><span class="hs-identifier">SafeRm.Data.Paths</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Paths</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html"><span class="hs-identifier">SafeRm.Data.UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier">UniqueSeq</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html"><span class="hs-identifier">SafeRm.Data.UniqueSeq</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">USeq</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html"><span class="hs-identifier">SafeRm.Effects.MonadCallStack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier">MonadCallStack</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier">throwCallStack</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html"><span class="hs-identifier">SafeRm.Effects.MonadFsReader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#MonadFsReader"><span class="hs-identifier">MonadFsReader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#readFile"><span class="hs-identifier">readFile</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html"><span class="hs-identifier">SafeRm.Effects.MonadFsWriter</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier">MonadFsWriter</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#appendFile"><span class="hs-identifier">appendFile</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#writeFile"><span class="hs-identifier">writeFile</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html"><span class="hs-identifier">SafeRm.Effects.MonadLoggerContext</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#MonadLoggerContext"><span class="hs-identifier">MonadLoggerContext</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#addNamespace"><span class="hs-identifier">addNamespace</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Exception.html"><span class="hs-identifier">SafeRm.Exception</span></a></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Exception.html#DuplicateIndexPathE"><span class="hs-identifier">DuplicateIndexPathE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Exception.html#MkDuplicateIndexPathE"><span class="hs-identifier">MkDuplicateIndexPathE</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#ReadIndexE"><span class="hs-identifier">ReadIndexE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Exception.html#MkReadIndexE"><span class="hs-identifier">MkReadIndexE</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="SafeRm.Exception.html#TrashPathNotFoundE"><span class="hs-identifier">TrashPathNotFoundE</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Exception.html#MkTrashPathNotFoundE"><span class="hs-identifier">MkTrashPathNotFoundE</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="SafeRm.Prelude.html"><span class="hs-identifier">SafeRm.Prelude</span></a></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/filepath-1.4.2.2/src/System.FilePath.html"><span class="hs-identifier">System.FilePath</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FP</span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Index that stores the trash data.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-60"></span><span id="local-6989586621679295625"><span id="local-6989586621679295626"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Index"><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-var">Index</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkIndex"><span class="annot"><a href="SafeRm.Data.Index.html#MkIndex"><span class="hs-identifier hs-var">MkIndex</span></a></span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AunIndex%3AMkIndex"><span class="annot"><span class="annottext">Index -&gt; HashMap (PathI 'TrashName) PathData
+</span><a href="SafeRm.Data.Index.html#%24sel%3AunIndex%3AMkIndex"><span class="hs-identifier hs-var hs-var">unIndex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621679295615"><span id="local-6989586621679295621"><span class="annot"><span class="annottext">Index -&gt; Index -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Index -&gt; Index -&gt; Bool
+$c/= :: Index -&gt; Index -&gt; Bool
+== :: Index -&gt; Index -&gt; Bool
+$c== :: Index -&gt; Index -&gt; Bool
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/ghc-prim-0.8.0/src/GHC.Classes.html#Eq"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">forall x. Rep Index x -&gt; Index
+forall x. Index -&gt; Rep Index x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep Index x -&gt; Index
+$cfrom :: forall x. Index -&gt; Rep Index x
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Generics.html#Generic"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621679295598"><span id="local-6989586621679295600"><span id="local-6989586621679295608"><span class="annot"><span class="annottext">Int -&gt; Index -&gt; ShowS
+[Index] -&gt; ShowS
+Index -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Index] -&gt; ShowS
+$cshowList :: [Index] -&gt; ShowS
+show :: Index -&gt; String
+$cshow :: Index -&gt; String
+showsPrec :: Int -&gt; Index -&gt; ShowS
+$cshowsPrec :: Int -&gt; Index -&gt; ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Show.html#Show"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621679295593"><span class="annot"><span class="annottext">Index -&gt; ()
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: Index -&gt; ()
+$crnf :: Index -&gt; ()
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/deepseq-1.4.6.1/src/Control.DeepSeq.html#C%3ANFData"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span>
+</span><span id="line-74"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">deriving</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621679295575"><span id="local-6989586621679295583"><span id="local-6989586621679295590"><span class="annot"><span class="annottext">NonEmpty Index -&gt; Index
+Index -&gt; Index -&gt; Index
+forall b. Integral b =&gt; b -&gt; Index -&gt; Index
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+stimes :: forall b. Integral b =&gt; b -&gt; Index -&gt; Index
+$cstimes :: forall b. Integral b =&gt; b -&gt; Index -&gt; Index
+sconcat :: NonEmpty Index -&gt; Index
+$csconcat :: NonEmpty Index -&gt; Index
+&lt;&gt; :: Index -&gt; Index -&gt; Index
+$c&lt;&gt; :: Index -&gt; Index -&gt; Index
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Semigroup"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>      </span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621679295550"><span id="local-6989586621679295556"><span id="local-6989586621679295563"><span class="annot"><span class="annottext">Semigroup Index
+Index
+[Index] -&gt; Index
+Index -&gt; Index -&gt; Index
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+mconcat :: [Index] -&gt; Index
+$cmconcat :: [Index] -&gt; Index
+mappend :: Index -&gt; Index -&gt; Index
+$cmappend :: Index -&gt; Index -&gt; Index
+mempty :: Index
+$cmempty :: Index
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></a></span></span></span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span id="local-6989586621679295539"><span id="local-6989586621679295865"><span id="local-6989586621679295866"><span id="local-6989586621679295867"><span class="hs-identifier">makeFieldLabelsNoPrefix</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Index</span></span></span></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- | @since 0.1</span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679295528"><span class="annot"><a href="file:///nix/store/6c1i8y2d7sys43mjniwg2z8d4n3l61k3-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html#Pretty"><span class="hs-identifier hs-type">Pretty</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-type">Index</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621679295513"><span class="annot"><span class="annottext">pretty :: forall ann. Index -&gt; Doc ann
+</span><a href="file:///nix/store/6c1i8y2d7sys43mjniwg2z8d4n3l61k3-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html#pretty"><span class="hs-identifier hs-var hs-var hs-var hs-var">pretty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">forall ann. [Doc ann] -&gt; Doc ann
+</span><a href="file:///nix/store/6c1i8y2d7sys43mjniwg2z8d4n3l61k3-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html#vsep"><span class="hs-identifier hs-var">vsep</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a ann. Pretty a =&gt; a -&gt; Doc ann
+</span><a href="file:///nix/store/6c1i8y2d7sys43mjniwg2z8d4n3l61k3-prettyprinter-1.7.1-doc/share/doc/prettyprinter-1.7.1/html/src/Prettyprinter.Internal.html#pretty"><span class="hs-identifier hs-var">pretty</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; a -&gt; Ordering) -&gt; [a] -&gt; [a]
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.OldList.html#sortBy"><span class="hs-identifier hs-var">L.sortBy</span></a></span><span> </span><span class="annot"><span class="annottext">PathData -&gt; PathData -&gt; Ordering
+</span><a href="SafeRm.Data.PathData.html#sortDefault"><span class="hs-identifier hs-var">sortDefault</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HMap.elems</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;unIndex&quot; a =&gt; a
+</span><span class="">#unIndex</span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- | Attempts to read the trash index file. If successful, guarantees:</span><span>
+</span><span id="line-95"></span><span class="hs-comment">--</span><span>
+</span><span id="line-96"></span><span class="hs-comment">-- * All trash paths are unique.</span><span>
+</span><span id="line-97"></span><span class="hs-comment">-- * Every index entry corresponds to a path in the trash directory.</span><span>
+</span><span id="line-98"></span><span class="hs-comment">--</span><span>
+</span><span id="line-99"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-100"></span><span id="local-6989586621679295827"><span class="annot"><a href="SafeRm.Data.Index.html#readIndex"><span class="hs-identifier hs-type">readIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#MonadFsReader"><span class="hs-identifier hs-type">MonadFsReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295827"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#MonadLoggerContext"><span class="hs-identifier hs-type">MonadLoggerContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295827"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier hs-type">MonadCallStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295827"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.IO.Class.html#MonadIO"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295827"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="#local-6989586621679295827"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-type">Index</span></a></span></span><span>
+</span><span id="line-108"></span><span id="readIndex"><span class="annot"><span class="annottext">readIndex :: forall (m :: * -&gt; *).
+(MonadFsReader m, MonadLoggerContext m, MonadCallStack m,
+ MonadIO m) =&gt;
+PathI 'TrashIndex -&gt; m Index
+</span><a href="SafeRm.Data.Index.html#readIndex"><span class="hs-identifier hs-var hs-var">readIndex</span></a></span></span><span> </span><span id="local-6989586621679295432"><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295432"><span class="hs-identifier hs-var">indexPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+(HasCallStack, MonadLoggerContext m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;readIndex&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">logDebug</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Index path: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295432"><span class="hs-identifier hs-var">indexPath</span></a></span><span> </span><span class="annot"><span class="annottext">forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;unPathI&quot; a =&gt; a
+</span><span class="">#unPathI</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#fmap"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData -&gt; Index
+</span><a href="SafeRm.Data.Index.html#MkIndex"><span class="hs-identifier hs-var">MkIndex</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+(MonadFsReader m, HasCallStack, MonadLoggerContext m,
+ MonadCallStack m, MonadIO m, Monoid a) =&gt;
+(m a -&gt; PathData -&gt; m a) -&gt; PathI 'TrashIndex -&gt; m a
+</span><a href="SafeRm.Data.Index.html#readIndexWithFold"><span class="hs-identifier hs-var">readIndexWithFold</span></a></span><span> </span><span class="annot"><span class="annottext">m (HashMap (PathI 'TrashName) PathData)
+-&gt; PathData -&gt; m (HashMap (PathI 'TrashName) PathData)
+</span><a href="#local-6989586621679295424"><span class="hs-identifier hs-var">foldVec</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295432"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621679295423"><span class="annot"><span class="annottext">trashHome :: PathI 'TrashHome
+</span><a href="#local-6989586621679295423"><span class="hs-identifier hs-var hs-var">trashHome</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex -&gt; PathI 'TrashHome
+</span><a href="SafeRm.Data.Paths.html#indexToHome"><span class="hs-identifier hs-var">Paths.indexToHome</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295432"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621679295424"><span class="annot"><span class="annottext">foldVec :: m (HashMap (PathI 'TrashName) PathData)
+-&gt; PathData -&gt; m (HashMap (PathI 'TrashName) PathData)
+</span><a href="#local-6989586621679295424"><span class="hs-identifier hs-var hs-var">foldVec</span></a></span></span><span> </span><span id="local-6989586621679295421"><span class="annot"><span class="annottext">m (HashMap (PathI 'TrashName) PathData)
+</span><a href="#local-6989586621679295421"><span class="hs-identifier hs-var">macc</span></a></span></span><span> </span><span id="local-6989586621679295420"><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-114"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">logDebug</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Found: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
+</span><a href="SafeRm.Prelude.html#showt"><span class="hs-identifier hs-var">showt</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>      </span><span id="local-6989586621679295418"><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295418"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (HashMap (PathI 'TrashName) PathData)
+</span><a href="#local-6989586621679295421"><span class="hs-identifier hs-var">macc</span></a></span><span>
+</span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+PathI 'TrashIndex
+-&gt; HashMap (PathI 'TrashName) PathData -&gt; PathData -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#throwIfDuplicates"><span class="hs-identifier hs-var">throwIfDuplicates</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295432"><span class="hs-identifier hs-var">indexPath</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295418"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span><span>
+</span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+PathI 'TrashHome -&gt; PathData -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#throwIfTrashNonExtant"><span class="hs-identifier hs-var">throwIfTrashNonExtant</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashHome
+</span><a href="#local-6989586621679295423"><span class="hs-identifier hs-var">trashHome</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span><span>
+</span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v.
+(Eq k, Hashable k) =&gt;
+k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.Strict.html#insert"><span class="hs-identifier hs-var">HMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295414"><span class="hs-identifier hs-var">fileName</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295418"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-119"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>        </span><span id="local-6989586621679295414"><span class="annot"><span class="annottext">fileName :: PathI 'TrashName
+</span><a href="#local-6989586621679295414"><span class="hs-identifier hs-var hs-var">fileName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295420"><span class="hs-identifier hs-var">pd</span></a></span><span> </span><span class="annot"><span class="annottext">forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;fileName&quot; a =&gt; a
+</span><span class="">#fileName</span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- | Searches the trash index for keys.</span><span>
+</span><span id="line-123"></span><span class="hs-comment">--</span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-125"></span><span class="annot"><a href="SafeRm.Data.Index.html#searchIndex"><span class="hs-identifier hs-type">searchIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-comment">-- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.</span><span>
+</span><span id="line-127"></span><span>  </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-comment">-- | The trash index.</span><span>
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-type">Index</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-comment">-- | The trash data matching the input keys.</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-132"></span><span id="searchIndex"><span class="annot"><span class="annottext">searchIndex :: UniqueSeq (PathI 'TrashName)
+-&gt; Index -&gt; ([PathI 'TrashName], UniqueSeq PathData)
+</span><a href="SafeRm.Data.Index.html#searchIndex"><span class="hs-identifier hs-var hs-var">searchIndex</span></a></span></span><span> </span><span id="local-6989586621679295413"><span class="annot"><span class="annottext">UniqueSeq (PathI 'TrashName)
+</span><a href="#local-6989586621679295413"><span class="hs-identifier hs-var">keys</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Index.html#MkIndex"><span class="hs-identifier hs-type">MkIndex</span></a></span><span> </span><span id="local-6989586621679295412"><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295412"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a b.
+Foldable t =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Foldable.html#foldr"><span class="hs-identifier hs-var">foldr</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+-&gt; ([PathI 'TrashName], UniqueSeq PathData)
+-&gt; ([PathI 'TrashName], UniqueSeq PathData)
+</span><a href="#local-6989586621679295410"><span class="hs-identifier hs-var">foldKeys</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">UniqueSeq (PathI 'TrashName)
+</span><a href="#local-6989586621679295409"><span class="hs-identifier hs-var">trashKeys</span></a></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-135"></span><span>    </span><span class="hs-comment">-- NOTE: drop trailing slashes to match our index's schema</span><span>
+</span><span id="line-136"></span><span>    </span><span id="local-6989586621679295409"><span class="annot"><span class="annottext">trashKeys :: UniqueSeq (PathI 'TrashName)
+</span><a href="#local-6989586621679295409"><span class="hs-identifier hs-var hs-var">trashKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall b a1. Hashable b =&gt; (a1 -&gt; b) -&gt; UniqueSeq a1 -&gt; UniqueSeq b
+</span><a href="SafeRm.Data.UniqueSeq.html#map"><span class="hs-identifier hs-var">USeq.map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (i :: PathIndex). ShowS -&gt; PathI i -&gt; PathI i
+</span><a href="SafeRm.Data.Paths.html#liftPathI%27"><span class="hs-identifier hs-var">Paths.liftPathI'</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/filepath-1.4.2.2/src/System.FilePath.Posix.html#dropTrailingPathSeparator"><span class="hs-identifier hs-var">FP.dropTrailingPathSeparator</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UniqueSeq (PathI 'TrashName)
+</span><a href="#local-6989586621679295413"><span class="hs-identifier hs-var">keys</span></a></span><span>
+</span><span id="line-137"></span><span>    </span><span class="annot"><a href="#local-6989586621679295410"><span class="hs-identifier hs-type">foldKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-138"></span><span>      </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-140"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="SafeRm.Data.UniqueSeq.html#UniqueSeq"><span class="hs-identifier hs-type">UniqueSeq</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621679295410"><span class="annot"><span class="annottext">foldKeys :: PathI 'TrashName
+-&gt; ([PathI 'TrashName], UniqueSeq PathData)
+-&gt; ([PathI 'TrashName], UniqueSeq PathData)
+</span><a href="#local-6989586621679295410"><span class="hs-identifier hs-var hs-var">foldKeys</span></a></span></span><span> </span><span id="local-6989586621679295405"><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295405"><span class="hs-identifier hs-var">trashKey</span></a></span></span><span> </span><span id="local-6989586621679295404"><span class="annot"><span class="annottext">acc :: ([PathI 'TrashName], UniqueSeq PathData)
+</span><a href="#local-6989586621679295404"><span class="hs-identifier hs-var">acc</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621679295403"><span class="annot"><span class="annottext">[PathI 'TrashName]
+</span><a href="#local-6989586621679295403"><span class="hs-identifier hs-var">exs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679295402"><span class="annot"><span class="annottext">UniqueSeq PathData
+</span><a href="#local-6989586621679295402"><span class="hs-identifier hs-var">found</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295405"><span class="hs-identifier hs-var">trashKey</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295412"><span class="hs-identifier hs-var">index</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">Maybe PathData
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {s} {t} {a}. Field1 s t [a] [a] =&gt; a -&gt; s -&gt; t
+</span><a href="#local-6989586621679295400"><span class="hs-identifier hs-var">prependBadPath</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295405"><span class="hs-identifier hs-var">trashKey</span></a></span><span> </span><span class="annot"><span class="annottext">([PathI 'TrashName], UniqueSeq PathData)
+</span><a href="#local-6989586621679295404"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-144"></span><span>        </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679295399"><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295399"><span class="hs-identifier hs-var">pd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PathI 'TrashName]
+</span><a href="#local-6989586621679295403"><span class="hs-identifier hs-var">exs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. Hashable a =&gt; UniqueSeq a -&gt; a -&gt; UniqueSeq a
+</span><a href="SafeRm.Data.UniqueSeq.html#append"><span class="hs-identifier hs-var">USeq.append</span></a></span><span> </span><span class="annot"><span class="annottext">UniqueSeq PathData
+</span><a href="#local-6989586621679295402"><span class="hs-identifier hs-var">found</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295399"><span class="hs-identifier hs-var">pd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>    </span><span id="local-6989586621679295400"><span class="annot"><span class="annottext">prependBadPath :: a -&gt; s -&gt; t
+</span><a href="#local-6989586621679295400"><span class="hs-identifier hs-var hs-var">prependBadPath</span></a></span></span><span> </span><span id="local-6989586621679295393"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679295393"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s t a b.
+Is k A_Setter =&gt;
+Optic k is s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Setter.html#over%27"><span class="hs-identifier hs-var">over'</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. Field1 s t a b =&gt; Lens s t a b
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Data.Tuple.Optics.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679295393"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-glyph">:</span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- | Reads a csv index file and applies the fold function to each</span><span>
+</span><span id="line-148"></span><span class="hs-comment">-- 'PathData' encountered. The fold function allows 'IO' in case it is needed</span><span>
+</span><span id="line-149"></span><span class="hs-comment">-- to check any conditions (e.g. trash path actually exists).</span><span>
+</span><span id="line-150"></span><span class="hs-comment">--</span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-152"></span><span class="annot"><a href="SafeRm.Data.Index.html#readIndexWithFold"><span class="hs-identifier hs-type">readIndexWithFold</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-153"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679295756"><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679295755"><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#MonadFsReader"><span class="hs-identifier hs-type">MonadFsReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadLoggerContext.html#MonadLoggerContext"><span class="hs-identifier hs-type">MonadLoggerContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier hs-type">MonadCallStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.IO.Class.html#MonadIO"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#Monoid"><span class="hs-identifier hs-type">Monoid</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-comment">-- | Fold function.</span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-163"></span><span>  </span><span class="hs-comment">-- | Path to index file.</span><span>
+</span><span id="line-164"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-166"></span><span id="readIndexWithFold"><span class="annot"><span class="annottext">readIndexWithFold :: forall (m :: * -&gt; *) a.
+(MonadFsReader m, HasCallStack, MonadLoggerContext m,
+ MonadCallStack m, MonadIO m, Monoid a) =&gt;
+(m a -&gt; PathData -&gt; m a) -&gt; PathI 'TrashIndex -&gt; m a
+</span><a href="SafeRm.Data.Index.html#readIndexWithFold"><span class="hs-identifier hs-var hs-var">readIndexWithFold</span></a></span></span><span> </span><span id="local-6989586621679295328"><span class="annot"><span class="annottext">m a -&gt; PathData -&gt; m a
+</span><a href="#local-6989586621679295328"><span class="hs-identifier hs-var">foldFn</span></a></span></span><span> </span><span id="local-6989586621679295327"><span class="annot"><span class="annottext">indexPath :: PathI 'TrashIndex
+</span><a href="#local-6989586621679295327"><span class="hs-identifier hs-var">indexPath</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679295326"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295326"><span class="hs-identifier hs-var">fp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-167"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+(HasCallStack, MonadLoggerContext m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="SafeRm.Effects.MonadLoggerContext.html#addNamespace"><span class="hs-identifier hs-var">addNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;readIndexWithFold&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+String -&gt; m ByteString
+</span><a href="SafeRm.Effects.MonadFsReader.html#readFile"><span class="hs-identifier hs-var">readFile</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.html#%3E%3D%3E"><span class="hs-operator hs-var">&gt;=&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">m a -&gt; Records PathData -&gt; m a
+</span><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#pure"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mempty"><span class="hs-identifier hs-var">mempty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Records PathData
+</span><a href="#local-6989586621679295323"><span class="hs-identifier hs-var">decode</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295326"><span class="hs-identifier hs-var">fp</span></a></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-170"></span><span>    </span><span id="local-6989586621679295323"><span class="annot"><span class="annottext">decode :: ByteString -&gt; Records PathData
+</span><a href="#local-6989586621679295323"><span class="hs-identifier hs-var hs-var">decode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. FromRecord a =&gt; HasHeader -&gt; ByteString -&gt; Records a
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#decode"><span class="hs-identifier hs-var">Csv.Streaming.decode</span></a></span><span> </span><span class="annot"><span class="annottext">HasHeader
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Types.html#HasHeader"><span class="hs-identifier hs-var">HasHeader</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Lazy.Internal.html#fromStrict"><span class="hs-identifier hs-var">BSL.fromStrict</span></a></span><span>
+</span><span id="line-171"></span><span>    </span><span class="hs-comment">-- NOTE: We fold over the Records manually because its Foldable instance</span><span>
+</span><span id="line-172"></span><span>    </span><span class="hs-comment">-- swallows errors, whereas we would like to report any encountered</span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-comment">-- immediately.</span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><a href="#local-6989586621679295324"><span class="hs-identifier hs-type">runFold</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Records"><span class="hs-identifier hs-type">Records</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679295756"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295755"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-175"></span><span>    </span><span class="hs-comment">-- Base case, we have parsed everything with no errors nor unconsumed</span><span>
+</span><span id="line-176"></span><span>    </span><span class="hs-comment">-- input</span><span>
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621679295324"><span class="annot"><span class="annottext">runFold :: m a -&gt; Records PathData -&gt; m a
+</span><a href="#local-6989586621679295324"><span class="hs-identifier hs-var hs-var">runFold</span></a></span></span><span> </span><span id="local-6989586621679295318"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295318"><span class="hs-identifier hs-var">macc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Nothing"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295318"><span class="hs-identifier hs-var">macc</span></a></span><span>
+</span><span id="line-178"></span><span>    </span><span class="hs-comment">-- End of stream w/ an error.</span><span>
+</span><span id="line-179"></span><span>    </span><span class="annot"><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Maybe.html#Just"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621679295317"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295317"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679295316"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679295316"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-180"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">logError</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error end of stream: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295317"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-182"></span><span>        </span><span class="annot"><span class="annottext">PathI 'TrashIndex -&gt; String -&gt; CallStack -&gt; ReadIndexE
+</span><a href="SafeRm.Exception.html#MkReadIndexE"><span class="hs-identifier hs-var">MkReadIndexE</span></a></span><span>
+</span><span id="line-183"></span><span>          </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295327"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-184"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; [a] -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#mconcat"><span class="hs-identifier hs-var">mconcat</span></a></span><span>
+</span><span id="line-185"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295317"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-186"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; at \&quot;&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-187"></span><span>                </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><a href="#local-6989586621679295314"><span class="hs-identifier hs-var">lbsToStr</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679295316"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-188"></span><span>                </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\&quot;&quot;</span></span><span>
+</span><span id="line-189"></span><span>              </span><span class="hs-special">]</span><span>
+</span><span id="line-190"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-191"></span><span>    </span><span class="hs-comment">-- No errors but there is unconsumed input. This is probably impossible,</span><span>
+</span><span id="line-192"></span><span>    </span><span class="hs-comment">-- but just to cover all cases...</span><span>
+</span><span id="line-193"></span><span>    </span><span class="annot"><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621679295313"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679295313"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-194"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">logError</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unconsumed input: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="#local-6989586621679295312"><span class="hs-identifier hs-var">lbsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679295313"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-195"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">PathI 'TrashIndex -&gt; String -&gt; CallStack -&gt; ReadIndexE
+</span><a href="SafeRm.Exception.html#MkReadIndexE"><span class="hs-identifier hs-var">MkReadIndexE</span></a></span><span>
+</span><span id="line-197"></span><span>          </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295327"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-198"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Unconsumed input: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><a href="#local-6989586621679295314"><span class="hs-identifier hs-var">lbsToStr</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679295313"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-199"></span><span>    </span><span class="hs-comment">-- Encountered an error.</span><span>
+</span><span id="line-200"></span><span>    </span><span class="annot"><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Cons"><span class="hs-identifier hs-type">Cons</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Left"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621679295311"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295311"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Records PathData
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-201"></span><span>      </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">logError</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Error reading stream: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%3C%3E"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295311"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex -&gt; String -&gt; CallStack -&gt; ReadIndexE
+</span><a href="SafeRm.Exception.html#MkReadIndexE"><span class="hs-identifier hs-var">MkReadIndexE</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295327"><span class="hs-identifier hs-var">indexPath</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295311"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-203"></span><span>    </span><span class="hs-comment">-- Inductive case, run fold and recurse</span><span>
+</span><span id="line-204"></span><span>    </span><span class="annot"><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span id="local-6989586621679295310"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295310"><span class="hs-identifier hs-var">macc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Streaming.html#Cons"><span class="hs-identifier hs-type">Cons</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Data.Either.html#Right"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621679295309"><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295309"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679295308"><span class="annot"><span class="annottext">Records PathData
+</span><a href="#local-6989586621679295308"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m a -&gt; Records PathData -&gt; m a
+</span><a href="#local-6989586621679295324"><span class="hs-identifier hs-var">runFold</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m a -&gt; PathData -&gt; m a
+</span><a href="#local-6989586621679295328"><span class="hs-identifier hs-var">foldFn</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679295310"><span class="hs-identifier hs-var">macc</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295309"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Records PathData
+</span><a href="#local-6989586621679295308"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-205"></span><span>
+</span><span id="line-206"></span><span>    </span><span id="local-6989586621679295314"><span class="annot"><span class="annottext">lbsToStr :: ByteString -&gt; String
+</span><a href="#local-6989586621679295314"><span class="hs-identifier hs-var hs-var">lbsToStr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Char8.html#unpack"><span class="hs-identifier hs-var">Char8.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Lazy.Internal.html#toStrict"><span class="hs-identifier hs-var">BSL.toStrict</span></a></span><span>
+</span><span id="line-207"></span><span>    </span><span id="local-6989586621679295312"><span class="annot"><span class="annottext">lbsToTxt :: ByteString -&gt; Text
+</span><a href="#local-6989586621679295312"><span class="hs-identifier hs-var hs-var">lbsToTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OnDecodeError -&gt; ByteString -&gt; Text
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Encoding.html#decodeUtf8With"><span class="hs-identifier hs-var">TEnc.decodeUtf8With</span></a></span><span> </span><span class="annot"><span class="annottext">OnDecodeError
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/text-1.2.5.0/src/Data.Text.Encoding.Error.html#lenientDecode"><span class="hs-identifier hs-var">TEncError.lenientDecode</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Lazy.Internal.html#toStrict"><span class="hs-identifier hs-var">BSL.toStrict</span></a></span><span>
+</span><span id="line-208"></span><span>
+</span><span id="line-209"></span><span class="hs-comment">-- | Verifies that the 'PathData'\'s @fileName@ does not exist in the</span><span>
+</span><span id="line-210"></span><span class="hs-comment">-- hashmap.</span><span>
+</span><span id="line-211"></span><span class="hs-comment">--</span><span>
+</span><span id="line-212"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-213"></span><span id="local-6989586621679295752"><span class="annot"><a href="SafeRm.Data.Index.html#throwIfDuplicates"><span class="hs-identifier hs-type">throwIfDuplicates</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier hs-type">MonadCallStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295752"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.IO.Class.html#MonadIO"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295752"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-217"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashName"><span class="hs-identifier hs-type">TrashName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-220"></span><span>  </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="#local-6989586621679295752"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-222"></span><span id="throwIfDuplicates"><span class="annot"><span class="annottext">throwIfDuplicates :: forall (m :: * -&gt; *).
+(HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+PathI 'TrashIndex
+-&gt; HashMap (PathI 'TrashName) PathData -&gt; PathData -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#throwIfDuplicates"><span class="hs-identifier hs-var hs-var">throwIfDuplicates</span></a></span></span><span> </span><span id="local-6989586621679295281"><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295281"><span class="hs-identifier hs-var">indexPath</span></a></span></span><span> </span><span id="local-6989586621679295280"><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295280"><span class="hs-identifier hs-var">trashMap</span></a></span></span><span> </span><span id="local-6989586621679295279"><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295279"><span class="hs-identifier hs-var">pd</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#when"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295277"><span class="hs-identifier hs-var">fileName</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#member"><span class="hs-operator hs-var">`HMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathI 'TrashName) PathData
+</span><a href="#local-6989586621679295280"><span class="hs-identifier hs-var">trashMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-224"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-225"></span><span>      </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+-&gt; PathI 'TrashName -&gt; CallStack -&gt; DuplicateIndexPathE
+</span><a href="SafeRm.Exception.html#MkDuplicateIndexPathE"><span class="hs-identifier hs-var">MkDuplicateIndexPathE</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashIndex
+</span><a href="#local-6989586621679295281"><span class="hs-identifier hs-var">indexPath</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295277"><span class="hs-identifier hs-var">fileName</span></a></span><span>
+</span><span id="line-226"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-227"></span><span>    </span><span id="local-6989586621679295277"><span class="annot"><span class="annottext">fileName :: PathI 'TrashName
+</span><a href="#local-6989586621679295277"><span class="hs-identifier hs-var hs-var">fileName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295279"><span class="hs-identifier hs-var">pd</span></a></span><span> </span><span class="annot"><span class="annottext">forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;fileName&quot; a =&gt; a
+</span><span class="">#fileName</span></span><span>
+</span><span id="line-228"></span><span>
+</span><span id="line-229"></span><span class="hs-comment">-- | Verifies that the 'PathData'\'s @fileName@ actually exists.</span><span>
+</span><span id="line-230"></span><span class="hs-comment">--</span><span>
+</span><span id="line-231"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-232"></span><span id="local-6989586621679295751"><span class="annot"><a href="SafeRm.Data.Index.html#throwIfTrashNonExtant"><span class="hs-identifier hs-type">throwIfTrashNonExtant</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-233"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsReader.html#MonadFsReader"><span class="hs-identifier hs-type">MonadFsReader</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295751"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-234"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Stack.Types.html#HasCallStack"><span class="hs-identifier hs-type">HasCallStack</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-235"></span><span>    </span><span class="annot"><a href="SafeRm.Effects.MonadCallStack.html#MonadCallStack"><span class="hs-identifier hs-type">MonadCallStack</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295751"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-236"></span><span>    </span><span class="annot"><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.IO.Class.html#MonadIO"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295751"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-237"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-238"></span><span>  </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashHome"><span class="hs-identifier hs-type">TrashHome</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-239"></span><span>  </span><span class="annot"><a href="SafeRm.Data.PathData.html#PathData"><span class="hs-identifier hs-type">PathData</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-240"></span><span>  </span><span class="annot"><a href="#local-6989586621679295751"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-241"></span><span id="throwIfTrashNonExtant"><span class="annot"><span class="annottext">throwIfTrashNonExtant :: forall (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+PathI 'TrashHome -&gt; PathData -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#throwIfTrashNonExtant"><span class="hs-identifier hs-var hs-var">throwIfTrashNonExtant</span></a></span></span><span> </span><span id="local-6989586621679295251"><span class="annot"><span class="annottext">PathI 'TrashHome
+</span><a href="#local-6989586621679295251"><span class="hs-identifier hs-var">trashHome</span></a></span></span><span> </span><span id="local-6989586621679295250"><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295250"><span class="hs-identifier hs-var">pd</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-242"></span><span>  </span><span id="local-6989586621679295249"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295249"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadFsReader m, HasCallStack) =&gt;
+PathI 'TrashHome -&gt; PathData -&gt; m Bool
+</span><a href="SafeRm.Data.PathData.html#trashPathExists"><span class="hs-identifier hs-var">PathData.trashPathExists</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashHome
+</span><a href="#local-6989586621679295251"><span class="hs-identifier hs-var">trashHome</span></a></span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295250"><span class="hs-identifier hs-var">pd</span></a></span><span>
+</span><span id="line-243"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/Control.Monad.html#unless"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679295249"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-244"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+(Exception e, HasCallStack, MonadCallStack m, MonadIO m) =&gt;
+(CallStack -&gt; e) -&gt; m a
+</span><a href="SafeRm.Effects.MonadCallStack.html#throwCallStack"><span class="hs-identifier hs-var">throwCallStack</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#%24"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-245"></span><span>      </span><span class="annot"><span class="annottext">PathI 'TrashHome
+-&gt; PathI 'TrashName -&gt; CallStack -&gt; TrashPathNotFoundE
+</span><a href="SafeRm.Exception.html#MkTrashPathNotFoundE"><span class="hs-identifier hs-var">MkTrashPathNotFoundE</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashHome
+</span><a href="#local-6989586621679295251"><span class="hs-identifier hs-var">trashHome</span></a></span><span> </span><span class="annot"><span class="annottext">PathI 'TrashName
+</span><a href="#local-6989586621679295246"><span class="hs-identifier hs-var">filePath</span></a></span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-247"></span><span>    </span><span id="local-6989586621679295246"><span class="annot"><span class="annottext">filePath :: PathI 'TrashName
+</span><a href="#local-6989586621679295246"><span class="hs-identifier hs-var hs-var">filePath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PathData
+</span><a href="#local-6989586621679295250"><span class="hs-identifier hs-var">pd</span></a></span><span> </span><span class="annot"><span class="annottext">forall k s (is :: IxList) a.
+Is k A_Getter =&gt;
+s -&gt; Optic' k is s a -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Operators.html#%5E."><span class="hs-operator hs-var">^.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;fileName&quot; a =&gt; a
+</span><span class="">#fileName</span></span><span>
+</span><span id="line-248"></span><span>
+</span><span id="line-249"></span><span class="hs-comment">-- | Appends the path data to the trash index. The header is not included.</span><span>
+</span><span id="line-250"></span><span class="hs-comment">--</span><span>
+</span><span id="line-251"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-252"></span><span id="local-6989586621679295694"><span class="annot"><a href="SafeRm.Data.Index.html#appendIndex"><span class="hs-identifier hs-type">appendIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier hs-type">MonadFsWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295694"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-type">Index</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679295694"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-253"></span><span id="appendIndex"><span class="annot"><span class="annottext">appendIndex :: forall (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+PathI 'TrashIndex -&gt; Index -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#appendIndex"><span class="hs-identifier hs-var hs-var">appendIndex</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679295232"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295232"><span class="hs-identifier hs-var">indexPath</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-254"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+String -&gt; ByteString -&gt; m ()
+</span><a href="SafeRm.Effects.MonadFsWriter.html#appendFile"><span class="hs-identifier hs-var">appendFile</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295232"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-255"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Lazy.Internal.html#toStrict"><span class="hs-identifier hs-var">BSL.toStrict</span></a></span><span>
+</span><span id="line-256"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToRecord a =&gt; [a] -&gt; ByteString
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Encoding.html#encode"><span class="hs-identifier hs-var">Csv.encode</span></a></span><span>
+</span><span id="line-257"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HMap.elems</span></a></span><span>
+</span><span id="line-258"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;unIndex&quot; a =&gt; a
+</span><span class="">#unIndex</span></span><span>
+</span><span id="line-259"></span><span>
+</span><span id="line-260"></span><span class="hs-comment">-- | Writes the path data to the trash index, overwriting the index if it</span><span>
+</span><span id="line-261"></span><span class="hs-comment">-- exists. The header is included.</span><span>
+</span><span id="line-262"></span><span class="hs-comment">--</span><span>
+</span><span id="line-263"></span><span class="hs-comment">-- @since 0.1</span><span>
+</span><span id="line-264"></span><span id="local-6989586621679295230"><span class="annot"><a href="SafeRm.Data.Index.html#writeIndex"><span class="hs-identifier hs-type">writeIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="SafeRm.Effects.MonadFsWriter.html#MonadFsWriter"><span class="hs-identifier hs-type">MonadFsWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679295230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#PathI"><span class="hs-identifier hs-type">PathI</span></a></span><span> </span><span class="annot"><a href="SafeRm.Data.Paths.html#TrashIndex"><span class="hs-identifier hs-type">TrashIndex</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="SafeRm.Data.Index.html#Index"><span class="hs-identifier hs-type">Index</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679295230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-265"></span><span id="writeIndex"><span class="annot"><span class="annottext">writeIndex :: forall (m :: * -&gt; *).
+MonadFsWriter m =&gt;
+PathI 'TrashIndex -&gt; Index -&gt; m ()
+</span><a href="SafeRm.Data.Index.html#writeIndex"><span class="hs-identifier hs-var hs-var">writeIndex</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="SafeRm.Data.Paths.html#MkPathI"><span class="hs-identifier hs-type">MkPathI</span></a></span><span> </span><span id="local-6989586621679295214"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295214"><span class="hs-identifier hs-var">indexPath</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-266"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+(MonadFsWriter m, HasCallStack) =&gt;
+String -&gt; ByteString -&gt; m ()
+</span><a href="SafeRm.Effects.MonadFsWriter.html#writeFile"><span class="hs-identifier hs-var">writeFile</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679295214"><span class="hs-identifier hs-var">indexPath</span></a></span><span>
+</span><span id="line-267"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/bytestring-0.11.3.1/src/Data.ByteString.Lazy.Internal.html#toStrict"><span class="hs-identifier hs-var">BSL.toStrict</span></a></span><span>
+</span><span id="line-268"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (DefaultOrdered a, ToNamedRecord a) =&gt; [a] -&gt; ByteString
+</span><a href="file:///nix/store/0yxsxi7by88d8hh14zmxpzyc5bapv478-cassava-0.5.3.0-doc/share/doc/cassava-0.5.3.0/html/src/Data.Csv.Encoding.html#encodeDefaultOrderedByName"><span class="hs-identifier hs-var">Csv.encodeDefaultOrderedByName</span></a></span><span>
+</span><span id="line-269"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///nix/store/88d8df6habp1lld77pfxcm3xipvzl3kv-unordered-containers-0.2.17.0-doc/share/doc/unordered-containers-0.2.17.0/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HMap.elems</span></a></span><span>
+</span><span id="line-270"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="file:///nix/store/8bm45xdk5sakpc30lam9f739izchy80h-ghc-9.2.4-doc/share/doc/ghc/html/libraries/base-4.16.3.0/src/GHC.Base.html#."><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k (is :: IxList) s a.
+Is k A_Getter =&gt;
+Optic' k is s a -&gt; s -&gt; a
+</span><a href="file:///nix/store/94qmscanawfjn5y0aw91l6n4ji9wcyrb-optics-core-0.4.1-doc/share/doc/optics-core-0.4.1/html/src/Optics.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsLabel &quot;unIndex&quot; a =&gt; a
+</span><span class="">#unIndex</span></span><span>
+</span><span id="line-271"></span></pre></body></html>
