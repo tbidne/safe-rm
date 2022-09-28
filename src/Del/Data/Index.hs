@@ -16,12 +16,14 @@ where
 
 import Data.ByteString qualified as BS
 import Data.ByteString qualified as BSL
+import Data.ByteString.Char8 qualified as Char8
 import Data.Csv (HasHeader (HasHeader))
 import Data.Csv qualified as Csv
+import Data.Csv.Streaming (Records (Cons, Nil))
+import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List qualified as L
-import Data.Vector qualified as V
 import Del.Data.PathData (PathData, sortDefault)
 import Del.Data.PathData qualified as PathData
 import Del.Data.Paths
@@ -139,6 +141,7 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
 --
 -- @since 0.1
 readIndexWithFold ::
+  forall a.
   Monoid a =>
   -- | Fold function.
   (IO a -> PathData -> IO a) ->
@@ -146,12 +149,38 @@ readIndexWithFold ::
   PathI TrashIndex ->
   IO a
 readIndexWithFold foldFn indexPath@(MkPathI fp) =
-  (BS.readFile >=> runFold . decode) fp
+  (BS.readFile >=> runFold mempty . decode) fp
   where
-    decode = Csv.decode HasHeader . BSL.fromStrict
-    runFold = \case
-      Left err -> throwIO $ MkExceptionI @ReadIndex (indexPath, err)
-      Right vec -> V.foldl' foldFn (pure mempty) vec
+    decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
+    runFold :: IO a -> Records PathData -> IO a
+    -- Base case, we have parsed everything with no errors nor unconsumed
+    -- input
+    runFold macc (Nil Nothing "") = macc
+    -- End of stream w/ an error.
+    runFold _ (Nil (Just err) rest) =
+      throwIO $
+        MkExceptionI @ReadIndex
+          ( indexPath,
+            mconcat
+              [ err,
+                " at \"",
+                lbsToStr rest,
+                "\""
+              ]
+          )
+    -- No errors but there is unconsumed input. This is probably impossible,
+    -- but just to cover all cases...
+    runFold _ (Nil _ rest) =
+      throwIO $
+        MkExceptionI @ReadIndex
+          (indexPath, "Unconsumed input: " <> lbsToStr rest)
+    -- Encountered an error.
+    runFold _ (Cons (Left err) _) =
+      throwIO $ MkExceptionI @ReadIndex (indexPath, err)
+    -- Inductive case, run fold and recurse
+    runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest
+
+    lbsToStr = Char8.unpack . BSL.toStrict
 
 -- | Verifies that the 'PathData''s 'originalPath' does not collide with
 -- an existing path.
