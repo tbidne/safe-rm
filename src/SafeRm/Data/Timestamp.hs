@@ -10,8 +10,8 @@ where
 import Data.ByteString.Char8 qualified as Char8
 import Data.Csv (FromField (parseField), ToField (toField))
 import Data.Time.Format qualified as Format
-import Data.Time.LocalTime (LocalTime)
 import Data.Time.LocalTime qualified as Local
+import Data.Time.LocalTime.Compat (LocalTime)
 import SafeRm.Prelude
 
 -- NOTE: We currently do not include any timezone information. We started
@@ -23,15 +23,17 @@ import SafeRm.Prelude
 -- would fix this upstream, though in the meantime we leave out timezone info
 -- altogether.
 
--- | Represents a point in time. The 'Eq'\/'Ord'\/'Hashable' instance is
--- determined by an equivalence class on its @YYYY-mm-dd H:M:S@
--- representation.
+-- | Represents a point in time.
 --
 -- @since 0.1
 newtype Timestamp = MkTimestamp LocalTime
   deriving stock
     ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
       Generic,
+      -- | @since 0.1
+      Ord,
       -- | @since 0.1
       Show
     )
@@ -39,18 +41,11 @@ newtype Timestamp = MkTimestamp LocalTime
     ( -- | @since 0.1
       NFData
     )
-
--- | @since 0.1
-instance Eq Timestamp where
-  x == y = toStr x == toStr y
-
--- | @since 0.1
-instance Ord Timestamp where
-  x <= y = toStr x <= toStr y
-
--- | @since 0.1
-instance Hashable Timestamp where
-  hashWithSalt s = hashWithSalt s . toStr
+  deriving
+    ( -- | @since 0.1
+      Hashable
+    )
+    via LocalTime
 
 -- | @since 0.1
 instance Pretty Timestamp where
