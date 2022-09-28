@@ -1,7 +1,7 @@
 -- | Provides types.
 --
 -- @since 0.1
-module Del.Data.Index
+module SafeRm.Data.Index
   ( Index (..),
 
     -- * Reading
@@ -24,15 +24,15 @@ import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List qualified as L
-import Del.Data.PathData (PathData, sortDefault)
-import Del.Data.PathData qualified as PathData
-import Del.Data.Paths
+import SafeRm.Data.PathData (PathData, sortDefault)
+import SafeRm.Data.PathData qualified as PathData
+import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashName),
     _MkPathI,
   )
-import Del.Data.Paths qualified as Paths
-import Del.Exceptions
+import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex
       ( DuplicateIndexPath,
@@ -42,7 +42,7 @@ import Del.Exceptions
         TrashPathNotFound
       ),
   )
-import Del.Prelude
+import SafeRm.Prelude
 import System.FilePath qualified as FP
 
 -- | Index that stores the trash data.

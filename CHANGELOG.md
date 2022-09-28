@@ -1,4 +1,4 @@
-# Revision history for del
+# Revision history for safe-rm
 
 ## 0.1 -- YYYY-mm-dd
 

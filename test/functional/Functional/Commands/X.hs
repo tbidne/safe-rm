@@ -7,9 +7,9 @@ module Functional.Commands.X
 where
 
 import Data.Text qualified as T
-import Del.Exceptions
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (tmpDir))
+import SafeRm.Exceptions
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -36,7 +36,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
   assertFilesExist [f1]
 
   -- delete to trash first
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   delResult <- captureDel ["l", "-t", trashDir]
@@ -50,7 +50,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
   -- PERMANENT DELETE
 
   let permDelArgList = ["x", "f1", "-f", "-t", trashDir]
-  runDel permDelArgList
+  runSafeRm permDelArgList
 
   -- list output assertions
   permDelResult <- captureDel ["l", "-t", trashDir]
@@ -64,7 +64,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/x1/f1",
+        Outfix "Original:" "/safe-rm/x1/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -94,7 +94,7 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   resultDel <- captureDel ["l", "-t", trashDir]
@@ -113,7 +113,7 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
 
   let permDelArgList =
         ["x", "f1", "f2", "f3", "dir1", "dir2", "-f", "-t", trashDir]
-  runDel permDelArgList
+  runSafeRm permDelArgList
 
   -- list output assertions
   permDelResult <- captureDel ["l", "-t", trashDir]
@@ -133,27 +133,27 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
     expectedDel =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/del/x2/dir1",
+        Outfix "Original:" "/safe-rm/x2/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/del/x2/dir2",
+        Outfix "Original:" "/safe-rm/x2/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/x2/f1",
+        Outfix "Original:" "/safe-rm/x2/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/del/x2/f2",
+        Outfix "Original:" "/safe-rm/x2/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/del/x2/f3",
+        Outfix "Original:" "/safe-rm/x2/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
@@ -177,14 +177,14 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
 
   -- technically we do not need to have anything in the trash to attempt
   -- a permanent delete, but this way we can ensure the trash itself is set
-  -- up (i.e. dir exists w/ index), so that we can test the perm del
+  -- up (i.e. dir exists w/ index), so that we can test the perm safe-rm
   -- failure only.
   clearDirectory testDir
   createFiles [f1]
   assertFilesExist [f1]
 
   -- delete to trash first
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   delResult <- captureDel ["l", "-t", trashDir]
@@ -201,7 +201,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
 
   -- assert exception
   result <-
-    (runDel permDelArgList $> Nothing)
+    (runSafeRm permDelArgList $> Nothing)
       `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -211,7 +211,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/x3/f1",
+        Outfix "Original:" "/safe-rm/x3/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",

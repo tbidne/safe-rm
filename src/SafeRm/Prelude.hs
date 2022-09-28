@@ -1,7 +1,7 @@
 -- | Custom prelude.
 --
 -- @since 0.1
-module Del.Prelude
+module SafeRm.Prelude
   ( module X,
   )
 where

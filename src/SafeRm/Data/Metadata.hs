@@ -1,7 +1,7 @@
 -- | Provides metadata functionality.
 --
 -- @since 0.1
-module Del.Data.Metadata
+module SafeRm.Data.Metadata
   ( Metadata (..),
     getMetadata,
   )
@@ -11,15 +11,15 @@ import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
-import Del.Data.Index (Index (MkIndex))
-import Del.Data.Index qualified as Index
-import Del.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
-import Del.Exceptions
+import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
+import SafeRm.Data.Index (Index (MkIndex))
+import SafeRm.Data.Index qualified as Index
+import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
+import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
   )
-import Del.Prelude
-import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
+import SafeRm.Prelude
 import System.Directory qualified as Dir
 
 -- | Holds trash metadata.

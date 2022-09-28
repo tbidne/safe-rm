@@ -1,16 +1,22 @@
 cradle:
   cabal:
     - path: "./src"
-      component: "lib:del"
+      component: "lib:safe-rm"
 
     - path: "./exe-internal"
-      component: "del:lib:del-exe-internal"
+      component: "safe-rm:lib:sr-exe-internal"
 
     - path: "./app/Main.hs"
-      component: "del:exe:del"
+      component: "safe-rm:exe:sr"
 
     - path: "./test/functional"
-      component: "del:test:functional"
+      component: "safe-rm:test:functional"
 
     - path: "./benchmarks/Main.hs"
-      component: "del:bench:benchmarks"
+      component: "safe-rm:bench:benchmarks"
+
+    - path: "./benchmarks/Benchmarks/Prelude.hs"
+      component: "safe-rm:bench:benchmarks"
+
+    - path: "./benchmarks/Benchmarks/ReadIndex.hs"
+      component: "safe-rm:bench:benchmarks"

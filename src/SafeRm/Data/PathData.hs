@@ -3,7 +3,7 @@
 -- | Provides types.
 --
 -- @since 0.1
-module Del.Data.PathData
+module SafeRm.Data.PathData
   ( PathData (..),
 
     -- * Creation
@@ -14,7 +14,7 @@ module Del.Data.PathData
     trashPathExists,
     originalPathExists,
 
-    -- * Deletion
+    -- * SafeRmetion
     mvTrashToOriginal,
     deletePathData,
 
@@ -40,21 +40,21 @@ import Data.Csv
   )
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
-import Del.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
-import Del.Data.Paths
+import GHC.Exts (IsList (Item))
+import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
+import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (OriginalName, TrashHome, TrashName, TrashPath),
     (<//>),
     _MkPathI,
   )
-import Del.Data.Paths qualified as Paths
-import Del.Data.Timestamp (Timestamp)
-import Del.Exceptions
+import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.Timestamp (Timestamp)
+import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, RenameDuplicate),
   )
-import Del.Prelude
-import GHC.Exts (IsList (Item))
+import SafeRm.Prelude
 import System.Directory qualified as Dir
 import System.FilePath qualified as FP
 

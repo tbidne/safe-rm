@@ -33,7 +33,7 @@
       mkPkg = returnShellEnv: withDevTools:
         compiler.developPackage {
           inherit returnShellEnv;
-          name = "del";
+          name = "safe-rm";
           root = ./.;
           modifier = drv:
             pkgs.haskell.lib.addBuildTools drv

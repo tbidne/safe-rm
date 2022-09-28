@@ -10,8 +10,8 @@ where
 import Benchmarks.Prelude
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
-import Del qualified
-import Del.Data.Paths (PathI (..), PathIndex (..))
+import SafeRm qualified
+import SafeRm.Data.Paths (PathI (..), PathIndex (..))
 
 -- | Index reading benchmarks.
 --
@@ -66,4 +66,4 @@ setup testDir = do
             ]
 
 readIndex :: String -> PathI TrashHome -> Benchmark
-readIndex desc = bench desc . nfIO . Del.getIndex . Just
+readIndex desc = bench desc . nfIO . SafeRm.getIndex . Just

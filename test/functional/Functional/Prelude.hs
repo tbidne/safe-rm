@@ -1,8 +1,8 @@
 module Functional.Prelude
   ( module X,
 
-    -- * Running Del
-    runDel,
+    -- * Running SafeRm
+    runSafeRm,
     captureDel,
 
     -- * File System Operations
@@ -25,8 +25,8 @@ where
 
 import Data.ByteString qualified as BS
 import Data.Text qualified as T
-import Del.Prelude as X
-import Del.Runner (runDelHandler)
+import SafeRm.Prelude as X
+import SafeRm.Runner (runSafeRmHandler)
 import System.Directory qualified as Dir
 import System.Environment qualified as SysEnv
 import Test.Tasty as X (TestTree, testGroup)
@@ -38,21 +38,21 @@ import Test.Tasty.HUnit as X
     (@=?),
   )
 
--- | Runs del.
+-- | Runs safe-rm.
 --
 -- @since 0.1
-runDel :: [String] -> IO ()
-runDel argList =
-  SysEnv.withArgs argList (runDelHandler (const (pure ())))
+runSafeRm :: [String] -> IO ()
+runSafeRm argList =
+  SysEnv.withArgs argList (runSafeRmHandler (const (pure ())))
 
--- | Runs del and captures output.
+-- | Runs safe-rm and captures output.
 --
 -- @since 0.1
 captureDel :: [String] -> IO [Text]
 captureDel argList = do
   output <- newIORef ""
   let handler txt = modifyIORef' output (<> txt)
-  SysEnv.withArgs argList (runDelHandler handler)
+  SysEnv.withArgs argList (runSafeRmHandler handler)
   T.lines <$> readIORef output
 
 -- | Creates empty files at the specified paths.

@@ -1,7 +1,7 @@
 -- | Provides types.
 --
 -- @since 0.1
-module Del.Data.PathType
+module SafeRm.Data.PathType
   ( PathType (..),
   )
 where
@@ -14,7 +14,7 @@ import Data.Csv qualified as Csv
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
-import Del.Prelude
+import SafeRm.Prelude
 
 -- | Path type.
 --

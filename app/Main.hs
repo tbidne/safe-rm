@@ -10,12 +10,12 @@ import Control.Exception
     catch,
     throwIO,
   )
-import Del.Runner (runDel)
+import SafeRm.Runner (runSafeRm)
 import System.Exit (ExitCode (ExitSuccess), exitFailure)
 
 main :: IO ()
 main =
-  runDel
+  runSafeRm
     `catchSync` doNothingOnSuccess
     `catchSync` handleEx
   where

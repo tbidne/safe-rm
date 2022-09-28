@@ -1,7 +1,7 @@
 -- | Timestamp functionality.
 --
 -- @since 0.1
-module Del.Data.Timestamp
+module SafeRm.Data.Timestamp
   ( Timestamp (..),
     getCurrentLocalTime,
   )
@@ -12,7 +12,7 @@ import Data.Csv (FromField (parseField), ToField (toField))
 import Data.Time.Format qualified as Format
 import Data.Time.LocalTime (LocalTime)
 import Data.Time.LocalTime qualified as Local
-import Del.Prelude
+import SafeRm.Prelude
 
 -- NOTE: We currently do not include any timezone information. We started
 -- out doing so at first but then realized timezone parsing is unsatisfactory.

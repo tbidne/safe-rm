@@ -7,12 +7,12 @@ module Functional.Commands.R
 where
 
 import Data.Text qualified as T
-import Del.Exceptions
+import Functional.Prelude
+import Functional.TestArgs (TestArgs (tmpDir))
+import SafeRm.Exceptions
   ( ExceptionI,
     ExceptionIndex (PathNotFound, RestoreCollision),
   )
-import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -40,7 +40,7 @@ restoreOne args = testCase "Restores a single file" $ do
   assertFilesExist [f1]
 
   -- delete to trash first
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   delResult <- captureDel ["l", "-t", trashDir]
@@ -54,7 +54,7 @@ restoreOne args = testCase "Restores a single file" $ do
   -- RESTORE
 
   let restoreArgList = ["r", "f1", "-t", trashDir]
-  runDel restoreArgList
+  runSafeRm restoreArgList
 
   -- list output assertions
   restoreResult <- captureDel ["l", "-t", trashDir]
@@ -68,7 +68,7 @@ restoreOne args = testCase "Restores a single file" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/r1/f1",
+        Outfix "Original:" "/safe-rm/r1/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -99,7 +99,7 @@ restoreMany args = testCase "Restores several paths" $ do
   assertDirectoriesExist ((testDir </>) <$> ["dir1", "dir2/dir3"])
   assertFilesExist ((testDir </> "dir2/dir3/foo") : filesToDelete)
 
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   resultDel <- captureDel ["l", "-t", trashDir]
@@ -118,7 +118,7 @@ restoreMany args = testCase "Restores several paths" $ do
 
   let restoreArgList =
         ["r", "f1", "f2", "f3", "dir1", "dir2", "-t", trashDir]
-  runDel restoreArgList
+  runSafeRm restoreArgList
 
   -- list output assertions
   restoreResult <- captureDel ["l", "-t", trashDir]
@@ -134,27 +134,27 @@ restoreMany args = testCase "Restores several paths" $ do
     expectedDel =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/del/r2/dir1",
+        Outfix "Original:" "/safe-rm/r2/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/del/r2/dir2",
+        Outfix "Original:" "/safe-rm/r2/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/r2/f1",
+        Outfix "Original:" "/safe-rm/r2/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/del/r2/f2",
+        Outfix "Original:" "/safe-rm/r2/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/del/r2/f3",
+        Outfix "Original:" "/safe-rm/r2/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
@@ -184,7 +184,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   createFiles [f1]
 
   -- delete to trash first
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   delResult <- captureDel ["l", "-t", trashDir]
@@ -200,7 +200,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
 
   -- assert exception
   result <-
-    (runDel restoreArgList $> Nothing)
+    (runSafeRm restoreArgList $> Nothing)
       `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -210,7 +210,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/r3/f1",
+        Outfix "Original:" "/safe-rm/r3/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -232,7 +232,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   createFiles [f1]
 
   -- delete to trash first and recreate
-  runDel delArgList
+  runSafeRm delArgList
   createFiles [f1]
 
   -- list output assertions
@@ -248,7 +248,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
 
   -- assert exception
   result <-
-    (runDel restoreArgList $> Nothing)
+    (runSafeRm restoreArgList $> Nothing)
       `catch` \(e :: ExceptionI RestoreCollision) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -258,7 +258,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/r4/f1",
+        Outfix "Original:" "/safe-rm/r4/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -269,5 +269,5 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
           ( "Cannot restore the trash file 'f1' as one exists at the "
               <> "original location:"
           )
-          "/del/r4/f1"
+          "/safe-rm/r4/f1"
       ]

@@ -35,7 +35,7 @@ metadata args = testCase "Prints metadata" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   delResult <- captureDel ["l", "-t", trashDir]
@@ -70,27 +70,27 @@ metadata args = testCase "Prints metadata" $ do
     expectedDel =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/del/m1/dir1",
+        Outfix "Original:" "/safe-rm/m1/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/del/m1/dir2",
+        Outfix "Original:" "/safe-rm/m1/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/m1/f1",
+        Outfix "Original:" "/safe-rm/m1/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/del/m1/f2",
+        Outfix "Original:" "/safe-rm/m1/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/del/m1/f3",
+        Outfix "Original:" "/safe-rm/m1/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",

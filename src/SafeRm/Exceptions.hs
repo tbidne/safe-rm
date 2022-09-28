@@ -1,9 +1,9 @@
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Provides exceptions used by Del.
+-- | Provides exceptions used by SafeRm.
 --
 -- @since 0.1
-module Del.Exceptions
+module SafeRm.Exceptions
   ( ExceptionI (..),
     _MkExceptionI,
     ExceptionIndex (..),
@@ -12,10 +12,10 @@ module Del.Exceptions
 where
 
 import Data.Typeable (Typeable, typeOf)
-import Del.Data.Paths (PathI (..), PathIndex (..))
-import Del.Prelude
 import GHC.Show (Show (showsPrec))
 import GHC.Show qualified as Show
+import SafeRm.Data.Paths (PathI (..), PathIndex (..))
+import SafeRm.Prelude
 
 -- | Types of exceptions thrown.
 --

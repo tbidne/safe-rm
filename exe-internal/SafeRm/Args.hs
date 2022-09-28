@@ -3,18 +3,16 @@
 -- | Provides CLI args functionality.
 --
 -- @since 0.1
-module Del.Args
+module SafeRm.Args
   ( getArgs,
     Args (..),
-    DelCommand (..),
+    SafeRmCommand (..),
   )
 where
 
 import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
-import Del.Data.Paths (PathI, PathIndex (..))
-import Del.Prelude
 import Development.GitRev qualified as GitRev
 import Options.Applicative
   ( CommandFields,
@@ -36,6 +34,8 @@ import Options.Applicative
 import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
+import SafeRm.Data.Paths (PathI, PathIndex (..))
+import SafeRm.Prelude
 
 -- | Retrieves CLI args.
 --
@@ -46,36 +46,36 @@ getArgs = OA.execParser parserInfoArgs
 -- | Action to run.
 --
 -- @since 0.1
-data DelCommand
+data SafeRmCommand
   = -- | Deletes a path.
     --
     -- @since 0.1
-    DelCommandDelete
+    SafeRmCommandDelete
       !(Maybe (PathI TrashHome))
       !(NonEmpty (PathI OriginalName))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
-    DelCommandPermDelete
+    SafeRmCommandPermDelete
       !(Maybe (PathI TrashHome))
       !Bool
       !(NonEmpty (PathI TrashName))
   | -- | Empties the trash.
     --
     -- @since 0.1
-    DelCommandEmpty !(Maybe (PathI TrashHome))
+    SafeRmCommandEmpty !(Maybe (PathI TrashHome))
   | -- | Restores a path.
     --
     -- @since 0.1
-    DelCommandRestore !(Maybe (PathI TrashHome)) !(NonEmpty (PathI TrashName))
+    SafeRmCommandRestore !(Maybe (PathI TrashHome)) !(NonEmpty (PathI TrashName))
   | -- | List all trash contents.
     --
     -- @since 0.1
-    DelCommandList !(Maybe (PathI TrashHome))
+    SafeRmCommandList !(Maybe (PathI TrashHome))
   | -- | Prints trash size.
     --
     -- @since 0.1
-    DelCommandMetadata !(Maybe (PathI TrashHome))
+    SafeRmCommandMetadata !(Maybe (PathI TrashHome))
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -90,7 +90,7 @@ newtype Args = MkArgs
   { -- | Command to run.
     --
     -- @since 0.1
-    command :: DelCommand
+    command :: SafeRmCommand
   }
   deriving stock
     ( -- | @since 0.1
@@ -113,12 +113,12 @@ parserInfoArgs =
       infoPolicy = Intersperse
     }
   where
-    headerTxt = Just "Del: A tool for deleting files to a trash directory."
+    headerTxt = Just "Safe-rm: A tool for deleting files to a trash directory."
     footerTxt = Just $ fromString versNum
     desc =
       Just $
         mconcat
-          [ "\nDel moves files to a trash directory, so they later can be ",
+          [ "\nSafe-rm moves files to a trash directory, so they can later be ",
             "restored or permanently deleted. It is intended as a safer ",
             "alternative to e.g. rm."
           ]
@@ -136,16 +136,16 @@ version = OA.infoOption txt (OA.long "version" <> OA.short 'v')
     txt =
       L.intercalate
         "\n"
-        [ "Del",
+        [ "SafeRm",
           versNum,
           "Revision: " <> $(GitRev.gitHash),
           "Date: " <> $(GitRev.gitCommitDate)
         ]
 
 versNum :: String
-versNum = "Version: " <> $$(PV.packageVersionStringTH "del.cabal")
+versNum = "Version: " <> $$(PV.packageVersionStringTH "safe-rm.cabal")
 
-commandParser :: Parser DelCommand
+commandParser :: Parser SafeRmCommand
 commandParser =
   OA.hsubparser
     ( mconcat
@@ -181,21 +181,21 @@ commandParser =
     metadataTxt = OA.progDesc "Prints trash metadata."
 
     delParser =
-      DelCommandDelete
+      SafeRmCommandDelete
         <$> trashParser
         <*> pathsParser
     permDelParser =
-      DelCommandPermDelete
+      SafeRmCommandPermDelete
         <$> trashParser
         <*> forceParser
         <*> pathsParser
-    emptyParser = DelCommandEmpty <$> trashParser
+    emptyParser = SafeRmCommandEmpty <$> trashParser
     restoreParser =
-      DelCommandRestore
+      SafeRmCommandRestore
         <$> trashParser
         <*> pathsParser
-    listParser = DelCommandList <$> trashParser
-    metadataParser = DelCommandMetadata <$> trashParser
+    listParser = SafeRmCommandList <$> trashParser
+    metadataParser = SafeRmCommandMetadata <$> trashParser
 
 forceParser :: Parser Bool
 forceParser =

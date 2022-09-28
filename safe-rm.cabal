@@ -1,5 +1,5 @@
 cabal-version:      2.4
-name:               del
+name:               safe-rm
 version:            0.1
 license:            MIT
 license-file:       LICENSE
@@ -7,8 +7,8 @@ tested-with:        GHC ==9.2.4
 copyright:          2022 Thomas Bidne
 author:             Thomas Bidne
 maintainer:         tbidne@protonmail.com
-homepage:           https://github.com/tbidne/del/
-bug-reports:        https://github.com/tbidne/del/issues
+homepage:           https://github.com/tbidne/safe-rm/
+bug-reports:        https://github.com/tbidne/safe-rm/issues
 synopsis:           Template
 description:        Template
 category:           Template
@@ -18,7 +18,7 @@ extra-source-files:
 
 source-repository head
   type:     git
-  location: https://github.com/tbidne/del
+  location: https://github.com/tbidne/safe-rm
 
 common common-exts
   default-extensions:
@@ -37,16 +37,16 @@ common common-exts
 library
   import:           common-exts
   exposed-modules:
-    Del
-    Del.Data.Index
-    Del.Data.Metadata
-    Del.Data.PathData
-    Del.Data.Paths
-    Del.Data.PathType
-    Del.Data.Timestamp
-    Del.Exceptions
-    Del.Prelude
-    Del.Utils
+    SafeRm
+    SafeRm.Data.Index
+    SafeRm.Data.Metadata
+    SafeRm.Data.PathData
+    SafeRm.Data.Paths
+    SafeRm.Data.PathType
+    SafeRm.Data.Timestamp
+    SafeRm.Exceptions
+    SafeRm.Prelude
+    SafeRm.Utils
 
   build-depends:
     , algebra-simple        ^>=0.1
@@ -68,31 +68,31 @@ library
   hs-source-dirs:   src
   default-language: GHC2021
 
-library del-exe-internal
+library safe-rm-exe-internal
   import:           common-exts
   exposed-modules:
-    Del.Args
-    Del.Runner
+    SafeRm.Args
+    SafeRm.Runner
 
   build-depends:
     , base
-    , del
     , gitrev                >=1.2.0   && <1.4
     , optparse-applicative  >=0.15    && <0.18
     , package-version       >=0.1.0.0 && <0.4
+    , safe-rm
     , text
     , unordered-containers
 
   hs-source-dirs:   exe-internal
   default-language: GHC2021
 
-executable del
+executable sr
   import:             common-exts
   default-extensions: ImplicitPrelude
   main-is:            Main.hs
   build-depends:
     , base
-    , del-exe-internal
+    , safe-rm-exe-internal
 
   hs-source-dirs:     app
   ghc-options:        -threaded -with-rtsopts=-N
@@ -115,12 +115,12 @@ test-suite functional
   build-depends:
     , base
     , bytestring
-    , del
-    , del-exe-internal
     , directory
-    , env-guard         ^>=0.2
-    , tasty             >=1.1.0.3 && <1.5
-    , tasty-hunit       >=0.9     && <0.11
+    , env-guard             ^>=0.2
+    , safe-rm
+    , safe-rm-exe-internal
+    , tasty                 >=1.1.0.3 && <1.5
+    , tasty-hunit           >=0.9     && <0.11
     , text
 
   hs-source-dirs:   test/functional
@@ -137,9 +137,9 @@ benchmark benchmarks
   build-depends:
     , base
     , bytestring
-    , del
     , directory
     , env-guard
+    , safe-rm
     , tasty-bench  ^>=0.3
 
   ghc-options:      -Wno-unused-packages

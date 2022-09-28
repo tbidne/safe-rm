@@ -7,9 +7,9 @@ module Functional.Commands.D
 where
 
 import Data.Text qualified as T
-import Del.Exceptions (ExceptionI, ExceptionIndex (PathNotFound))
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (tmpDir))
+import SafeRm.Exceptions (ExceptionI, ExceptionIndex (PathNotFound))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -35,7 +35,7 @@ deletesOne args = testCase "Deletes a single file" $ do
   createFiles [f1]
   assertFilesExist [f1]
 
-  runDel argList
+  runSafeRm argList
 
   -- list output assertions
   result <- captureDel ["l", "-t", trashDir]
@@ -49,7 +49,7 @@ deletesOne args = testCase "Deletes a single file" $ do
     expected =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/d1/f1",
+        Outfix "Original:" "/safe-rm/d1/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -74,7 +74,7 @@ deletesMany args = testCase "Deletes several paths" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runDel argList
+  runSafeRm argList
 
   -- list output assertions
   result <- captureDel ["l", "-t", trashDir]
@@ -92,27 +92,27 @@ deletesMany args = testCase "Deletes several paths" $ do
     expected =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/del/d2/dir1",
+        Outfix "Original:" "/safe-rm/d2/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/del/d2/dir2",
+        Outfix "Original:" "/safe-rm/d2/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/d2/f1",
+        Outfix "Original:" "/safe-rm/d2/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/del/d2/f2",
+        Outfix "Original:" "/safe-rm/d2/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/del/d2/f3",
+        Outfix "Original:" "/safe-rm/d2/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
@@ -132,13 +132,13 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
 
   -- assert exception
   result <-
-    (runDel argList $> Nothing)
+    (runSafeRm argList $> Nothing)
       `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
     Just ex -> assertMatches expected [T.pack $ displayException ex]
   where
-    expected = [Outfix "Path not found:" "/del/d3/bad file"]
+    expected = [Outfix "Path not found:" "/safe-rm/d3/bad file"]
 
 deleteDuplicateFile :: IO TestArgs -> TestTree
 deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
@@ -154,11 +154,11 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
   -- create and delete twice
   createFiles [file]
   assertFilesExist [file]
-  runDel argList
+  runSafeRm argList
 
   createFiles [file]
   assertFilesExist [file]
-  runDel argList
+  runSafeRm argList
 
   result <- captureDel ["l", "-t", trashDir]
   assertMatches expected result
@@ -172,12 +172,12 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
     expected =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/d4/f1",
+        Outfix "Original:" "/safe-rm/d4/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f11",
-        Outfix "Original:" "/del/d4/f1",
+        Outfix "Original:" "/safe-rm/d4/f1",
         Prefix "Created:",
         Exact "Entries:      2",
         Exact "Total Files:  2",

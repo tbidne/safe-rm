@@ -35,7 +35,7 @@ empty args = testCase "Empties trash" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runDel delArgList
+  runSafeRm delArgList
 
   -- list output assertions
   resultDel <- captureDel ["l", "-t", trashDir]
@@ -53,7 +53,7 @@ empty args = testCase "Empties trash" $ do
   -- EMPTY
 
   let emptyArgList = ["e", "-t", trashDir]
-  runDel emptyArgList
+  runSafeRm emptyArgList
 
   -- list output assertions
   result <- captureDel ["l", "-t", trashDir]
@@ -72,27 +72,27 @@ empty args = testCase "Empties trash" $ do
     expectedDel =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/del/e1/dir1",
+        Outfix "Original:" "/safe-rm/e1/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/del/e1/dir2",
+        Outfix "Original:" "/safe-rm/e1/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/del/e1/f1",
+        Outfix "Original:" "/safe-rm/e1/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/del/e1/f2",
+        Outfix "Original:" "/safe-rm/e1/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/del/e1/f3",
+        Outfix "Original:" "/safe-rm/e1/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",

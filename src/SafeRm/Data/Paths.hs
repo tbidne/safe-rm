@@ -1,7 +1,7 @@
 -- | Provides functionality for distinguishing path types.
 --
 -- @since 0.1
-module Del.Data.Paths
+module SafeRm.Data.Paths
   ( -- * Types
     PathI (..),
     _MkPathI,
@@ -23,11 +23,11 @@ module Del.Data.Paths
 where
 
 import Data.Csv (FromField, ToField)
-import Del.Prelude
+import SafeRm.Prelude
 import System.Directory qualified as Dir
 import System.FilePath qualified as FP
 
--- | Types of filepaths used in Del.
+-- | Types of filepaths used in SafeRm.
 --
 -- @since 0.1
 data PathIndex

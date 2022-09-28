@@ -1,12 +1,12 @@
 -- | Provides internal utility functions
 --
 -- @since 0.1
-module Del.Utils
+module SafeRm.Utils
   ( allM1,
   )
 where
 
-import Del.Prelude
+import SafeRm.Prelude
 
 -- | 'allM' that must have at least one 'True'.
 --

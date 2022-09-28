@@ -8,9 +8,9 @@ where
 
 import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
-import Del.Exceptions
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
+import SafeRm.Exceptions
 
 -- import Data.ByteString qualified as BS
 
@@ -54,7 +54,7 @@ readIndexError args = testCase "Read Index Error" $ do
 
   -- assert exception
   result <-
-    (runDel argList $> Nothing)
+    (runSafeRm argList $> Nothing)
       `catch` \(e :: ExceptionI ReadIndex) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -91,7 +91,7 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
 
   -- assert exception
   result <-
-    (runDel argList $> Nothing)
+    (runSafeRm argList $> Nothing)
       `catch` \(e :: ExceptionI TrashPathNotFound) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -100,7 +100,7 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
     expected =
       [ Outfix
           "The path 'foo' was not found in the trash directory"
-          "/del/l3/.trash' despite being listed in the trash index."
+          "/safe-rm/l3/.trash' despite being listed in the trash index."
       ]
 
 indexDuplicatesError :: IO TestArgs -> TestTree
@@ -131,7 +131,7 @@ indexDuplicatesError args = testCase "Index Duplicates Error" $ do
 
   -- assert exception
   result <-
-    (runDel argList $> Nothing)
+    (runSafeRm argList $> Nothing)
       `catch` \(e :: ExceptionI DuplicateIndexPath) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -144,7 +144,7 @@ indexDuplicatesError args = testCase "Index Duplicates Error" $ do
                 "the trash index"
               ]
           )
-          "/del/l4/.trash/.index.csv' for the following path: foo"
+          "/safe-rm/l4/.trash/.index.csv' for the following path: foo"
       ]
 
 indexSizeMismatchError :: IO TestArgs -> TestTree
@@ -174,7 +174,7 @@ indexSizeMismatchError args = testCase "Index Size Mismatch Error" $ do
 
   -- assert exception
   result <-
-    (runDel argList $> Nothing)
+    (runSafeRm argList $> Nothing)
       `catch` \(e :: ExceptionI TrashIndexSizeMismatch) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
@@ -187,5 +187,5 @@ indexSizeMismatchError args = testCase "Index Size Mismatch Error" $ do
                 "entries (2) in trash:"
               ]
           )
-          "/del/l5/.trash"
+          "/safe-rm/l5/.trash"
       ]

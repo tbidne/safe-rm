@@ -34,7 +34,7 @@ main =
 
 setup :: IO TestArgs
 setup = do
-  tmpDir <- (</> "del") <$> Dir.getTemporaryDirectory
+  tmpDir <- (</> "safe-rm") <$> Dir.getTemporaryDirectory
 
   createDirectoryIfMissing False tmpDir
   pure $ MkTestArgs tmpDir

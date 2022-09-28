@@ -3,10 +3,10 @@
 -- | Provides functionality for moving a file to a trash location.
 --
 -- @since 0.1
-module Del
-  ( -- * Deletion
-    del,
-    permDel,
+module SafeRm
+  ( -- * Delete
+    delete,
+    deletePermanently,
     empty,
 
     -- * Restore
@@ -22,31 +22,31 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
-import Del.Data.Index (Index (..))
-import Del.Data.Index qualified as Index
-import Del.Data.Metadata (Metadata (..))
-import Del.Data.Metadata qualified as Metadata
-import Del.Data.PathData (PathData (..))
-import Del.Data.PathData qualified as PathData
-import Del.Data.Paths
+import SafeRm.Data.Index (Index (..))
+import SafeRm.Data.Index qualified as Index
+import SafeRm.Data.Metadata (Metadata (..))
+import SafeRm.Data.Metadata qualified as Metadata
+import SafeRm.Data.PathData (PathData (..))
+import SafeRm.Data.PathData qualified as PathData
+import SafeRm.Data.Paths
   ( PathI,
     PathIndex (..),
     _MkPathI,
   )
-import Del.Data.Paths qualified as Paths
-import Del.Data.Timestamp qualified as Timestamp
-import Del.Prelude
-import Del.Utils qualified as Utils
+import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.Timestamp qualified as Timestamp
+import SafeRm.Prelude
+import SafeRm.Utils qualified as Utils
 import System.Directory qualified as Dir
 import System.IO qualified as IO
 
--- | @del trash p@ moves path @p@ to the given trash location @trash@ and
+-- | @delete trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
 -- defaults to @~\/.trash@.
 --
 -- @since 0.1
-del :: Maybe (PathI TrashHome) -> HashSet (PathI OriginalName) -> IO ()
-del mtrash paths = do
+delete :: Maybe (PathI TrashHome) -> HashSet (PathI OriginalName) -> IO ()
+delete mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
@@ -74,16 +74,16 @@ del mtrash paths = do
 -- | Permanently deletes the paths from the trash.
 --
 -- @since 0.1
-permDel ::
+deletePermanently ::
   Maybe (PathI TrashHome) ->
   Bool ->
   HashSet (PathI TrashName) ->
   IO ()
-permDel mtrash force paths = do
+deletePermanently mtrash force paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
 
-  toDelete <- Index.searchIndex False trashHome paths index
+  toSafeRmete <- Index.searchIndex False trashHome paths index
   deletedPathsRef <- newIORef Map.empty
 
   let deleteFn pd = do
@@ -94,7 +94,7 @@ permDel mtrash force paths = do
   deletePathsFn <-
     if force
       then do
-        pure $ for_ toDelete deleteFn
+        pure $ for_ toSafeRmete deleteFn
       else do
         -- NOTE:
         -- - No buffering on input so we can read a single char w/o requiring a
@@ -106,7 +106,7 @@ permDel mtrash force paths = do
         IO.hSetBuffering IO.stdin NoBuffering
         IO.hSetBuffering IO.stdout NoBuffering
 
-        pure $ for_ toDelete $ \pd -> do
+        pure $ for_ toSafeRmete $ \pd -> do
           let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
           putStrLn $ T.unpack pdStr
           putStr "Permanently delete (y/n)? "
@@ -165,7 +165,7 @@ restore mtrash paths = do
     restoredPaths <- readIORef restoredPathsRef
     Index.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
 
--- | Empties the trash. Deletes the index file.
+-- | Empties the trash. SafeRmetes the index file.
 --
 -- @since 0.1
 empty :: Maybe (PathI TrashHome) -> IO ()

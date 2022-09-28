@@ -7,8 +7,8 @@ where
 
 import Data.ByteString.Char8 qualified as Char8
 import Data.List qualified as L
-import Del.Data.PathData (headerNames)
-import Del.Prelude as X
+import SafeRm.Data.PathData (headerNames)
+import SafeRm.Prelude as X
 import System.Directory qualified as Dir
 import Test.Tasty.Bench as X
   ( Benchmark,

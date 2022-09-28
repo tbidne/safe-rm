@@ -3,7 +3,7 @@ let
   compiler = pkgs.haskell.packages."ghc924";
 in
 pkgs.haskell.lib.buildStackProject {
-  name = "del";
+  name = "safe-rm";
 
   buildInputs = with pkgs; [
     git
