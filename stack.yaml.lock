@@ -6,6 +6,13 @@
 packages:
 - completed:
     pantry-tree:
+      sha256: af965e0380b7a6889116657802e98b8b6e982bb2ea6550151b7d2abd364f3074
+      size: 419
+    hackage: env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
+  original:
+    hackage: env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
+- completed:
+    pantry-tree:
       sha256: 0313e1494edd350cd2b2c60890a8ee64d5ad3e74cb4df3942cebdd3746ba6f99
       size: 1040
     hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781

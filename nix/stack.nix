@@ -1,6 +1,6 @@
 let
   pkgs = import ((import ../default.nix).inputs.nixpkgs) { };
-  compiler = pkgs.haskell.packages."ghc902";
+  compiler = pkgs.haskell.packages."ghc924";
 in
 pkgs.haskell.lib.buildStackProject {
   name = "del";

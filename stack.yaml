@@ -9,6 +9,7 @@ ghc-options:
     -Wredundant-constraints -Wunused-packages -Wmissing-deriving-strategies
     -Wno-unticked-promoted-constructors -Wprepositive-qualified-module
 extra-deps:
+- env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
 - package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
 - git: https://github.com/tbidne/algebra-simple.git
   commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
