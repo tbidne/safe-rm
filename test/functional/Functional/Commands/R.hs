@@ -66,10 +66,10 @@ restoreOne args = testCase "Restores a single file" $ do
   assertDirectoriesExist [trashDir]
   where
     expectedDel =
-      [ Exact "type:      File",
-        Exact "name:      f1",
-        Outfix "original:" "/del/r1/f1",
-        Prefix "created:",
+      [ Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/del/r1/f1",
+        Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
         Prefix "Size:"
@@ -132,30 +132,30 @@ restoreMany args = testCase "Restores several paths" $ do
     ((trashDir </>) <$> ["dir1", "dir2", "dir2/dir3"])
   where
     expectedDel =
-      [ Exact "type:      Directory",
-        Exact "name:      dir1",
-        Outfix "original:" "/del/r2/dir1",
-        Prefix "created:",
+      [ Exact "Type:      Directory",
+        Exact "Name:      dir1",
+        Outfix "Original:" "/del/r2/dir1",
+        Prefix "Created:",
         Exact "",
-        Exact "type:      Directory",
-        Exact "name:      dir2",
-        Outfix "original:" "/del/r2/dir2",
-        Prefix "created:",
+        Exact "Type:      Directory",
+        Exact "Name:      dir2",
+        Outfix "Original:" "/del/r2/dir2",
+        Prefix "Created:",
         Exact "",
-        Exact "type:      File",
-        Exact "name:      f1",
-        Outfix "original:" "/del/r2/f1",
-        Prefix "created:",
+        Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/del/r2/f1",
+        Prefix "Created:",
         Exact "",
-        Exact "type:      File",
-        Exact "name:      f2",
-        Outfix "original:" "/del/r2/f2",
-        Prefix "created:",
+        Exact "Type:      File",
+        Exact "Name:      f2",
+        Outfix "Original:" "/del/r2/f2",
+        Prefix "Created:",
         Exact "",
-        Exact "type:      File",
-        Exact "name:      f3",
-        Outfix "original:" "/del/r2/f3",
-        Prefix "created:",
+        Exact "Type:      File",
+        Exact "Name:      f3",
+        Outfix "Original:" "/del/r2/f3",
+        Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
         Prefix "Size:"
@@ -208,10 +208,10 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   where
     expectedDel =
-      [ Exact "type:      File",
-        Exact "name:      f1",
-        Outfix "original:" "/del/r3/f1",
-        Prefix "created:",
+      [ Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/del/r3/f1",
+        Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
         Prefix "Size:"
@@ -256,10 +256,10 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   assertFilesExist [trashDir </> "f1", f1, trashDir </> ".index.csv"]
   where
     expectedDel =
-      [ Exact "type:      File",
-        Exact "name:      f1",
-        Outfix "original:" "/del/r4/f1",
-        Prefix "created:",
+      [ Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/del/r4/f1",
+        Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
         Prefix "Size:"

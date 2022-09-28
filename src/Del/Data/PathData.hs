@@ -138,7 +138,7 @@ instance Pretty PathData where
 --
 -- @since 0.1
 headerNames :: (IsList a, IsString (Item a)) => a
-headerNames = ["type", "name", "original", "created"]
+headerNames = ["Type", "Name", "Original", "Created"]
 
 -- | For a given filepath, attempts to capture the following data:
 --
