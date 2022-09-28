@@ -11,6 +11,7 @@ import Functional.Commands.X qualified as X
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (..))
 import System.Directory qualified as Dir
+import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
 
 -- | Runs unit tests.
@@ -19,18 +20,15 @@ import Test.Tasty qualified as Tasty
 main :: IO ()
 main =
   Tasty.defaultMain $
-    Tasty.withResource setup teardown specs
-
-specs :: IO TestArgs -> TestTree
-specs args =
-  testGroup
-    "Functional Tests"
-    [ D.tests args,
-      X.tests args,
-      E.tests args,
-      R.tests args,
-      M.tests args
-    ]
+    Tasty.withResource setup teardown $ \args ->
+      testGroup
+        "Functional Tests"
+        [ D.tests args,
+          X.tests args,
+          E.tests args,
+          R.tests args,
+          M.tests args
+        ]
 
 setup :: IO TestArgs
 setup = do
@@ -40,4 +38,8 @@ setup = do
   pure $ MkTestArgs tmpDir
 
 teardown :: TestArgs -> IO ()
-teardown args = Dir.removePathForcibly (args ^. #tmpDir)
+teardown args = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
+  where
+    cleanup = Dir.removePathForcibly (args ^. #tmpDir)
+    doNothing =
+      putStrLn $ "*** Not cleaning up tmp dir: " <> args ^. #tmpDir
