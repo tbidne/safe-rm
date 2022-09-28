@@ -74,7 +74,11 @@ del mtrash paths = do
 -- | Permanently deletes the paths from the trash.
 --
 -- @since 0.1
-permDel :: Maybe (PathI TrashHome) -> Bool -> HashSet (PathI TrashName) -> IO ()
+permDel ::
+  Maybe (PathI TrashHome) ->
+  Bool ->
+  HashSet (PathI TrashName) ->
+  IO ()
 permDel mtrash force paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath

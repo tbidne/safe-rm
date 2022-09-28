@@ -107,8 +107,6 @@ searchIndex ::
   -- | Trash home. Used to verify that found trash paths actually exist.
   PathI TrashHome ->
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
-  --
-  -- REVIEW: Should this be a non-empty set?
   HashSet (PathI TrashName) ->
   -- | The trash index.
   Index ->
