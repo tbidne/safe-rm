@@ -17,7 +17,7 @@ allM1 (m :| ms) =
     True -> allM ms
     False -> pure False
 
--- | 'all' lifted to monads.
+-- | 'Prelude.all' lifted to monads.
 --
 -- @since 0.1
 allM :: (Foldable t, Monad m) => t (m Bool) -> m Bool

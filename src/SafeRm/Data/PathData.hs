@@ -267,7 +267,7 @@ mvOriginalToTrash trashHome pd =
       PathTypeFile -> Dir.renameFile
       PathTypeDirectory -> Dir.renameDirectory
 
--- | Returns 'True' if the 'PathData''s 'fileName' corresponds to a real path
+-- | Returns 'True' if the 'PathData'\'s @fileName@ corresponds to a real path
 -- that exists in 'TrashHome'.
 --
 -- @since 0.1
@@ -279,7 +279,7 @@ trashPathExists (MkPathI trashHome) pd = existsFn trashPath
       PathTypeFile -> Dir.doesFileExist
       PathTypeDirectory -> Dir.doesDirectoryExist
 
--- | Returns 'True' if the 'PathData''s 'originalPath' corresponds to a real
+-- | Returns 'True' if the 'PathData\''s @originalPath@ corresponds to a real
 -- path that exists.
 --
 -- @since 0.1
@@ -290,7 +290,7 @@ originalPathExists pd = existsFn (pd ^. #originalPath % _MkPathI)
       PathTypeFile -> Dir.doesFileExist
       PathTypeDirectory -> Dir.doesDirectoryExist
 
--- | Gives the 'PathData's full trash path in the given 'TrashHome'.
+-- | Gives the 'PathData'\'s full trash path in the given 'TrashHome'.
 --
 -- @since 0.1
 pathDataToTrashPath :: PathI TrashHome -> PathData -> PathI TrashPath

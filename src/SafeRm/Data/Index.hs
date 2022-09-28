@@ -182,7 +182,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 
     lbsToStr = Char8.unpack . BSL.toStrict
 
--- | Verifies that the 'PathData''s 'originalPath' does not collide with
+-- | Verifies that the 'PathData'\'s @originalPath@ does not collide with
 -- an existing path.
 --
 -- @since 0.1
@@ -196,7 +196,7 @@ throwIfOrigCollision pd = do
     trashName = pd ^. #fileName
     originalPath = pd ^. #originalPath
 
--- | Verifies that the 'PathData''s 'fileName' does not exist in the
+-- | Verifies that the 'PathData'\'s @fileName@ does not exist in the
 -- hashmap.
 --
 -- @since 0.1
@@ -212,7 +212,7 @@ throwIfDuplicates indexPath trashMap pd =
   where
     fileName = pd ^. #fileName
 
--- | Verifies that the 'PathData'\'s 'fileName' actually exists.
+-- | Verifies that the 'PathData'\'s @fileName@ actually exists.
 --
 -- @since 0.1
 throwIfTrashNonExtant :: PathI TrashHome -> PathData -> IO ()
