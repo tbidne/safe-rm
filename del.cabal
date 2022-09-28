@@ -105,6 +105,7 @@ test-suite functional
   other-modules:
     Functional.Commands.D
     Functional.Commands.E
+    Functional.Commands.L
     Functional.Commands.M
     Functional.Commands.R
     Functional.Commands.X

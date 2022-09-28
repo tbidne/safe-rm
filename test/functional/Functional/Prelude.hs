@@ -7,6 +7,7 @@ module Functional.Prelude
 
     -- * File System Operations
     createFiles,
+    createFileContents,
     createDirectories,
     clearDirectory,
 
@@ -60,6 +61,13 @@ captureDel argList = do
 createFiles :: [FilePath] -> IO ()
 createFiles paths = do
   for_ paths $ \p -> BS.writeFile p ""
+
+-- | Creates files at the specified paths.
+--
+-- @since 0.1
+createFileContents :: [(FilePath, ByteString)] -> IO ()
+createFileContents paths = do
+  for_ paths (uncurry BS.writeFile)
 
 -- | Creates empty files at the specified paths.
 --

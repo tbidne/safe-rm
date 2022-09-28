@@ -11,8 +11,11 @@ module Del.Exceptions
   )
 where
 
+import Data.Typeable (Typeable, typeOf)
 import Del.Data.Paths (PathI (..), PathIndex (..))
 import Del.Prelude
+import GHC.Show (Show (showsPrec))
+import GHC.Show qualified as Show
 
 -- | Types of exceptions thrown.
 --
@@ -87,7 +90,15 @@ newtype ExceptionI i = MkExceptionI (ExceptionF i)
 deriving stock instance Eq (ExceptionF i) => Eq (ExceptionI i)
 
 -- | @since 0.1
-deriving stock instance Show (ExceptionF i) => Show (ExceptionI i)
+instance (Show (ExceptionF i), Typeable i) => Show (ExceptionI i) where
+  -- NOTE: not derived so we can include the index.
+  showsPrec i (MkExceptionI e) =
+    Show.showParen
+      (i >= Show.appPrec1)
+      (Show.showString baseName . Show.showsPrec Show.appPrec1 e)
+    where
+      baseName = "MkExceptionI (" <> show rep <> ") "
+      rep = typeOf @(Proxy i) Proxy
 
 -- | @since 0.1
 deriving anyclass instance NFData (ExceptionF i) => NFData (ExceptionI i)
