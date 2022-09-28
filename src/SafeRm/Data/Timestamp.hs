@@ -23,7 +23,7 @@ import SafeRm.Prelude
 -- would fix this upstream, though in the meantime we leave out timezone info
 -- altogether.
 
--- | Represents a point in time. The 'Eq'/'Ord'/'Hashable' instance is
+-- | Represents a point in time. The 'Eq'\/'Ord'\/'Hashable' instance is
 -- determined by an equivalence class on its @YYYY-mm-dd H:M:S@
 -- representation.
 --

@@ -118,7 +118,7 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
-    trashKeys = Set.map (Paths.liftPathI FP.dropTrailingPathSeparator) keys
+    trashKeys = Set.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys :: IO (HashSet PathData) -> PathI TrashName -> IO (HashSet PathData)
     foldKeys macc trashKey = do
       acc <- macc
@@ -152,6 +152,9 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
   (BS.readFile >=> runFold mempty . decode) fp
   where
     decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
+    -- NOTE: We fold over the Records manually because its Foldable instance
+    -- swallows errors, whereas we would like to report any encountered
+    -- immediately.
     runFold :: IO a -> Records PathData -> IO a
     -- Base case, we have parsed everything with no errors nor unconsumed
     -- input
@@ -224,8 +227,7 @@ throwIfTrashNonExtant trashHome pd = do
   where
     filePath = pd ^. #fileName
 
--- | Appends the path data to the trash index. This is intended to be used
--- after a successful move to the trash.
+-- | Appends the path data to the trash index. The header is not included.
 --
 -- @since 0.1
 appendIndex :: PathI TrashIndex -> Index -> IO ()
@@ -236,8 +238,8 @@ appendIndex (MkPathI indexPath) =
     . Map.elems
     . view #unIndex
 
--- | Writes the path data to the trash index. This is intended to be used
--- after a successful move to the trash.
+-- | Writes the path data to the trash index, overwriting the index if it
+-- exists. The header is included.
 --
 -- @since 0.1
 writeIndex :: PathI TrashIndex -> Index -> IO ()

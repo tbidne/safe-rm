@@ -14,7 +14,7 @@ module SafeRm.Data.PathData
     trashPathExists,
     originalPathExists,
 
-    -- * SafeRmetion
+    -- * Deletion
     mvTrashToOriginal,
     deletePathData,
 
@@ -149,16 +149,16 @@ headerNames = ["Type", "Name", "Original", "Created"]
 -- @since 0.1
 toPathData :: Timestamp -> PathI TrashHome -> PathI OriginalName -> IO PathData
 toPathData currTime trashHome originalPath = do
-  origPath <- Paths.liftPathIM Dir.canonicalizePath originalPath
+  origPath <- Paths.liftPathIF' Dir.canonicalizePath originalPath
   -- NOTE: need to get the file name here because fp could refer to an
   -- absolute path. In this case, </> returns the 2nd arg which is absolutely
   -- not what we want.
   --
   -- This works for directories too because canonicalizePath drops the
   -- trailing slashes.
-  let fileName = Paths.liftPathI FP.takeFileName origPath
+  let fileName = Paths.liftPathI' FP.takeFileName origPath
   uniqPath <- mkUniqPath (trashHome <//> fileName)
-  let uniqName = Paths.liftPathI FP.takeFileName uniqPath
+  let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
   isFile <- Paths.applyPathI Dir.doesFileExist origPath
   if isFile
     then
@@ -178,9 +178,9 @@ toPathData currTime trashHome originalPath = do
             -- ensure later lookups succeed (requires string equality)
             MkPathData
               { fileName =
-                  Paths.liftPathI FP.dropTrailingPathSeparator uniqName,
+                  Paths.liftPathI' FP.dropTrailingPathSeparator uniqName,
                 originalPath =
-                  Paths.liftPathI FP.dropTrailingPathSeparator origPath,
+                  Paths.liftPathI' FP.dropTrailingPathSeparator origPath,
                 pathType = PathTypeDirectory,
                 created = currTime
               }
@@ -235,7 +235,7 @@ sortName = mapOrd (view #fileName)
 mapOrd :: Ord b => (a -> b) -> a -> a -> Ordering
 mapOrd f x y = f x `compare` f y
 
--- | Moves the 'PathData' to the trash.
+-- | Moves the 'PathData'\'s @fileName@ back to its @originalPath@.
 --
 -- @since 0.1
 mvTrashToOriginal :: PathI TrashHome -> PathData -> IO ()
@@ -255,7 +255,7 @@ deletePathData (MkPathI trashHome) pd = Dir.removePathForcibly trashPath
   where
     trashPath = trashHome </> (pd ^. #fileName % _MkPathI)
 
--- | Renames a path based on its type.
+-- | Moves the 'PathData'\'s @originalPath@ to the trash.
 --
 -- @since 0.1
 mvOriginalToTrash :: PathI TrashHome -> PathData -> IO ()
@@ -279,7 +279,7 @@ trashPathExists (MkPathI trashHome) pd = existsFn trashPath
       PathTypeFile -> Dir.doesFileExist
       PathTypeDirectory -> Dir.doesDirectoryExist
 
--- | Returns 'True' if the 'PathData\''s @originalPath@ corresponds to a real
+-- | Returns 'True' if the 'PathData'\'s @originalPath@ corresponds to a real
 -- path that exists.
 --
 -- @since 0.1

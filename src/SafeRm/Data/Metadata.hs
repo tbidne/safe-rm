@@ -76,7 +76,7 @@ instance Pretty Metadata where
           (MkFloatingFormatter (Just 2))
           Bytes.sizedFormatterUnix
 
--- | Returns stats on the trash directory.
+-- | Returns metadata for the trash directory.
 --
 -- @since 0.1
 getMetadata :: (PathI TrashHome, PathI TrashIndex) -> IO Metadata

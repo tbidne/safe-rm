@@ -14,11 +14,13 @@ module SafeRm.Data.Paths
     getTrashAndIndex,
 
     -- ** General
+    -- $general
     (<//>),
     applyPathI,
     liftPathI,
-    unsafeLiftPathI,
-    liftPathIM,
+    liftPathI',
+    liftPathIF,
+    liftPathIF',
   )
 where
 
@@ -47,7 +49,7 @@ data PathIndex
     --
     -- @since 0.1
     OriginalName
-  | -- | The full trash path i.e. @'TrashHome' </> 'TrashName'@
+  | -- | The full trash path i.e. @'TrashHome' '</>' 'TrashName'@
     --
     -- @since 0.1
     TrashPath
@@ -91,24 +93,32 @@ newtype PathI (i :: PathIndex) = MkPathI FilePath
 _MkPathI :: Iso' (PathI i) FilePath
 _MkPathI = iso (\(MkPathI fp) -> fp) MkPathI
 
--- | Lifts a 'FilePath' transformation to 'PathI'.
---
--- @since 0.1
-liftPathI :: (FilePath -> FilePath) -> PathI i -> PathI i
-liftPathI = unsafeLiftPathI
-
--- | Lifts a 'FilePath' transformation to 'PathI'.
---
--- @since 0.1
-liftPathIM :: (FilePath -> IO FilePath) -> PathI i -> IO (PathI i)
-liftPathIM f = fmap MkPathI . applyPathI f
-
 -- | Lifts a 'FilePath' transformation to 'PathI', allowing for the index to
 -- change.
 --
 -- @since 0.1
-unsafeLiftPathI :: (FilePath -> FilePath) -> PathI i -> PathI j
-unsafeLiftPathI f (MkPathI fp) = MkPathI (f fp)
+liftPathI :: (FilePath -> FilePath) -> PathI i -> PathI j
+liftPathI f (MkPathI fp) = MkPathI (f fp)
+
+-- | 'liftPathI' specialized to the same index. This should be preferred
+-- as the former is easier to use incorrectly.
+--
+-- @since 0.1
+liftPathI' :: (FilePath -> FilePath) -> PathI i -> PathI i
+liftPathI' = liftPathI
+
+-- | Lifts an effectful 'FilePath' transformation to 'PathI'.
+--
+-- @since 0.1
+liftPathIF :: Functor f => (FilePath -> f FilePath) -> PathI i -> f (PathI j)
+liftPathIF f = fmap MkPathI . applyPathI f
+
+-- | 'liftPathIF' specialized to the same index. This should be preferred
+-- as the former is easier to use incorrectly.
+--
+-- @since 0.1
+liftPathIF' :: Functor f => (FilePath -> f FilePath) -> PathI i -> f (PathI i)
+liftPathIF' = liftPathIF
 
 -- | Lifts a 'FilePath' function to 'PathI'.
 --
@@ -130,7 +140,7 @@ getTrashAndIndex ::
   Maybe (PathI TrashHome) -> IO (PathI TrashHome, PathI TrashIndex)
 getTrashAndIndex mfp = do
   res <- trashOrDefault mfp
-  pure (res, unsafeLiftPathI (</> ".index.csv") res)
+  pure (res, liftPathI (</> ".index.csv") res)
 
 -- | If the argument is given, returns it. Otherwise searches for the default
 -- trash location.
@@ -152,3 +162,9 @@ getTrashHome = MkPathI . (</> ".trash") <$> Dir.getHomeDirectory
 MkPathI x <//> MkPathI y = MkPathI (x </> y)
 
 infixr 5 <//>
+
+-- $general
+-- These functions allows for lifting arbitrary 'FilePath' functions onto our
+-- 'PathI'. Note that this can easily invalidate any invariants we would
+-- like to hold (e.g. appending a path can turn a directory into a file),
+-- so caution must be exercised.
