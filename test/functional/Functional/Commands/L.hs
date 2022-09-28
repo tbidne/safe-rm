@@ -31,7 +31,7 @@ emptySucceeds args = testCase "List on empty directory succeeds" $ do
   tmpDir <- view #tmpDir <$> args
   let argList = ["l", "-t", tmpDir </> "l1/.trash"]
 
-  result <- captureDel argList
+  result <- captureSafeRm argList
   assertMatches expected result
   where
     expected =

@@ -43,7 +43,7 @@ restoreOne args = testCase "Restores a single file" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions
@@ -57,7 +57,7 @@ restoreOne args = testCase "Restores a single file" $ do
   runSafeRm restoreArgList
 
   -- list output assertions
-  restoreResult <- captureDel ["l", "-t", trashDir]
+  restoreResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedRestore restoreResult
 
   -- file assertions
@@ -102,7 +102,7 @@ restoreMany args = testCase "Restores several paths" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  resultDel <- captureDel ["l", "-t", trashDir]
+  resultDel <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel resultDel
 
   -- file assertions
@@ -117,17 +117,18 @@ restoreMany args = testCase "Restores several paths" $ do
   -- RESTORE
 
   let restoreArgList =
-        ["r", "f1", "f2", "f3", "dir1", "dir2", "-t", trashDir]
+        -- do not restore f2
+        ["r", "f1", "f3", "dir1", "dir2", "-t", trashDir]
   runSafeRm restoreArgList
 
   -- list output assertions
-  restoreResult <- captureDel ["l", "-t", trashDir]
+  restoreResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedRestore restoreResult
 
   -- file assertions
-  assertFilesExist [trashDir </> ".index.csv"]
+  assertFilesExist [trashDir </> "f2", trashDir </> ".index.csv"]
   assertDirectoriesExist [trashDir]
-  assertFilesDoNotExist ((trashDir </>) <$> ["f1", "f2", "f3"])
+  assertFilesDoNotExist ((trashDir </>) <$> ["f1", "f3"])
   assertDirectoriesDoNotExist
     ((trashDir </>) <$> ["dir1", "dir2", "dir2/dir3"])
   where
@@ -161,8 +162,12 @@ restoreMany args = testCase "Restores several paths" $ do
         Prefix "Size:"
       ]
     expectedRestore =
-      [ Exact "Entries:      0",
-        Exact "Total Files:  0",
+      [ Exact "Type:      File",
+        Exact "Name:      f2",
+        Outfix "Original:" "/safe-rm/r2/f2",
+        Prefix "Created:",
+        Exact "Entries:      1",
+        Exact "Total Files:  1",
         Prefix "Size:"
       ]
 
@@ -187,7 +192,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions
@@ -236,7 +241,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   createFiles [f1]
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions

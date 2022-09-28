@@ -38,7 +38,7 @@ deletesOne args = testCase "Deletes a single file" $ do
   runSafeRm argList
 
   -- list output assertions
-  result <- captureDel ["l", "-t", trashDir]
+  result <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expected result
 
   -- file assertions
@@ -77,7 +77,7 @@ deletesMany args = testCase "Deletes several paths" $ do
   runSafeRm argList
 
   -- list output assertions
-  result <- captureDel ["l", "-t", trashDir]
+  result <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expected result
 
   -- file assertions
@@ -160,7 +160,7 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
   assertFilesExist [file]
   runSafeRm argList
 
-  result <- captureDel ["l", "-t", trashDir]
+  result <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expected result
 
   -- file assertions

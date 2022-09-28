@@ -38,7 +38,7 @@ empty args = testCase "Empties trash" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  resultDel <- captureDel ["l", "-t", trashDir]
+  resultDel <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel resultDel
 
   -- file assertions
@@ -56,7 +56,7 @@ empty args = testCase "Empties trash" $ do
   runSafeRm emptyArgList
 
   -- list output assertions
-  result <- captureDel ["l", "-t", trashDir]
+  result <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedEmpty result
 
   -- file assertions

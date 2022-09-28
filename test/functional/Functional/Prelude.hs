@@ -3,7 +3,7 @@ module Functional.Prelude
 
     -- * Running SafeRm
     runSafeRm,
-    captureDel,
+    captureSafeRm,
 
     -- * File System Operations
     createFiles,
@@ -48,8 +48,8 @@ runSafeRm argList =
 -- | Runs safe-rm and captures output.
 --
 -- @since 0.1
-captureDel :: [String] -> IO [Text]
-captureDel argList = do
+captureSafeRm :: [String] -> IO [Text]
+captureSafeRm argList = do
   output <- newIORef ""
   let handler txt = modifyIORef' output (<> txt)
   SysEnv.withArgs argList (runSafeRmHandler handler)
@@ -59,21 +59,19 @@ captureDel argList = do
 --
 -- @since 0.1
 createFiles :: [FilePath] -> IO ()
-createFiles paths = do
-  for_ paths $ \p -> BS.writeFile p ""
+createFiles paths = for_ paths $ \p -> BS.writeFile p ""
 
 -- | Creates files at the specified paths.
 --
 -- @since 0.1
 createFileContents :: [(FilePath, ByteString)] -> IO ()
-createFileContents paths = do
-  for_ paths (uncurry BS.writeFile)
+createFileContents paths = for_ paths (uncurry BS.writeFile)
 
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
 createDirectories :: [FilePath] -> IO ()
-createDirectories paths = do
+createDirectories paths =
   for_ paths $ \p -> Dir.createDirectoryIfMissing True p
 
 -- | Clears a directory by deleting it if it exists and then recreating it.
@@ -91,7 +89,7 @@ clearDirectory path = do
 --
 -- @since 0.1
 assertFilesExist :: [FilePath] -> IO ()
-assertFilesExist paths = do
+assertFilesExist paths =
   for_ paths $ \p -> do
     exists <- Dir.doesFileExist p
     assertBool ("Expected file to exist: " <> p) exists
@@ -100,7 +98,7 @@ assertFilesExist paths = do
 --
 -- @since 0.1
 assertFilesDoNotExist :: [FilePath] -> IO ()
-assertFilesDoNotExist paths = do
+assertFilesDoNotExist paths =
   for_ paths $ \p -> do
     exists <- Dir.doesFileExist p
     assertBool ("Expected file not to exist: " <> p) (not exists)
@@ -109,7 +107,7 @@ assertFilesDoNotExist paths = do
 --
 -- @since 0.1
 assertDirectoriesExist :: [FilePath] -> IO ()
-assertDirectoriesExist paths = do
+assertDirectoriesExist paths =
   for_ paths $ \p -> do
     exists <- Dir.doesDirectoryExist p
     assertBool ("Expected directory to exist: " <> p) exists
@@ -118,7 +116,7 @@ assertDirectoriesExist paths = do
 --
 -- @since 0.1
 assertDirectoriesDoNotExist :: [FilePath] -> IO ()
-assertDirectoriesDoNotExist paths = do
+assertDirectoriesDoNotExist paths =
   for_ paths $ \p -> do
     exists <- Dir.doesDirectoryExist p
     assertBool ("Expected directory not to exist: " <> p) (not exists)

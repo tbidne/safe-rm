@@ -38,7 +38,7 @@ metadata args = testCase "Prints metadata" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions
@@ -53,7 +53,7 @@ metadata args = testCase "Prints metadata" $ do
   -- METADATA
 
   let metaArgList = ["m", "-t", trashDir]
-  metadataResult <- captureDel metaArgList
+  metadataResult <- captureSafeRm metaArgList
 
   -- list output assertions
   assertMatches expectedMetadata metadataResult

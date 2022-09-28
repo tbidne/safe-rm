@@ -39,7 +39,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions
@@ -53,7 +53,7 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
   runSafeRm permDelArgList
 
   -- list output assertions
-  permDelResult <- captureDel ["l", "-t", trashDir]
+  permDelResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedPermDel permDelResult
 
   -- file assertions
@@ -97,7 +97,7 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  resultDel <- captureDel ["l", "-t", trashDir]
+  resultDel <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel resultDel
 
   -- file assertions
@@ -112,11 +112,12 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
   -- PERMANENT DELETE
 
   let permDelArgList =
-        ["x", "f1", "f2", "f3", "dir1", "dir2", "-f", "-t", trashDir]
+        -- leave f2 alone
+        ["x", "f1", "f3", "dir1", "dir2", "-f", "-t", trashDir]
   runSafeRm permDelArgList
 
   -- list output assertions
-  permDelResult <- captureDel ["l", "-t", trashDir]
+  permDelResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedPermDel permDelResult
 
   -- file assertions
@@ -127,7 +128,7 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
     )
   assertDirectoriesDoNotExist
     ((testDir </>) <$> ["dir1", "dir2/dir3"] <> dirsToDelete)
-  assertFilesExist [trashDir </> ".index.csv"]
+  assertFilesExist [trashDir </> "f2", trashDir </> ".index.csv"]
   assertDirectoriesExist [trashDir]
   where
     expectedDel =
@@ -160,8 +161,12 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
         Prefix "Size:"
       ]
     expectedPermDel =
-      [ Exact "Entries:      0",
-        Exact "Total Files:  0",
+      [ Exact "Type:      File",
+        Exact "Name:      f2",
+        Outfix "Original:" "/safe-rm/x2/f2",
+        Prefix "Created:",
+        Exact "Entries:      1",
+        Exact "Total Files:  1",
         Prefix "Size:"
       ]
 
@@ -187,7 +192,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   runSafeRm delArgList
 
   -- list output assertions
-  delResult <- captureDel ["l", "-t", trashDir]
+  delResult <- captureSafeRm ["l", "-t", trashDir]
   assertMatches expectedDel delResult
 
   -- file assertions

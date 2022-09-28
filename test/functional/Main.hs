@@ -1,4 +1,4 @@
--- | Entrypoint for unit tests.
+-- | Entrypoint for functional tests.
 --
 -- @since 0.1
 module Main (main) where
@@ -15,7 +15,7 @@ import System.Directory qualified as Dir
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
 
--- | Runs unit tests.
+-- | Runs unfunctionalit tests.
 --
 -- @since 0.1
 main :: IO ()
