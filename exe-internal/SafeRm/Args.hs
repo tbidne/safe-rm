@@ -34,7 +34,14 @@ import Options.Applicative
 import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
-import SafeRm.Data.Paths (PathI, PathIndex (..))
+import SafeRm.Data.Paths
+  ( PathI,
+    PathIndex
+      ( OriginalPath,
+        TrashHome,
+        TrashName
+      ),
+  )
 import SafeRm.Prelude
 
 -- | Retrieves CLI args.
@@ -52,7 +59,7 @@ data SafeRmCommand
     -- @since 0.1
     SafeRmCommandDelete
       !(Maybe (PathI TrashHome))
-      !(NonEmpty (PathI OriginalName))
+      !(NonEmpty (PathI OriginalPath))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1

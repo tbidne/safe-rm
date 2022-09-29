@@ -14,7 +14,10 @@ where
 import Data.Typeable (Typeable, typeOf)
 import GHC.Show (Show (showsPrec))
 import GHC.Show qualified as Show
-import SafeRm.Data.Paths (PathI (..), PathIndex (..))
+import SafeRm.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (OriginalPath, TrashHome, TrashIndex, TrashName),
+  )
 import SafeRm.Prelude
 
 -- | Types of exceptions thrown.
@@ -72,7 +75,7 @@ type family ExceptionF e where
   ExceptionF ReadIndex = (PathI TrashIndex, String)
   ExceptionF DuplicateIndexPath = (PathI TrashIndex, PathI TrashName)
   ExceptionF TrashPathNotFound = (PathI TrashHome, PathI TrashName)
-  ExceptionF RestoreCollision = (PathI TrashName, PathI OriginalName)
+  ExceptionF RestoreCollision = (PathI TrashName, PathI OriginalPath)
   ExceptionF TrashIndexSizeMismatch = (PathI TrashHome, Int, Int)
 
 -- | Indexed 'Exception' for simplifying the interface for throwing different
@@ -140,7 +143,6 @@ instance Exception (ExceptionI DuplicateIndexPath) where
 
 -- | @since 0.1
 instance Exception (ExceptionI TrashPathNotFound) where
-  -- TODO: mention commands for fixing these (e.g. empty, new 'fix' command)
   displayException
     (MkExceptionI (MkPathI trashHome, MkPathI notFound)) =
       mconcat
@@ -148,7 +150,9 @@ instance Exception (ExceptionI TrashPathNotFound) where
           notFound,
           "' was not found in the trash directory '",
           trashHome,
-          "' despite being listed in the trash index."
+          "' despite being listed in the trash index. This can be fixed by ",
+          "manually deleting the entry from the index or deleting everything ",
+          "(i.e. sr e)."
         ]
 
 -- | @since 0.1

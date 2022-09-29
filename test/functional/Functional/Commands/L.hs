@@ -9,8 +9,16 @@ where
 import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (..))
+import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions
+  ( ExceptionI,
+    ExceptionIndex
+      ( DuplicateIndexPath,
+        ReadIndex,
+        TrashIndexSizeMismatch,
+        TrashPathNotFound
+      ),
+  )
 
 -- import Data.ByteString qualified as BS
 
@@ -100,7 +108,12 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
     expected =
       [ Outfix
           "The path 'foo' was not found in the trash directory"
-          "/safe-rm/l3/.trash' despite being listed in the trash index."
+          ( mconcat
+              [ "/safe-rm/l3/.trash' despite being listed in the trash index. ",
+                "This can be fixed by manually deleting the entry from the ",
+                "index or deleting everything (i.e. sr e)."
+              ]
+          )
       ]
 
 indexDuplicatesError :: IO TestArgs -> TestTree

@@ -1,3 +1,6 @@
+-- | Prelude for benchmarks.
+--
+-- @since 0.1
 module Benchmarks.Prelude
   ( module X,
     clearDirectory,
@@ -18,6 +21,9 @@ import Test.Tasty.Bench as X
     nfIO,
   )
 
+-- | Clears a directory by deleting it if it exists and then recreating it.
+--
+-- @since 0.1
 clearDirectory :: FilePath -> IO ()
 clearDirectory path = do
   exists <- Dir.doesDirectoryExist path
@@ -26,5 +32,8 @@ clearDirectory path = do
     else pure ()
   createDirectoryIfMissing False path
 
+-- | Csv header.
+--
+-- @since 0.1
 header :: ByteString
 header = Char8.pack $ L.intercalate "," headerNames

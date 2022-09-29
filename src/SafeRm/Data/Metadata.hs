@@ -91,7 +91,7 @@ getMetadata (trashHome@(MkPathI th), trashIndex) = do
 
   -- NOTE: Verify that sizes are the same. Because reading the index verifies
   -- that there are no duplicate entries and each entry corresponds to a real
-  --- trash path, this guarantees that the index exactly corresponds to the
+  -- trash path, this guarantees that the index exactly corresponds to the
   -- trash state.
   if numEntries /= numIndex
     then

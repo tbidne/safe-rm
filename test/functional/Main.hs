@@ -10,7 +10,7 @@ import Functional.Commands.M qualified as M
 import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (..))
+import Functional.TestArgs (TestArgs (MkTestArgs, tmpDir))
 import System.Directory qualified as Dir
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty

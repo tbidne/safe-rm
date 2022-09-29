@@ -44,7 +44,7 @@ import GHC.Exts (IsList (Item))
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
-    PathIndex (OriginalName, TrashHome, TrashName, TrashPath),
+    PathIndex (OriginalPath, TrashHome, TrashName, TrashPath),
     (<//>),
     _MkPathI,
   )
@@ -73,7 +73,7 @@ data PathData = MkPathData
     -- | The original path on the file system.
     --
     -- @since 0.1
-    originalPath :: !(PathI OriginalName),
+    originalPath :: !(PathI OriginalPath),
     -- | Time this entry was created.
     --
     -- @since 0.1
@@ -147,7 +147,7 @@ headerNames = ["Type", "Name", "Original", "Created"]
 -- * File/directory type.
 --
 -- @since 0.1
-toPathData :: Timestamp -> PathI TrashHome -> PathI OriginalName -> IO PathData
+toPathData :: Timestamp -> PathI TrashHome -> PathI OriginalPath -> IO PathData
 toPathData currTime trashHome originalPath = do
   origPath <- Paths.liftPathIF' Dir.canonicalizePath originalPath
   -- NOTE: need to get the file name here because fp could refer to an

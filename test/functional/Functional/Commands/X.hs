@@ -9,7 +9,7 @@ where
 import Data.Text qualified as T
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (tmpDir))
-import SafeRm.Exceptions
+import SafeRm.Exceptions (ExceptionI, ExceptionIndex (PathNotFound))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree

@@ -11,7 +11,7 @@ import Benchmarks.Prelude
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
 import SafeRm qualified
-import SafeRm.Data.Paths (PathI (..), PathIndex (..))
+import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 
 -- | Index reading benchmarks.
 --

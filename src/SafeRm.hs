@@ -13,7 +13,6 @@ module SafeRm
     restore,
 
     -- * Information
-    Metadata (..),
     getIndex,
     getMetadata,
   )
@@ -22,15 +21,14 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
-import SafeRm.Data.Index (Index (..))
+import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
-import SafeRm.Data.Metadata (Metadata (..))
+import SafeRm.Data.Metadata (Metadata)
 import SafeRm.Data.Metadata qualified as Metadata
-import SafeRm.Data.PathData (PathData (..))
 import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
   ( PathI,
-    PathIndex (..),
+    PathIndex (OriginalPath, TrashHome, TrashName),
     _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
@@ -45,7 +43,7 @@ import System.IO qualified as IO
 -- defaults to @~\/.trash@.
 --
 -- @since 0.1
-delete :: Maybe (PathI TrashHome) -> HashSet (PathI OriginalName) -> IO ()
+delete :: Maybe (PathI TrashHome) -> HashSet (PathI OriginalPath) -> IO ()
 delete mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
@@ -83,18 +81,17 @@ deletePermanently mtrash force paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
 
-  toSafeRmete <- Index.searchIndex False trashHome paths index
+  toDelete <- Index.searchIndex False trashHome paths index
   deletedPathsRef <- newIORef Map.empty
 
   let deleteFn pd = do
         PathData.deletePathData trashHome pd
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
 
-  -- move trash paths back to original location
+  -- permanently delete paths
   deletePathsFn <-
     if force
-      then do
-        pure $ for_ toSafeRmete deleteFn
+      then pure $ for_ toDelete deleteFn
       else do
         -- NOTE:
         -- - No buffering on input so we can read a single char w/o requiring a
@@ -106,7 +103,7 @@ deletePermanently mtrash force paths = do
         IO.hSetBuffering IO.stdin NoBuffering
         IO.hSetBuffering IO.stdout NoBuffering
 
-        pure $ for_ toSafeRmete $ \pd -> do
+        pure $ for_ toDelete $ \pd -> do
           let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
           putStrLn $ T.unpack pdStr
           putStr "Permanently delete (y/n)? "
@@ -165,7 +162,7 @@ restore mtrash paths = do
     restoredPaths <- readIORef restoredPathsRef
     Index.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
 
--- | Empties the trash. SafeRmetes the index file.
+-- | Empties the trash. Deletes the index file.
 --
 -- @since 0.1
 empty :: Maybe (PathI TrashHome) -> IO ()

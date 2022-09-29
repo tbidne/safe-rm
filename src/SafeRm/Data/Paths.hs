@@ -45,10 +45,10 @@ data PathIndex
     --
     -- @since 0.1
     TrashName
-  | -- | The original name for some file/directory in the trash directory.
+  | -- | The original path for some file/directory in the trash directory.
     --
     -- @since 0.1
-    OriginalName
+    OriginalPath
   | -- | The full trash path i.e. @'TrashHome' '</>' 'TrashName'@
     --
     -- @since 0.1

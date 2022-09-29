@@ -1,3 +1,6 @@
+-- | Prelude for functional test suite.
+--
+-- @since 0.1
 module Functional.Prelude
   ( module X,
 

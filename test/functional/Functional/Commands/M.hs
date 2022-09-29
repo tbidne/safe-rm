@@ -7,7 +7,7 @@ module Functional.Commands.M
 where
 
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (..))
+import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree

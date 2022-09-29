@@ -23,7 +23,7 @@ import SafeRm.Args
       ),
     getArgs,
   )
-import SafeRm.Data.Paths (PathI, PathIndex (..))
+import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Prelude
 
 -- | Reads cli args and prints the results to stdout.
