@@ -57,32 +57,29 @@ data SafeRmCommand
   = -- | Deletes a path.
     --
     -- @since 0.1
-    SafeRmCommandDelete
-      !(Maybe (PathI TrashHome))
-      !(NonEmpty (PathI OriginalPath))
+    SafeRmCommandDelete !(NonEmpty (PathI OriginalPath))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
     SafeRmCommandPermDelete
-      !(Maybe (PathI TrashHome))
       !Bool
       !(NonEmpty (PathI TrashName))
   | -- | Empties the trash.
     --
     -- @since 0.1
-    SafeRmCommandEmpty !(Maybe (PathI TrashHome))
+    SafeRmCommandEmpty
   | -- | Restores a path.
     --
     -- @since 0.1
-    SafeRmCommandRestore !(Maybe (PathI TrashHome)) !(NonEmpty (PathI TrashName))
+    SafeRmCommandRestore (NonEmpty (PathI TrashName))
   | -- | List all trash contents.
     --
     -- @since 0.1
-    SafeRmCommandList !(Maybe (PathI TrashHome))
+    SafeRmCommandList
   | -- | Prints trash size.
     --
     -- @since 0.1
-    SafeRmCommandMetadata !(Maybe (PathI TrashHome))
+    SafeRmCommandMetadata
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -93,11 +90,19 @@ data SafeRmCommand
 -- | CLI args.
 --
 -- @since 0.1
-newtype Args = MkArgs
-  { -- | Command to run.
+data Args = MkArgs
+  { -- | Path to toml config.
     --
     -- @since 0.1
-    command :: SafeRmCommand
+    tomlConfigPath :: !(Maybe FilePath),
+    -- | Path to trash home..
+    --
+    -- @since 0.1
+    trashHome :: !(Maybe (PathI TrashHome)),
+    -- | Command to run.
+    --
+    -- @since 0.1
+    command :: !SafeRmCommand
   }
   deriving stock
     ( -- | @since 0.1
@@ -127,13 +132,16 @@ parserInfoArgs =
         mconcat
           [ "\nSafe-rm moves files to a trash directory, so they can later be ",
             "restored or permanently deleted. It is intended as a safer ",
-            "alternative to e.g. rm."
+            "alternative to rm. See github.com/tbidne/safe-rm#readme for ",
+            "full documentation."
           ]
 
 argsParser :: Parser Args
 argsParser =
   MkArgs
-    <$> commandParser
+    <$> configParser
+    <*> trashParser
+    <*> commandParser
     <**> OA.helper
     <**> version
 
@@ -151,6 +159,24 @@ version = OA.infoOption txt (OA.long "version" <> OA.short 'v')
 
 versNum :: String
 versNum = "Version: " <> $$(PV.packageVersionStringTH "safe-rm.cabal")
+
+configParser :: Parser (Maybe FilePath)
+configParser =
+  A.optional
+    $ OA.option
+      OA.str
+    $ mconcat
+      [ OA.long "config",
+        OA.short 'c',
+        OA.metavar "PATH",
+        OA.help helpTxt
+      ]
+  where
+    helpTxt =
+      mconcat
+        [ "Path to the toml config file. If none is given we default to ",
+          "the xdg config directory e.g. ~/.config/safe-rm/config.toml"
+        ]
 
 commandParser :: Parser SafeRmCommand
 commandParser =
@@ -188,21 +214,15 @@ commandParser =
     metadataTxt = OA.progDesc "Prints trash metadata."
 
     delParser =
-      SafeRmCommandDelete
-        <$> trashParser
-        <*> pathsParser
+      SafeRmCommandDelete <$> pathsParser
     permDelParser =
       SafeRmCommandPermDelete
-        <$> trashParser
-        <*> forceParser
+        <$> forceParser
         <*> pathsParser
-    emptyParser = SafeRmCommandEmpty <$> trashParser
-    restoreParser =
-      SafeRmCommandRestore
-        <$> trashParser
-        <*> pathsParser
-    listParser = SafeRmCommandList <$> trashParser
-    metadataParser = SafeRmCommandMetadata <$> trashParser
+    emptyParser = pure SafeRmCommandEmpty
+    restoreParser = SafeRmCommandRestore <$> pathsParser
+    listParser = pure SafeRmCommandList
+    metadataParser = pure SafeRmCommandMetadata
 
 forceParser :: Parser Bool
 forceParser =
@@ -221,7 +241,7 @@ trashParser =
     $ OA.option
       OA.str
     $ mconcat
-      [ OA.long "trash",
+      [ OA.long "trash-home",
         OA.short 't',
         OA.metavar "PATH",
         OA.help helpTxt
@@ -229,8 +249,9 @@ trashParser =
   where
     helpTxt =
       mconcat
-        [ "Path to the trash directory. If none is given we default to ",
-          "XDG/.trash e.g. ~/.trash."
+        [ "Path to the trash directory. This overrides the toml config, if ",
+          "it exists. If neither is given then we use the xdg home directory ",
+          "e.g. ~/.trash"
         ]
 
 pathsParser :: IsString a => Parser (NonEmpty a)

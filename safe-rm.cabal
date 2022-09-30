@@ -63,6 +63,7 @@ library
     , text                  >=1.2.4.0  && <2.1
     , time                  >=1.9.3    && <1.14
     , time-compat           ^>=1.9.6.1
+    , toml-reader           ^>=0.1.0.0
     , unordered-containers  ^>=0.2.14.0
     , vector                >=0.12.3.0 && <0.14
 
@@ -74,14 +75,18 @@ library safe-rm-exe-internal
   exposed-modules:
     SafeRm.Args
     SafeRm.Runner
+    SafeRm.Toml
 
   build-depends:
     , base
+    , bytestring
+    , directory
     , gitrev                >=1.2.0   && <1.4
     , optparse-applicative  >=0.15    && <0.18
     , package-version       >=0.1.0.0 && <0.4
     , safe-rm
     , text
+    , toml-reader
     , unordered-containers
 
   hs-source-dirs:   exe-internal

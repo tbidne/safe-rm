@@ -18,6 +18,7 @@
 
 - [Introduction](#introduction)
   - [Usage](#usage)
+- [Configuration](#configuration)
 - [Commands](#commands)
   - [Delete Commands](#delete-commands)
     - [Delete](#delete)
@@ -39,11 +40,17 @@
 ```
 Safe-rm: A tool for deleting files to a trash directory.
 
-Usage: sr COMMAND [-v|--version]
+Usage: sr [-c|--config PATH] [-t|--trash-home PATH] COMMAND [-v|--version]
 
-Safe-rm moves files to a trash directory, so they can later be restored or permanently deleted. It is intended as a safer alternative to e.g. rm.
+Safe-rm moves files to a trash directory, so they can later be restored or permanently deleted. It is intended as a safer alternative to rm. See github.com/tbidne/safe-rm#readme for full documentation.
 
 Available options:
+  -c,--config PATH         Path to the toml config file. If none is given we
+                           default to the xdg config directory e.g.
+                           ~/.config/safe-rm/config.toml
+  -t,--trash-home PATH     Path to the trash directory. This overrides the toml
+                           config, if it exists. If neither is given then we use
+                           the xdg home directory e.g. ~/.trash
   -h,--help                Show this help text
 
 Delete Commands
@@ -60,9 +67,17 @@ Information Commands
   m                        Prints trash metadata.
 
 Version: 0.1
- ```
+```
+
+# Configuration
+
+`safe-rm` can be configured by either CLI args or a `toml` config file. A path to the config file can be given with the `-c` option. Otherwise we search in the xdg config e.g. `~/.config/safe-rm/config.toml`. In general, if an option can be specified in both the config file and on the CLI (e.g. `--trash-home`), then the CLI takes priority.
+
+See [default.toml](./examples/config.toml) for a description of the `toml` file.
 
 # Commands
+
+This section describes the possible commands, along with their specific options.
 
 ## Delete Commands
 
@@ -71,19 +86,17 @@ Version: 0.1
 **Usage:**
 
 ```
-Usage: sr d [-t|--trash PATH] PATHS...
+Usage: sr d PATHS...
   Moves the path(s) to the trash.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -h,--help                Show this help text
 ```
 
 **Examples**
 
 ```
-# moves paths "foo bar baz" to the default trash
+# moves paths "foo", "bar", and "baz" to the trash
 $ sr d foo bar baz
 ```
 
@@ -92,12 +105,10 @@ $ sr d foo bar baz
 **Usage:**
 
 ```
-Usage: sr x [-t|--trash PATH] [-f|--force] PATHS...
+Usage: sr x [-f|--force] PATHS...
   Permanently deletes path(s) from the trash.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -f,--force               If enabled, will not ask before deleting each path.
   -h,--help                Show this help text
 ```
@@ -105,7 +116,7 @@ Available options:
 **Examples**
 
 ```
-# permanently deletes "foo bar baz" from the trash directory
+# permanently deletes "foo", "bar", and "baz" from the trash directory
 $ sr x -f foo bar baz
 ```
 
@@ -114,12 +125,10 @@ $ sr x -f foo bar baz
 **Usage:**
 
 ```
-Usage: sr e [-t|--trash PATH]
+Usage: sr e
   Empties the trash and deletes the index.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -h,--help                Show this help text
 ```
 
@@ -136,23 +145,21 @@ $ sr e
 **Usage:**
 
 ```
-Usage: sr r [-t|--trash PATH] PATHS...
+Usage: sr r PATHS...
   Restores the trash path(s) to their original location.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -h,--help                Show this help text
 ```
 
 **Examples**
 
 ```
-# deleting 'foo' first
-$ sr d foo
+# deleting "foo" and "baz" first
+$ sr d foo baz
 
-# restore foo to original location
-$ sr r foo
+# restore "foo" and "baz" to their original locations
+$ sr r foo baz
 ```
 
 ## Information Commands
@@ -162,12 +169,10 @@ $ sr r foo
 **Usage:**
 
 ```
-Usage: sr l [-t|--trash PATH]
+Usage: sr l
   Lists all trash contents and metadata.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -h,--help                Show this help text
 ```
 
@@ -183,21 +188,21 @@ $ sr l
 Type:      File
 Name:      bar
 Original:  <path>/bar
-Created:   2022-09-28 23:57:10 
+Created:   2022-09-28 23:57:10
 
 Type:      Directory
 Name:      baz
 Original:  <path>/baz
-Created:   2022-09-28 23:57:10 
+Created:   2022-09-28 23:57:10
 
 Type:      File
 Name:      foo
 Original:  <path>/foo
-Created:   2022-09-28 23:57:10 
+Created:   2022-09-28 23:57:10
 
 Entries:      3
 Total Files:  2
-Size:         246.00B 
+Size:         246.00B
 ```
 
 ### Metadata
@@ -205,12 +210,10 @@ Size:         246.00B
 **Usage:**
 
 ```
-Usage: sr m [-t|--trash PATH]
+Usage: sr m
   Prints trash metadata.
 
 Available options:
-  -t,--trash PATH          Path to the trash directory. If none is given we
-                           default to XDG/.trash e.g. ~/.trash.
   -h,--help                Show this help text
 ```
 
@@ -225,5 +228,5 @@ $ sr m
 
 Entries:      3
 Total Files:  2
-Size:         246.00B 
+Size:         246.00B
 ```

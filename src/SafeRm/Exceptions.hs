@@ -11,6 +11,7 @@ module SafeRm.Exceptions
   )
 where
 
+import Data.Text qualified as T
 import Data.Typeable (Typeable, typeOf)
 import GHC.Show (Show (showsPrec))
 import GHC.Show qualified as Show
@@ -19,6 +20,7 @@ import SafeRm.Data.Paths
     PathIndex (OriginalPath, TrashHome, TrashIndex, TrashName),
   )
 import SafeRm.Prelude
+import TOML (TOMLError, renderTOMLError)
 
 -- | Types of exceptions thrown.
 --
@@ -52,6 +54,10 @@ data ExceptionIndex
     --
     -- @since 0.1
     TrashIndexSizeMismatch
+  | -- | Error reading toml configuration.
+    --
+    -- @since 0.1
+    TomlDecode
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -77,6 +83,7 @@ type family ExceptionF e where
   ExceptionF TrashPathNotFound = (PathI TrashHome, PathI TrashName)
   ExceptionF RestoreCollision = (PathI TrashName, PathI OriginalPath)
   ExceptionF TrashIndexSizeMismatch = (PathI TrashHome, Int, Int)
+  ExceptionF TomlDecode = TOMLError
 
 -- | Indexed 'Exception' for simplifying the interface for throwing different
 -- types of exceptions.
@@ -175,4 +182,12 @@ instance Exception (ExceptionI TrashIndexSizeMismatch) where
         show dirSize,
         ") in trash: ",
         trashHome
+      ]
+
+-- | @since 0.1
+instance Exception (ExceptionI TomlDecode) where
+  displayException (MkExceptionI tomlError) =
+    mconcat
+      [ "Error decoding toml: ",
+        T.unpack (renderTOMLError tomlError)
       ]
