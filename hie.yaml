@@ -4,7 +4,7 @@ cradle:
       component: "lib:safe-rm"
 
     - path: "./exe-internal"
-      component: "safe-rm:lib:sr-exe-internal"
+      component: "safe-rm:lib:safe-rm-exe-internal"
 
     - path: "./app/Main.hs"
       component: "safe-rm:exe:sr"
