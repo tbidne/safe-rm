@@ -29,6 +29,10 @@
   - [Information Commands](#information-commands)
     - [List](#list)
     - [Metadata](#metadata)
+- [Building](#building)
+  - [Cabal](#cabal)
+  - [Stack](#stack)
+  - [Nix](#nix)
 
 # Introduction
 
@@ -229,4 +233,78 @@ $ sr m
 Entries:      3
 Total Files:  2
 Size:         246.00B
+```
+
+# Building
+
+## Prerequisites
+
+You will need one of:
+
+* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and [ghc 9.2](https://www.haskell.org/ghcup/)
+* [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
+* [nix](https://nixos.org/download.html)
+
+If you have never built a haskell program before, `cabal` + `ghcup` is probably the best choice.
+
+## Cabal
+
+You will need `ghc` and `cabal-install`. From there `safe-rm` can be built with `cabal build` or installed globally (i.e. `~/.cabal/bin/`) with `cabal install`.
+
+## Stack
+
+Like `cabal`, `safe-rm` can be built locally or installed globally (e.g. `~/.local/bin/`) with `stack build` and `stack install`, respectively.
+
+## Nix
+
+### From source
+
+Building with `nix` uses [flakes](https://nixos.wiki/wiki/Flakes). `safe-rm` can be built with `nix build`, which will compile and run the tests.
+
+To launch a shell with various tools (e.g. `cabal`, `hls`), run `nix develop`. After that we can launch a repl with `cabal repl` or run the various tools on our code. At this point you could also build via `cabal`, though you may have to first run `cabal update`. This will fetch the needed dependencies from `nixpkgs`.
+
+### Via nix
+
+Because `safe-rm` is a flake, it be built as part of a nix expression. For instance, if you want to add `safe-rm` to `NixOS`, your `flake.nix` might look something like:
+
+```nix
+{
+  description = "My flake";
+
+  inputs = {
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    safe-rm-src.url= "github:tbidne/safe-rm/main";
+  };
+
+  outputs = { self, nixpkgs, safe-rm-src, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        system = system;
+      };
+      safe-rm = safe-rm-src.packages."${system}".default;
+    in
+    {
+      nixosConfigurations = {
+        nixos = nixpkgs.lib.nixosSystem {
+          system = system;
+          modules = [
+            (import ./configuration.nix { inherit pkgs safe-rm; })
+          ];
+        };
+      };
+    };
+}
+```
+
+Then in `configuration.nix` you can simply have:
+
+```nix
+{ pkgs, safe-rm, ... }:
+
+{
+  environment.systemPackages = [
+    safe-rm
+  ];
+}
 ```
