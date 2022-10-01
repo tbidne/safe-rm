@@ -3,8 +3,11 @@ cradle:
     - path: "./src"
       component: "lib:safe-rm"
 
-    - path: "./exe-internal"
+    - path: "./lib/exe-internal"
       component: "safe-rm:lib:safe-rm-exe-internal"
+
+    - path: "./lib/file-utils"
+      component: "safe-rm:lib:file-utils"
 
     - path: "./app/Main.hs"
       component: "safe-rm:exe:sr"

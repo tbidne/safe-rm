@@ -92,7 +92,20 @@ library safe-rm-exe-internal
     , unliftio
     , unordered-containers
 
-  hs-source-dirs:   exe-internal
+  hs-source-dirs:   lib/exe-internal
+  default-language: GHC2021
+
+library file-utils
+  import:           common-exts
+  exposed-modules:  SafeRm.FileUtils
+  build-depends:
+    , base
+    , bytestring
+    , safe-rm
+    , text
+    , unliftio
+
+  hs-source-dirs:   lib/file-utils
   default-language: GHC2021
 
 executable sr
@@ -144,11 +157,12 @@ test-suite functional
     , base
     , bytestring
     , env-guard             ^>=0.2
-    , mtl                   >=2.2.1   && <2.4
+    , file-utils
+    , mtl                   >=2.2.1 && <2.4
     , safe-rm
     , safe-rm-exe-internal
-    , tasty                 >=1.1.0.3 && <1.5
-    , tasty-hunit           >=0.9     && <0.11
+    , tasty
+    , tasty-hunit
     , text
     , unliftio
 
