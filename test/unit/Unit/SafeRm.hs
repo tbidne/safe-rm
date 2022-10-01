@@ -29,7 +29,8 @@ tests testDir =
     "SafeRm"
     [ delete testDir,
       deletePermanently testDir,
-      restore testDir
+      restore testDir,
+      empty testDir
     ]
 
 delete :: IO FilePath -> TestTree
@@ -156,6 +157,47 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         assert $ Map.null index
         assertFilesExist pathsList
+        assertFilesDoNotExist trashList
+
+empty :: IO FilePath -> TestTree
+empty mtestDir = askOption $ \(MkMaxRuns limit) ->
+  testPropertyNamed "Empties the trash" "empty" $ do
+    withTests limit $
+      property $ do
+        testDir <- (</> "4") <$> liftIO mtestDir
+        fileNames <- forAll genFileNameSet
+        let pathSet = Set.map (Paths.liftPathI (testDir </>)) fileNames
+            fileNamesList = view _MkPathI <$> Set.toList fileNames
+            pathsList = (testDir </>) <$> fileNamesList
+            trashDir = testDir </> ".trash"
+            trashList = (trashDir </>) <$> fileNamesList
+            mtrashHome = Just $ MkPathI trashDir
+
+        annotateShow pathsList
+        annotateShow trashList
+
+        -- create files and assert existence
+        liftIO $ do
+          clearDirectory testDir
+          createFiles pathsList
+        assertFilesExist (view _MkPathI <$> Set.toList pathSet)
+
+        -- delete files
+        liftIO $ SafeRm.delete False mtrashHome pathSet
+
+        -- assert original files moved to trash
+        assertFilesExist trashList
+        assertFilesDoNotExist pathsList
+
+        -- empty trash
+        liftIO $ SafeRm.empty mtrashHome
+
+        -- get index
+        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        annotateShow index
+
+        assert $ Map.null index
+        assertFilesDoNotExist pathsList
         assertFilesDoNotExist trashList
 
 genFileNameSet :: Gen (HashSet (PathI OriginalPath))
