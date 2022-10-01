@@ -17,9 +17,9 @@ import SafeRm.Data.PathData (PathData (originalPath))
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (OriginalPath),
-    liftPathI,
     _MkPathI,
   )
+import SafeRm.Data.Paths qualified as Paths
 import Unit.MaxRuns (MaxRuns (MkMaxRuns))
 import Unit.Prelude
 
@@ -28,7 +28,8 @@ tests testDir =
   testGroup
     "SafeRm"
     [ delete testDir,
-      deletePermanently testDir
+      deletePermanently testDir,
+      restore testDir
     ]
 
 delete :: IO FilePath -> TestTree
@@ -38,7 +39,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
       property $ do
         testDir <- (</> "1") <$> liftIO mtestDir
         fileNames <- forAll genFileNameSet
-        let pathSet = Set.map (liftPathI (testDir </>)) fileNames
+        let pathSet = Set.map (Paths.liftPathI (testDir </>)) fileNames
             fileNamesList = view _MkPathI <$> Set.toList fileNames
             pathsList = (testDir </>) <$> fileNamesList
             trashDir = testDir </> ".trash"
@@ -80,7 +81,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
       property $ do
         testDir <- (</> "2") <$> liftIO mtestDir
         fileNames <- forAll genFileNameSet
-        let pathSet = Set.map (liftPathI (testDir </>)) fileNames
+        let pathSet = Set.map (Paths.liftPathI (testDir </>)) fileNames
             fileNamesList = view _MkPathI <$> Set.toList fileNames
             pathsList = (testDir </>) <$> fileNamesList
             trashDir = testDir </> ".trash"
@@ -103,7 +104,8 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist trashList
         assertFilesDoNotExist pathsList
 
-        let fileNamesToDelete = Set.map (liftPathI id) fileNames
+        -- permanently delete files
+        let fileNamesToDelete = Set.map Paths.reindex fileNames
         liftIO $ SafeRm.deletePermanently False mtrashHome True fileNamesToDelete
 
         -- get index
@@ -112,6 +114,48 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         assert $ Map.null index
         assertFilesDoNotExist pathsList
+        assertFilesDoNotExist trashList
+
+restore :: IO FilePath -> TestTree
+restore mtestDir = askOption $ \(MkMaxRuns limit) ->
+  testPropertyNamed "Restores all trash entries" "restore" $ do
+    withTests limit $
+      property $ do
+        testDir <- (</> "3") <$> liftIO mtestDir
+        fileNames <- forAll genFileNameSet
+        let pathSet = Set.map (Paths.liftPathI (testDir </>)) fileNames
+            fileNamesList = view _MkPathI <$> Set.toList fileNames
+            pathsList = (testDir </>) <$> fileNamesList
+            trashDir = testDir </> ".trash"
+            trashList = (trashDir </>) <$> fileNamesList
+            mtrashHome = Just $ MkPathI trashDir
+
+        annotateShow pathsList
+        annotateShow trashList
+
+        -- create files and assert existence
+        liftIO $ do
+          clearDirectory testDir
+          createFiles pathsList
+        assertFilesExist (view _MkPathI <$> Set.toList pathSet)
+
+        -- delete files
+        liftIO $ SafeRm.delete False mtrashHome pathSet
+
+        -- assert original files moved to trash
+        assertFilesExist trashList
+        assertFilesDoNotExist pathsList
+
+        -- restore files
+        let fileNamesToRestore = Set.map Paths.reindex fileNames
+        liftIO $ SafeRm.restore False mtrashHome fileNamesToRestore
+
+        -- get index
+        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        annotateShow index
+
+        assert $ Map.null index
+        assertFilesExist pathsList
         assertFilesDoNotExist trashList
 
 genFileNameSet :: Gen (HashSet (PathI OriginalPath))

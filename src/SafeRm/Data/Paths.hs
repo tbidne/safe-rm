@@ -15,6 +15,7 @@ module SafeRm.Data.Paths
 
     -- ** General
     -- $general
+    reindex,
     (<//>),
     applyPathI,
     liftPathI,
@@ -92,6 +93,12 @@ newtype PathI (i :: PathIndex) = MkPathI FilePath
 -- | @since 0.1
 _MkPathI :: Iso' (PathI i) FilePath
 _MkPathI = iso (\(MkPathI fp) -> fp) MkPathI
+
+-- | Modifies the index.
+--
+-- @since 0.1
+reindex :: PathI i -> PathI j
+reindex = liftPathI id
 
 -- | Lifts a 'FilePath' transformation to 'PathI', allowing for the index to
 -- change.
