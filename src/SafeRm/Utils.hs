@@ -11,15 +11,24 @@ where
 
 import SafeRm.Prelude
 
+-- | Applies the function when we have a Just.
+--
+-- @since 0.1
 whenJust :: Applicative f => Maybe t -> (t -> f ()) -> f ()
 whenJust Nothing _ = pure ()
 whenJust (Just x) f = f x
 
+-- | Concats the list with the non-empty.
+--
+-- @since 0.1
 concatMNonEmpty :: [a] -> Maybe (NonEmpty a) -> Maybe (NonEmpty a)
 concatMNonEmpty [] ne = ne
 concatMNonEmpty (x : xs) Nothing = Just $ x :| xs
 concatMNonEmpty (x : xs) (Just (y :| ys)) = Just $ x :| xs <> (y : ys)
 
+-- | Prepends a value to the non-empty, turning it into a Just.
+--
+-- @since 0.1
 prependMNonEmpty :: a -> Maybe (NonEmpty a) -> Maybe (NonEmpty a)
 prependMNonEmpty x Nothing = Just (x :| [])
 prependMNonEmpty x (Just (y :| ys)) = Just (x :| y : ys)

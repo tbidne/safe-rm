@@ -23,13 +23,16 @@ module Functional.Prelude
     -- ** Text
     TextMatch (..),
     assertMatches,
+    assertExceptionMatches,
   )
 where
 
 import Control.Monad.Reader (MonadReader (ask), ReaderT (ReaderT), runReaderT)
 import Data.ByteString qualified as BS
+import Data.List qualified as L
 import Data.Text qualified as T
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
+import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 import SafeRm.Prelude as X hiding (IO)
 import SafeRm.Runner qualified as Runner
 import System.IO as X (IO)
@@ -184,6 +187,23 @@ assertMatches expectations results = case matches expectations results of
           "\n*** Full results ***\n\n",
           T.unpack (T.unlines results)
         ]
+
+-- | Tests text for exception matches. We sorted the exceptions textual
+-- representation, so the listed exception expectations must match!
+--
+-- @since 0.1
+assertExceptionMatches :: [TextMatch] -> ExceptionI SomeExceptions -> IO ()
+assertExceptionMatches s exs = do
+  case exTxt of
+    [] -> pure ()
+    (h : hs) -> do
+      -- assert exception header
+      "Encountered exception(s)" @=? h
+      -- now do the rest, sorting the results since the order is
+      -- non-deterministic
+      assertMatches s (L.sort hs)
+  where
+    exTxt = T.lines . T.pack $ displayException exs
 
 matches :: [TextMatch] -> [Text] -> Maybe String
 matches [] [] = Nothing

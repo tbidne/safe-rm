@@ -43,10 +43,6 @@ import SafeRm.Utils qualified as Utils
 import System.IO qualified as IO
 import UnliftIO.Directory qualified as Dir
 
--- REVIEW: delete, deletePermanently, and restore take hashset of paths.
--- Does this make the tests non-deterministic, since we can encounter
--- exceptions in random order, on which our tests depend?
-
 -- | @delete trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
 -- defaults to @~\/.trash@.

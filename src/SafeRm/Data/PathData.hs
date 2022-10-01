@@ -206,7 +206,6 @@ mkUniqPath ::
   PathI TrashName ->
   m (PathI TrashName)
 mkUniqPath fp = do
-  -- TODO: add parens to names
   b <- Paths.applyPathI Dir.doesPathExist fp
   if b
     then go 1

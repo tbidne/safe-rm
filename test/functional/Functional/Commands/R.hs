@@ -323,10 +323,7 @@ restoresSome args = testCase "Restores some, errors on others" $ do
       `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
-    Just ex ->
-      assertMatches
-        expectedException
-        (T.lines . T.pack $ displayException ex)
+    Just ex -> assertExceptionMatches expectedExceptions ex
 
   -- list output assertions
   resultList <- captureSafeRm ["l", "-t", trashDir]
@@ -356,9 +353,8 @@ restoresSome args = testCase "Restores some, errors on others" $ do
         Exact "Total Files:  3",
         Prefix "Size:"
       ]
-    expectedException =
-      [ Exact "Encountered exception(s)",
-        Exact "- Path not found: f3",
+    expectedExceptions =
+      [ Exact "- Path not found: f3",
         Exact "- Path not found: f4"
       ]
     expected =

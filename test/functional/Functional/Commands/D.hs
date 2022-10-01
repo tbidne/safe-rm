@@ -207,10 +207,7 @@ deletesSome args = testCase "Deletes some, errors on others" $ do
       `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
-    Just ex ->
-      assertMatches
-        expectedException
-        (T.lines . T.pack $ displayException ex)
+    Just ex -> assertExceptionMatches expectedExceptions ex
 
   -- list output assertions
   resultList <- captureSafeRm ["l", "-t", trashDir]
@@ -223,9 +220,8 @@ deletesSome args = testCase "Deletes some, errors on others" $ do
     )
   assertFilesDoNotExist ((trashDir </>) <$> ["f3", "f4"])
   where
-    expectedException =
-      [ Exact "Encountered exception(s)",
-        Outfix "- Path not found:" "/safe-rm/d5/f3",
+    expectedExceptions =
+      [ Outfix "- Path not found:" "/safe-rm/d5/f3",
         Outfix "- Path not found:" "/safe-rm/d5/f4"
       ]
     expected =
