@@ -169,7 +169,7 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
 
   -- file assertions
   assertFilesExist
-    [trashDir </> "f11", trashDir </> "f1", trashDir </> ".index.csv"]
+    [trashDir </> "f1 (1)", trashDir </> "f1", trashDir </> ".index.csv"]
   assertFilesDoNotExist [file]
   assertDirectoriesExist [trashDir]
   where
@@ -180,7 +180,7 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
-        Exact "Name:      f11",
+        Exact "Name:      f1 (1)",
         Outfix "Original:" "/safe-rm/d4/f1",
         Prefix "Created:",
         Exact "Entries:      2",

@@ -206,6 +206,7 @@ mkUniqPath ::
   PathI TrashName ->
   m (PathI TrashName)
 mkUniqPath fp = do
+  -- TODO: add parens to names
   b <- Paths.applyPathI Dir.doesPathExist fp
   if b
     then go 1
@@ -217,11 +218,12 @@ mkUniqPath fp = do
           throwIO $
             MkExceptionI @RenameDuplicate fp
       | otherwise = do
-          let fp' = fp <> MkPathI (show counter)
+          let fp' = fp <> MkPathI (mkSuffix counter)
           b <- Paths.applyPathI Dir.doesPathExist fp'
           if b
             then go (counter + 1)
             else pure fp'
+    mkSuffix i = " (" <> show i <> ")"
 
 -- | Sorts by the created date then the name.
 --
