@@ -32,7 +32,7 @@ setup = do
   tmpDir <- (</> "safe-rm/unit") <$> Dir.getTemporaryDirectory
 
   createDirectoryIfMissing True tmpDir
-  pure $ tmpDir
+  pure tmpDir
 
 teardown :: FilePath -> IO ()
 teardown tmpDir = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
