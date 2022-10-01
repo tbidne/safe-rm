@@ -160,7 +160,7 @@ argsParser =
     <**> version
 
 version :: Parser (a -> a)
-version = OA.infoOption txt (OA.long "version" <> OA.short 'v')
+version = OA.infoOption txt (OA.long "version")
   where
     txt =
       L.intercalate
@@ -274,7 +274,7 @@ verboseParser =
     OA.switch $
       mconcat
         [ OA.long "verbose",
-          OA.short 'l',
+          OA.short 'v',
           OA.help helpTxt
         ]
   where
