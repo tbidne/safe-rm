@@ -7,6 +7,12 @@ module SafeRm.Args
   ( getArgs,
     Args (..),
     SafeRmCommand (..),
+    _SafeRmCommandDelete,
+    _SafeRmCommandPermDelete,
+    _SafeRmCommandEmpty,
+    _SafeRmCommandRestore,
+    _SafeRmCommandList,
+    _SafeRmCommandMetadata,
   )
 where
 
@@ -14,6 +20,7 @@ import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
+import Optics.TH (makePrisms)
 import Options.Applicative
   ( CommandFields,
     InfoMod,
@@ -43,12 +50,6 @@ import SafeRm.Data.Paths
       ),
   )
 import SafeRm.Prelude
-
--- | Retrieves CLI args.
---
--- @since 0.1
-getArgs :: IO Args
-getArgs = OA.execParser parserInfoArgs
 
 -- | Action to run.
 --
@@ -86,6 +87,14 @@ data SafeRmCommand
       -- | @since 0.1
       Show
     )
+
+makePrisms ''SafeRmCommand
+
+-- | Retrieves CLI args.
+--
+-- @since 0.1
+getArgs :: IO Args
+getArgs = OA.execParser parserInfoArgs
 
 -- | CLI args.
 --

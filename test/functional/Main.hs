@@ -15,7 +15,7 @@ import System.Directory qualified as Dir
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
 
--- | Runs unfunctionalit tests.
+-- | Runs functional tests.
 --
 -- @since 0.1
 main :: IO ()

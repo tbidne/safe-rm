@@ -27,6 +27,7 @@ common common-exts
     DeriveAnyClass
     DerivingStrategies
     DerivingVia
+    DuplicateRecordFields
     LambdaCase
     MultiWayIf
     OverloadedLabels
@@ -82,6 +83,7 @@ library safe-rm-exe-internal
     , bytestring
     , directory
     , gitrev                >=1.2.0   && <1.4
+    , optics-th             ^>=0.4
     , optparse-applicative  >=0.15    && <0.18
     , package-version       >=0.1.0.0 && <0.4
     , safe-rm
@@ -103,6 +105,25 @@ executable sr
   hs-source-dirs:     app
   ghc-options:        -threaded -with-rtsopts=-N
   default-language:   GHC2021
+
+test-suite config
+  import:           common-exts
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  other-modules:
+    Config.Args
+    Config.Prelude
+    Config.Toml
+
+  build-depends:
+    , base
+    , safe-rm
+    , safe-rm-exe-internal
+    , tasty                 >=1.1.0.3 && <1.5
+    , tasty-hunit           >=0.9     && <0.11
+
+  hs-source-dirs:   test/config
+  default-language: GHC2021
 
 test-suite functional
   import:           common-exts

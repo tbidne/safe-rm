@@ -2,8 +2,13 @@
 --
 -- @since 0.1
 module SafeRm.Runner
-  ( runSafeRm,
+  ( -- * Main functions
+    runSafeRm,
     runSafeRmHandler,
+
+    -- * Helpers
+    FinalConfig (..),
+    getConfiguration,
   )
 where
 
@@ -47,6 +52,50 @@ runSafeRm = runSafeRmHandler (putStrLn . T.unpack)
 -- @since 0.1
 runSafeRmHandler :: (Text -> IO ()) -> IO ()
 runSafeRmHandler handler = do
+  -- Combine args and toml config to get final versions of shared config
+  -- values. Right now, only the trash home is shared.
+  finalConfig <- getConfiguration
+  let finalTrashHome = finalConfig ^. #trashHome
+
+  case finalConfig ^. #command of
+    SafeRmCommandDelete paths -> SafeRm.delete finalTrashHome (listToSet paths)
+    SafeRmCommandPermDelete force paths ->
+      SafeRm.deletePermanently finalTrashHome force (listToSet paths)
+    SafeRmCommandEmpty -> SafeRm.empty finalTrashHome
+    SafeRmCommandRestore paths ->
+      SafeRm.restore finalTrashHome (listToSet paths)
+    SafeRmCommandList -> do
+      listIndex handler finalTrashHome
+      printStats handler finalTrashHome
+    SafeRmCommandMetadata -> printStats handler finalTrashHome
+
+-- | Holds the final configuration data.
+--
+-- @since 0.1
+data FinalConfig = MkFinalConfig
+  { trashHome :: !(Maybe (PathI TrashHome)),
+    command :: !SafeRmCommand
+  }
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Generic,
+      -- | @since 0.1
+      Show
+    )
+
+-- | Parses CLI 'Args' and optional 'TomlConfig' to produce the full
+-- configuration. For values shared between the CLI and Toml file, the CLI
+-- takes priority.
+--
+-- For example, if both the CLI and Toml file specify the trash home, then
+-- the CLI's value will be used.
+--
+-- @since 0.1
+getConfiguration :: IO FinalConfig
+getConfiguration = do
+  -- get CLI args
   args <- getArgs
 
   -- get toml config
@@ -64,21 +113,13 @@ runSafeRmHandler handler = do
         else -- 3. no config exists: return default (empty)
           pure mempty
 
-  -- Combine args and toml config to get final versions of shared config
-  -- values. Right now, only the trash home is shared.
-  let finalTrashHome = mergeConfigs args tomlConfig ^. #trashHome
-
-  case args ^. #command of
-    SafeRmCommandDelete paths -> SafeRm.delete finalTrashHome (listToSet paths)
-    SafeRmCommandPermDelete force paths ->
-      SafeRm.deletePermanently finalTrashHome force (listToSet paths)
-    SafeRmCommandEmpty -> SafeRm.empty finalTrashHome
-    SafeRmCommandRestore paths ->
-      SafeRm.restore finalTrashHome (listToSet paths)
-    SafeRmCommandList -> do
-      listIndex handler finalTrashHome
-      printStats handler finalTrashHome
-    SafeRmCommandMetadata -> printStats handler finalTrashHome
+  -- merge share CLI and toml values
+  let tomlConfig' = mergeConfigs args tomlConfig
+  pure $
+    MkFinalConfig
+      { trashHome = tomlConfig' ^. #trashHome,
+        command = args ^. #command
+      }
   where
     readConfig fp = do
       contents <-

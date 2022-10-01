@@ -58,7 +58,7 @@ import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (fromIntegral)
 import GHC.Stack as X (HasCallStack)
-import Optics.Core as X (Iso', iso, review, view, (%), (^.), _1, _2)
+import Optics.Core as X (Iso', iso, review, view, (%), (^.), (^?), _1, _2)
 import Prettyprinter as X
   ( Pretty (pretty),
     layoutCompact,
