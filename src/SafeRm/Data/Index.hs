@@ -38,7 +38,6 @@ import SafeRm.Exceptions
       ( DuplicateIndexPath,
         PathNotFound,
         ReadIndex,
-        RestoreCollision,
         TrashPathNotFound
       ),
   )
@@ -106,56 +105,32 @@ readIndex indexPath =
 --
 -- @since 0.1
 searchIndex ::
-  forall m.
-  MonadIO m =>
-  -- | If true, errors if there is a collision between a found trash path
-  -- and its original path.
-  Bool ->
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
   HashSet (PathI TrashName) ->
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
-  m ([SomeException], HashSet PathData)
-searchIndex errIfOrigCollision keys (MkIndex index) =
-  Set.foldl' foldKeys (pure mempty) trashKeys
+  ([SomeException], HashSet PathData)
+searchIndex keys (MkIndex index) =
+  Set.foldl' foldKeys mempty trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = Set.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
-      m ([SomeException], HashSet PathData) ->
+      ([SomeException], HashSet PathData) ->
       PathI TrashName ->
-      m ([SomeException], HashSet PathData)
-    foldKeys macc trashKey = do
-      acc@(exs, found) <- macc
+      ([SomeException], HashSet PathData)
+    foldKeys acc@(exs, found) trashKey =
       case Map.lookup trashKey index of
         Nothing ->
-          pure $
-            prependEx
-              (MkExceptionI @PathNotFound (view _MkPathI trashKey))
-              acc
-        Just pd -> do
-          -- NOTE: Because the index passed to this function should have
-          -- been created via readIndex, thus we do not to check the following
-          -- invariants again:
-          --   - trash path existence
-          --   - duplicates
-
-          -- optional collision detection
-          collision <- mCollisionErr pd
-          if collision
-            then
-              pure $
-                prependEx
-                  ( MkExceptionI @RestoreCollision
-                      (pd ^. #fileName, pd ^. #originalPath)
-                  )
-                  acc
-            else pure (exs, Set.insert pd found)
-    mCollisionErr =
-      if errIfOrigCollision
-        then PathData.originalPathExists
-        else const (pure False)
+          -- NOTE: since this is the only exception type we do not actually
+          -- have to do this; we could simply return the offending trashKey.
+          -- Nevertheless we turn these into exceptions since it makes the
+          -- callers' lives easier.
+          prependEx
+            (MkExceptionI @PathNotFound (view _MkPathI trashKey))
+            acc
+        Just pd -> (exs, Set.insert pd found)
     prependEx ex = over' _1 (toException ex :)
 
 -- | Reads a csv index file and applies the fold function to each

@@ -107,8 +107,7 @@ deletePermanently verbose mtrash force paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
-
-  (searchExs, toDelete) <- Index.searchIndex False paths index
+      (searchExs, toDelete) = Index.searchIndex paths index
   deletedPathsRef <- newIORef Map.empty
   exceptionsRef <- newIORef Nothing
 
@@ -199,7 +198,7 @@ restore verbose mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
-  (searchExs, toRestore) <- Index.searchIndex True paths index
+      (searchExs, toRestore) = Index.searchIndex paths index
 
   restoredPathsRef <- newIORef Map.empty
   exceptionsRef <- newIORef Nothing

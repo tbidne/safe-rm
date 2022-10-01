@@ -52,7 +52,7 @@ import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp (Timestamp)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
-    ExceptionIndex (PathNotFound, RenameDuplicate),
+    ExceptionIndex (PathNotFound, RenameDuplicate, RestoreCollision),
   )
 import SafeRm.Prelude
 import System.FilePath qualified as FP
@@ -255,10 +255,16 @@ mvTrashToOriginal ::
   PathI TrashHome ->
   PathData ->
   m ()
-mvTrashToOriginal (MkPathI trashHome) pd =
+mvTrashToOriginal (MkPathI trashHome) pd = do
+  exists <- originalPathExists pd
+  when exists $
+    throwIO $
+      MkExceptionI @RestoreCollision (fileName, originalPath)
   renameFn trashPath (pd ^. #originalPath % _MkPathI)
   where
-    trashPath = trashHome </> (pd ^. #fileName % _MkPathI)
+    originalPath = pd ^. #originalPath
+    fileName = pd ^. #fileName
+    trashPath = trashHome </> (fileName ^. _MkPathI)
     renameFn = case pd ^. #pathType of
       PathTypeFile -> Dir.renameFile
       PathTypeDirectory -> Dir.renameDirectory
