@@ -50,7 +50,7 @@ deletesOne args = testCase "Deletes a single file" $ do
     expected =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/d1/f1",
+        Outfix "Original:" "/safe-rm/functional/d1/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -93,27 +93,27 @@ deletesMany args = testCase "Deletes several paths" $ do
     expected =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/safe-rm/d2/dir1",
+        Outfix "Original:" "/safe-rm/functional/d2/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/safe-rm/d2/dir2",
+        Outfix "Original:" "/safe-rm/functional/d2/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/d2/f1",
+        Outfix "Original:" "/safe-rm/functional/d2/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/d2/f2",
+        Outfix "Original:" "/safe-rm/functional/d2/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/safe-rm/d2/f3",
+        Outfix "Original:" "/safe-rm/functional/d2/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
@@ -141,7 +141,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   where
     expected =
       [ Exact "Encountered exception(s)",
-        Outfix "- Path not found:" "/safe-rm/d3/bad file"
+        Outfix "- Path not found:" "/safe-rm/functional/d3/bad file"
       ]
 
 deleteDuplicateFile :: IO TestArgs -> TestTree
@@ -176,12 +176,12 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
     expected =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/d4/f1",
+        Outfix "Original:" "/safe-rm/functional/d4/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1 (1)",
-        Outfix "Original:" "/safe-rm/d4/f1",
+        Outfix "Original:" "/safe-rm/functional/d4/f1",
         Prefix "Created:",
         Exact "Entries:      2",
         Exact "Total Files:  2",
@@ -221,23 +221,23 @@ deletesSome args = testCase "Deletes some, errors on others" $ do
   assertFilesDoNotExist ((trashDir </>) <$> ["f3", "f4"])
   where
     expectedExceptions =
-      [ Outfix "- Path not found:" "/safe-rm/d5/f3",
-        Outfix "- Path not found:" "/safe-rm/d5/f4"
+      [ Outfix "- Path not found:" "/safe-rm/functional/d5/f3",
+        Outfix "- Path not found:" "/safe-rm/functional/d5/f4"
       ]
     expected =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/d5/f1",
+        Outfix "Original:" "/safe-rm/functional/d5/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/d5/f2",
+        Outfix "Original:" "/safe-rm/functional/d5/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f5",
-        Outfix "Original:" "/safe-rm/d5/f5",
+        Outfix "Original:" "/safe-rm/functional/d5/f5",
         Prefix "Created:",
         Exact "Entries:      3",
         Exact "Total Files:  3",

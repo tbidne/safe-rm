@@ -69,7 +69,7 @@ restoreOne args = testCase "Restores a single file" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/r1/f1",
+        Outfix "Original:" "/safe-rm/functional/r1/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -136,27 +136,27 @@ restoreMany args = testCase "Restores several paths" $ do
     expectedDel =
       [ Exact "Type:      Directory",
         Exact "Name:      dir1",
-        Outfix "Original:" "/safe-rm/r2/dir1",
+        Outfix "Original:" "/safe-rm/functional/r2/dir1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      Directory",
         Exact "Name:      dir2",
-        Outfix "Original:" "/safe-rm/r2/dir2",
+        Outfix "Original:" "/safe-rm/functional/r2/dir2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/r2/f1",
+        Outfix "Original:" "/safe-rm/functional/r2/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/r2/f2",
+        Outfix "Original:" "/safe-rm/functional/r2/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f3",
-        Outfix "Original:" "/safe-rm/r2/f3",
+        Outfix "Original:" "/safe-rm/functional/r2/f3",
         Prefix "Created:",
         Exact "Entries:      5",
         Exact "Total Files:  4",
@@ -165,7 +165,7 @@ restoreMany args = testCase "Restores several paths" $ do
     expectedRestore =
       [ Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/r2/f2",
+        Outfix "Original:" "/safe-rm/functional/r2/f2",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -219,7 +219,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/r3/f1",
+        Outfix "Original:" "/safe-rm/functional/r3/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -273,7 +273,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/r4/f1",
+        Outfix "Original:" "/safe-rm/functional/r4/f1",
         Prefix "Created:",
         Exact "Entries:      1",
         Exact "Total Files:  1",
@@ -285,7 +285,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
           ( "- Cannot restore the trash file 'f1' as one exists at the "
               <> "original location:"
           )
-          "/safe-rm/r4/f1"
+          "/safe-rm/functional/r4/f1"
       ]
 
 restoresSome :: IO TestArgs -> TestTree
@@ -337,17 +337,17 @@ restoresSome args = testCase "Restores some, errors on others" $ do
     expectedDel =
       [ Exact "Type:      File",
         Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/r5/f1",
+        Outfix "Original:" "/safe-rm/functional/r5/f1",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/r5/f2",
+        Outfix "Original:" "/safe-rm/functional/r5/f2",
         Prefix "Created:",
         Exact "",
         Exact "Type:      File",
         Exact "Name:      f5",
-        Outfix "Original:" "/safe-rm/r5/f5",
+        Outfix "Original:" "/safe-rm/functional/r5/f5",
         Prefix "Created:",
         Exact "Entries:      3",
         Exact "Total Files:  3",

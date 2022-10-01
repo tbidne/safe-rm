@@ -120,6 +120,31 @@ executable sr
   ghc-options:        -threaded -with-rtsopts=-N
   default-language:   GHC2021
 
+test-suite unit
+  import:           common-exts
+  type:             exitcode-stdio-1.0
+  main-is:          Main.hs
+  other-modules:
+    Unit.MaxRuns
+    Unit.Prelude
+    Unit.SafeRm
+
+  build-depends:
+    , base
+    , env-guard             ^>=0.2
+    , file-utils
+    , hedgehog              >=1.0.2   && <1.3
+    , safe-rm
+    , tagged                ^>=0.8.6
+    , tasty                 >=1.1.0.3 && <1.5
+    , tasty-hedgehog        >=1.2.0.0 && <1.4
+    , text
+    , unliftio
+    , unordered-containers
+
+  hs-source-dirs:   test/unit
+  default-language: GHC2021
+
 test-suite config
   import:           common-exts
   type:             exitcode-stdio-1.0

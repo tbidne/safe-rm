@@ -16,22 +16,36 @@ module SafeRm.FileUtils
 where
 
 import Data.ByteString qualified as BS
+import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
-import SafeRm.Prelude hiding (IO)
-import System.IO (IO)
+import SafeRm.Prelude
+import System.IO (putStrLn)
 import UnliftIO.Directory qualified as Dir
 
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
 createFiles :: [FilePath] -> IO ()
-createFiles paths = for_ paths $ \p -> BS.writeFile p ""
+createFiles = createFileContents . fmap (,"")
 
 -- | Creates files at the specified paths.
 --
 -- @since 0.1
 createFileContents :: [(FilePath, ByteString)] -> IO ()
-createFileContents paths = for_ paths (uncurry BS.writeFile)
+createFileContents paths = for_ paths $
+  \(p, c) ->
+    BS.writeFile p c
+      `catchAny` \ex -> do
+        putStrLn $
+          mconcat
+            [ "[SafeRm.FileUtils.createFileContents] Exception for file '",
+              p,
+              "' and contents '",
+              Char8.unpack c,
+              "': ",
+              displayException ex
+            ]
+        throwIO ex
 
 -- | Creates empty files at the specified paths.
 --

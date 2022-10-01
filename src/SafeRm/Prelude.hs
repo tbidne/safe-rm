@@ -12,10 +12,18 @@ import Control.Applicative as X
     (*>),
   )
 import Control.DeepSeq as X (NFData)
-import Control.Monad as X (Monad ((>>=)), join, unless, void, when, (<=<), (>=>))
+import Control.Monad as X
+  ( Monad ((>>=)),
+    join,
+    unless,
+    void,
+    when,
+    (<=<),
+    (>=>),
+  )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
-import Data.Bool as X (Bool (False, True), not, otherwise, (&&))
+import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))

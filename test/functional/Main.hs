@@ -35,9 +35,9 @@ main =
 
 setup :: IO TestArgs
 setup = do
-  tmpDir <- (</> "safe-rm") <$> Dir.getTemporaryDirectory
+  tmpDir <- (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory
 
-  createDirectoryIfMissing False tmpDir
+  createDirectoryIfMissing True tmpDir
   pure $ MkTestArgs tmpDir
 
 teardown :: TestArgs -> IO ()

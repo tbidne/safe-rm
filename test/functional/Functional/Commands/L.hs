@@ -109,7 +109,7 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
       [ Outfix
           "The path 'foo' was not found in the trash directory"
           ( mconcat
-              [ "/safe-rm/l3/.trash' despite being listed in the trash index. ",
+              [ "/safe-rm/functional/l3/.trash' despite being listed in the trash index. ",
                 "This can be fixed by manually deleting the entry from the ",
                 "index or deleting everything (i.e. sr e)."
               ]
@@ -157,7 +157,7 @@ indexDuplicatesError args = testCase "Index Duplicates Error" $ do
                 "the trash index"
               ]
           )
-          "/safe-rm/l4/.trash/.index.csv' for the following path: foo"
+          "/safe-rm/functional/l4/.trash/.index.csv' for the following path: foo"
       ]
 
 indexSizeMismatchError :: IO TestArgs -> TestTree
@@ -200,5 +200,5 @@ indexSizeMismatchError args = testCase "Index Size Mismatch Error" $ do
                 "entries (2) in trash:"
               ]
           )
-          "/safe-rm/l5/.trash"
+          "/safe-rm/functional/l5/.trash"
       ]
