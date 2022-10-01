@@ -137,7 +137,6 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
               (MkExceptionI @PathNotFound (view _MkPathI trashKey))
               acc
         Just pd -> do
-          throwIfTrashNonExtant trashHome pd
           nonExtant <- trashNonExtant trashHome pd
           if nonExtant
             then
