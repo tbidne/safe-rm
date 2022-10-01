@@ -75,7 +75,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
 genFileNameSet :: Gen (HashSet (PathI OriginalPath))
 genFileNameSet = Set.fromList <$> Gen.list range genPaths
   where
-    range = Range.linear 1 100
+    range = Range.linear 0 100
 
 genPaths :: Gen (PathI OriginalPath)
 genPaths = do
