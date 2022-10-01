@@ -19,7 +19,7 @@ import Data.Bool as X (Bool (False, True), not, otherwise, (&&))
 import Data.ByteString as X (ByteString)
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))
-import Data.Foldable as X (Foldable (foldl', foldr, length), for_)
+import Data.Foldable as X (Foldable (foldl', foldr, length), for_, null)
 import Data.Function as X (const, flip, ($), (.))
 import Data.Functor as X (Functor (fmap), ($>), (<$>))
 import Data.HashMap.Strict as X (HashMap)
@@ -29,7 +29,7 @@ import Data.Int as X (Int)
 import Data.Kind as X (Constraint, Type)
 import Data.List as X (zipWith)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
-import Data.Maybe as X (Maybe (Just, Nothing), maybe)
+import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe)
 import Data.Monoid as X (Monoid (mconcat, mempty))
 import Data.Ord as X (Ord (compare, (<=), (>), (>=)), Ordering (EQ, GT, LT))
 import Data.Proxy as X (Proxy (Proxy))
@@ -49,7 +49,7 @@ import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (fromIntegral)
 import GHC.Stack as X (HasCallStack)
-import Optics.Core as X (Iso', iso, review, view, (%), (^.), (^?), _1, _2)
+import Optics.Core as X (Iso', Lens', iso, over', review, view, (%), (^.), (^?), _1, _2)
 import Prettyprinter as X
   ( Pretty (pretty),
     layoutCompact,
@@ -74,6 +74,7 @@ import UnliftIO.Exception as X
     SomeException,
     bracket,
     catch,
+    catchAny,
     finally,
     throwIO,
   )

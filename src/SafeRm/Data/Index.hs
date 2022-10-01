@@ -118,29 +118,50 @@ searchIndex ::
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
-  m (HashSet PathData)
+  m ([SomeException], HashSet PathData)
 searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = Set.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
-    foldKeys :: m (HashSet PathData) -> PathI TrashName -> m (HashSet PathData)
+    foldKeys ::
+      m ([SomeException], HashSet PathData) ->
+      PathI TrashName ->
+      m ([SomeException], HashSet PathData)
     foldKeys macc trashKey = do
-      acc <- macc
+      acc@(exs, found) <- macc
       case Map.lookup trashKey index of
         Nothing ->
-          throwIO $
-            MkExceptionI @PathNotFound (view _MkPathI trashKey)
+          pure $
+            prependEx
+              (MkExceptionI @PathNotFound (view _MkPathI trashKey))
+              acc
         Just pd -> do
           throwIfTrashNonExtant trashHome pd
-
-          -- optional collision detection
-          mCollisionErr pd
-          pure $ Set.insert pd acc
+          nonExtant <- trashNonExtant trashHome pd
+          if nonExtant
+            then
+              pure $
+                prependEx
+                  (MkExceptionI @TrashPathNotFound (trashHome, pd ^. #fileName))
+                  acc
+            else do
+              -- optional collision detection
+              collision <- mCollisionErr pd
+              if collision
+                then
+                  pure $
+                    prependEx
+                      ( MkExceptionI @RestoreCollision
+                          (pd ^. #fileName, pd ^. #originalPath)
+                      )
+                      acc
+                else pure (exs, Set.insert pd found)
     mCollisionErr =
       if errIfOrigCollision
-        then throwIfOrigCollision
-        else const (pure ())
+        then PathData.originalPathExists
+        else const (pure False)
+    prependEx ex = over' _1 (toException ex :)
 
 -- | Reads a csv index file and applies the fold function to each
 -- 'PathData' encountered. The fold function allows 'IO' in case it is needed
@@ -192,20 +213,6 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 
     lbsToStr = Char8.unpack . BSL.toStrict
 
--- | Verifies that the 'PathData'\'s @originalPath@ does not collide with
--- an existing path.
---
--- @since 0.1
-throwIfOrigCollision :: MonadIO m => PathData -> m ()
-throwIfOrigCollision pd = do
-  exists <- PathData.originalPathExists pd
-  when exists $
-    throwIO $
-      MkExceptionI @RestoreCollision (trashName, originalPath)
-  where
-    trashName = pd ^. #fileName
-    originalPath = pd ^. #originalPath
-
 -- | Verifies that the 'PathData'\'s @fileName@ does not exist in the
 -- hashmap.
 --
@@ -234,6 +241,9 @@ throwIfTrashNonExtant trashHome pd = do
       MkExceptionI @TrashPathNotFound (trashHome, filePath)
   where
     filePath = pd ^. #fileName
+
+trashNonExtant :: MonadIO m => PathI TrashHome -> PathData -> m Bool
+trashNonExtant fp = fmap not . PathData.trashPathExists fp
 
 -- | Appends the path data to the trash index. The header is not included.
 --

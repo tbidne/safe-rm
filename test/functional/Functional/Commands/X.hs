@@ -9,7 +9,7 @@ where
 import Data.Text qualified as T
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (tmpDir))
-import SafeRm.Exceptions (ExceptionI, ExceptionIndex (PathNotFound))
+import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
 -- | @since 0.1
 tests :: IO TestArgs -> TestTree
@@ -18,7 +18,8 @@ tests args =
     "Permanent Delete (x)"
     [ deletesOne args,
       deletesMany args,
-      deleteUnknownError args
+      deleteUnknownError args,
+      deletesSome args
     ]
 
 deletesOne :: IO TestArgs -> TestTree
@@ -207,10 +208,13 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   -- assert exception
   result <-
     (runSafeRm permDelArgList $> Nothing)
-      `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
+      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
-    Just ex -> assertMatches expectedPermDel [T.pack $ displayException ex]
+    Just ex ->
+      assertMatches
+        expectedPermDel
+        (T.lines . T.pack $ displayException ex)
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -222,4 +226,84 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
         Exact "Total Files:  1",
         Prefix "Size:"
       ]
-    expectedPermDel = [Outfix "Path not found:" "bad file"]
+    expectedPermDel =
+      [ Exact "Encountered exception(s)",
+        Exact "- Path not found: bad file"
+      ]
+
+deletesSome :: IO TestArgs -> TestTree
+deletesSome args = testCase "Deletes some, errors on others" $ do
+  tmpDir <- view #tmpDir <$> args
+  let testDir = tmpDir </> "x4"
+      trashDir = testDir </> ".trash"
+      realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
+      filesTryPermDelete = ["f1", "f2", "f3", "f4", "f5"]
+      delArgList = ("d" : realFiles) <> ["-t", trashDir]
+
+  -- setup
+  clearDirectory testDir
+  createFiles realFiles
+  assertFilesExist realFiles
+
+  -- delete to trash first
+  runSafeRm delArgList
+
+  -- list output assertions
+  delResult <- captureSafeRm ["l", "-t", trashDir]
+  assertMatches expectedDel delResult
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist realFiles
+  assertDirectoriesExist [trashDir]
+
+  -- PERMANENT DELETE
+  let permDelArgList =
+        ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
+
+  result <-
+    (runSafeRm permDelArgList $> Nothing)
+      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
+  case result of
+    Nothing -> assertFailure "Expected exception"
+    Just ex ->
+      assertMatches
+        expectedException
+        (T.lines . T.pack $ displayException ex)
+
+  -- list output assertions
+  resultList <- captureSafeRm ["l", "-t", trashDir]
+  assertMatches expected resultList
+
+  -- file assertions
+  assertFilesDoNotExist ((trashDir </>) <$> filesTryPermDelete)
+  where
+    expectedDel =
+      [ Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/safe-rm/x4/f1",
+        Prefix "Created:",
+        Exact "",
+        Exact "Type:      File",
+        Exact "Name:      f2",
+        Outfix "Original:" "/safe-rm/x4/f2",
+        Prefix "Created:",
+        Exact "",
+        Exact "Type:      File",
+        Exact "Name:      f5",
+        Outfix "Original:" "/safe-rm/x4/f5",
+        Prefix "Created:",
+        Exact "Entries:      3",
+        Exact "Total Files:  3",
+        Prefix "Size:"
+      ]
+    expectedException =
+      [ Exact "Encountered exception(s)",
+        Exact "- Path not found: f3",
+        Exact "- Path not found: f4"
+      ]
+    expected =
+      [ Exact "Entries:      0",
+        Exact "Total Files:  0",
+        Prefix "Size:"
+      ]

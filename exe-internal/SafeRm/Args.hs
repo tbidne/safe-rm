@@ -108,6 +108,10 @@ data Args = MkArgs
     --
     -- @since 0.1
     trashHome :: !(Maybe (PathI TrashHome)),
+    -- | verbose
+    --
+    -- @since 0.1
+    verbose :: !(Maybe Bool),
     -- | Command to run.
     --
     -- @since 0.1
@@ -150,6 +154,7 @@ argsParser =
   MkArgs
     <$> configParser
     <*> trashParser
+    <*> verboseParser
     <*> commandParser
     <**> OA.helper
     <**> version
@@ -262,6 +267,18 @@ trashParser =
           "it exists. If neither is given then we use the xdg home directory ",
           "e.g. ~/.trash"
         ]
+
+verboseParser :: Parser (Maybe Bool)
+verboseParser =
+  A.optional $
+    OA.switch $
+      mconcat
+        [ OA.long "verbose",
+          OA.short 'l',
+          OA.help helpTxt
+        ]
+  where
+    helpTxt = "Verbosity level e.g. if we print data that is deleted/restored."
 
 pathsParser :: IsString a => Parser (NonEmpty a)
 pathsParser =

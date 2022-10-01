@@ -7,7 +7,7 @@ module SafeRm.Toml
   )
 where
 
-import SafeRm.Args (Args (trashHome))
+import SafeRm.Args (Args (trashHome, verbose))
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 import SafeRm.Prelude
 import TOML
@@ -18,8 +18,9 @@ import TOML
 -- | Holds TOML configuration.
 --
 -- @since 0.1
-newtype TomlConfig = MkTomlConfig
-  { trashHome :: Maybe (PathI TrashHome)
+data TomlConfig = MkTomlConfig
+  { trashHome :: !(Maybe (PathI TrashHome)),
+    verbose :: !(Maybe Bool)
   }
   deriving stock
     ( -- | @since 0.1
@@ -32,18 +33,20 @@ newtype TomlConfig = MkTomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
-  MkTomlConfig a <> MkTomlConfig b = MkTomlConfig (a <|> b)
+  MkTomlConfig a b <> MkTomlConfig a' b' = MkTomlConfig (a <|> a') (b <|> b')
 
 -- | @since 0.1
 instance Monoid TomlConfig where
-  mempty = MkTomlConfig Nothing
+  mempty = MkTomlConfig Nothing Nothing
 
 -- | @since 0.5
 instance DecodeTOML TomlConfig where
-  tomlDecoder = MkTomlConfig <$> decodeTrashHome
+  tomlDecoder = MkTomlConfig <$> decodeTrashHome <*> decodeVerbose
     where
       decodeTrashHome =
         fmap MkPathI <$> getFieldOptWith tomlDecoder "trash-home"
+      decodeVerbose =
+        getFieldOptWith tomlDecoder "verbose"
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.
@@ -53,4 +56,5 @@ mergeConfigs :: Args -> TomlConfig -> TomlConfig
 mergeConfigs args = (argsToTomlConfig args <>)
 
 argsToTomlConfig :: Args -> TomlConfig
-argsToTomlConfig args = MkTomlConfig $ args ^. #trashHome
+argsToTomlConfig args =
+  MkTomlConfig (args ^. #trashHome) (args ^. #verbose)

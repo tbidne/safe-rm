@@ -1,2 +1,5 @@
 # Path to the trash home. Overridden by the CLI -t option.
 trash-home = "./tmp"
+
+# General verbosity flag.
+verbose = false

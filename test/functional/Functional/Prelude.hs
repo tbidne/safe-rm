@@ -72,7 +72,11 @@ runFunctionalIO (MkFunctionalIO rdr) = runReaderT rdr
 --
 -- @since 0.1
 runSafeRm :: [String] -> IO ()
-runSafeRm argList = SysEnv.withArgs argList Runner.runSafeRm
+runSafeRm argList = do
+  output <- newIORef ""
+  runFunctionalIO funcIO output
+  where
+    funcIO = SysEnv.withArgs argList Runner.runSafeRm
 
 -- | Runs safe-rm and captures output.
 --

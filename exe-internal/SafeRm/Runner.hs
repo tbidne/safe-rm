@@ -35,7 +35,7 @@ import SafeRm.Exceptions
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Toml (TomlConfig (trashHome), mergeConfigs)
+import SafeRm.Toml (TomlConfig (trashHome, verbose), mergeConfigs)
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
@@ -52,12 +52,12 @@ runSafeRm = do
 
   case finalConfig ^. #command of
     SafeRmCommandDelete paths ->
-      SafeRm.delete finalTrashHome (listToSet paths)
+      SafeRm.delete (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
     SafeRmCommandPermDelete force paths ->
-      SafeRm.deletePermanently finalTrashHome force (listToSet paths)
+      SafeRm.deletePermanently (finalConfig ^. #verbose) finalTrashHome force (listToSet paths)
     SafeRmCommandEmpty -> SafeRm.empty finalTrashHome
     SafeRmCommandRestore paths ->
-      SafeRm.restore finalTrashHome (listToSet paths)
+      SafeRm.restore (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
     SafeRmCommandList -> do
       listIndex finalTrashHome
       printStats finalTrashHome
@@ -68,6 +68,7 @@ runSafeRm = do
 -- @since 0.1
 data FinalConfig = MkFinalConfig
   { trashHome :: !(Maybe (PathI TrashHome)),
+    verbose :: !Bool,
     command :: !SafeRmCommand
   }
   deriving stock
@@ -108,10 +109,11 @@ getConfiguration = do
           pure mempty
 
   -- merge share CLI and toml values
-  let tomlConfig' = mergeConfigs args tomlConfig
+  let mergedConfig = mergeConfigs args tomlConfig
   pure $
     MkFinalConfig
-      { trashHome = tomlConfig' ^. #trashHome,
+      { trashHome = mergedConfig ^. #trashHome,
+        verbose = fromMaybe False (mergedConfig ^. #verbose),
         command = args ^. #command
       }
   where

@@ -11,7 +11,7 @@ import Functional.Prelude
 import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions
   ( ExceptionI,
-    ExceptionIndex (PathNotFound, RestoreCollision),
+    ExceptionIndex (SomeExceptions),
   )
 
 -- | @since 0.1
@@ -22,7 +22,8 @@ tests args =
     [ restoreOne args,
       restoreMany args,
       restoreUnknownError args,
-      restoreCollisionError args
+      restoreCollisionError args,
+      restoresSome args
     ]
 
 restoreOne :: IO TestArgs -> TestTree
@@ -206,10 +207,13 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   -- assert exception
   result <-
     (runSafeRm restoreArgList $> Nothing)
-      `catch` \(e :: ExceptionI PathNotFound) -> pure (Just e)
+      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
-    Just ex -> assertMatches expectedRestore [T.pack $ displayException ex]
+    Just ex ->
+      assertMatches
+        expectedRestore
+        (T.lines . T.pack $ displayException ex)
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -221,7 +225,10 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
         Exact "Total Files:  1",
         Prefix "Size:"
       ]
-    expectedRestore = [Outfix "Path not found:" "bad file"]
+    expectedRestore =
+      [ Exact "Encountered exception(s)",
+        Exact "- Path not found: bad file"
+      ]
 
 restoreCollisionError :: IO TestArgs -> TestTree
 restoreCollisionError args = testCase "Restore collision prints error" $ do
@@ -254,10 +261,13 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   -- assert exception
   result <-
     (runSafeRm restoreArgList $> Nothing)
-      `catch` \(e :: ExceptionI RestoreCollision) -> pure (Just e)
+      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"
-    Just ex -> assertMatches expectedRestore [T.pack $ displayException ex]
+    Just ex ->
+      assertMatches
+        expectedRestore
+        (T.lines . T.pack $ displayException ex)
   assertFilesExist [trashDir </> "f1", f1, trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -270,9 +280,89 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
         Prefix "Size:"
       ]
     expectedRestore =
-      [ Outfix
-          ( "Cannot restore the trash file 'f1' as one exists at the "
+      [ Exact "Encountered exception(s)",
+        Outfix
+          ( "- Cannot restore the trash file 'f1' as one exists at the "
               <> "original location:"
           )
           "/safe-rm/r4/f1"
+      ]
+
+restoresSome :: IO TestArgs -> TestTree
+restoresSome args = testCase "Restores some, errors on others" $ do
+  tmpDir <- view #tmpDir <$> args
+  let testDir = tmpDir </> "r5"
+      trashDir = testDir </> ".trash"
+      realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
+      filesTryRestore = ["f1", "f2", "f3", "f4", "f5"]
+      delArgList = ("d" : realFiles) <> ["-t", trashDir]
+
+  -- setup
+  clearDirectory testDir
+  createFiles realFiles
+  assertFilesExist realFiles
+
+  -- delete to trash first
+  runSafeRm delArgList
+
+  -- list output assertions
+  delResult <- captureSafeRm ["l", "-t", trashDir]
+  assertMatches expectedDel delResult
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist realFiles
+  assertDirectoriesExist [trashDir]
+
+  -- PERMANENT DELETE
+  let permDelArgList =
+        ("r" : filesTryRestore) <> ["-t", trashDir]
+
+  result <-
+    (runSafeRm permDelArgList $> Nothing)
+      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
+  case result of
+    Nothing -> assertFailure "Expected exception"
+    Just ex ->
+      assertMatches
+        expectedException
+        (T.lines . T.pack $ displayException ex)
+
+  -- list output assertions
+  resultList <- captureSafeRm ["l", "-t", trashDir]
+  assertMatches expected resultList
+
+  -- file assertions
+  assertFilesDoNotExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist ((testDir </>) <$> ["f3", "f4"])
+  assertFilesExist ((testDir </>) <$> ["f1", "f2", "f5"])
+  where
+    expectedDel =
+      [ Exact "Type:      File",
+        Exact "Name:      f1",
+        Outfix "Original:" "/safe-rm/r5/f1",
+        Prefix "Created:",
+        Exact "",
+        Exact "Type:      File",
+        Exact "Name:      f2",
+        Outfix "Original:" "/safe-rm/r5/f2",
+        Prefix "Created:",
+        Exact "",
+        Exact "Type:      File",
+        Exact "Name:      f5",
+        Outfix "Original:" "/safe-rm/r5/f5",
+        Prefix "Created:",
+        Exact "Entries:      3",
+        Exact "Total Files:  3",
+        Prefix "Size:"
+      ]
+    expectedException =
+      [ Exact "Encountered exception(s)",
+        Exact "- Path not found: f3",
+        Exact "- Path not found: f4"
+      ]
+    expected =
+      [ Exact "Entries:      0",
+        Exact "Total Files:  0",
+        Prefix "Size:"
       ]
