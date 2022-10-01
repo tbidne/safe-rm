@@ -86,7 +86,10 @@ instance Pretty Index where
 -- * Every index entry corresponds to a path in the trash directory.
 --
 -- @since 0.1
-readIndex :: PathI TrashIndex -> IO Index
+readIndex ::
+  MonadIO m =>
+  PathI TrashIndex ->
+  m Index
 readIndex indexPath =
   fmap MkIndex . readIndexWithFold foldVec $ indexPath
   where
@@ -103,6 +106,8 @@ readIndex indexPath =
 --
 -- @since 0.1
 searchIndex ::
+  forall m.
+  MonadIO m =>
   -- | If true, errors if there is a collision between a found trash path
   -- and its original path.
   Bool ->
@@ -113,17 +118,19 @@ searchIndex ::
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
-  IO (HashSet PathData)
+  m (HashSet PathData)
 searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = Set.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
-    foldKeys :: IO (HashSet PathData) -> PathI TrashName -> IO (HashSet PathData)
+    foldKeys :: m (HashSet PathData) -> PathI TrashName -> m (HashSet PathData)
     foldKeys macc trashKey = do
       acc <- macc
       case Map.lookup trashKey index of
-        Nothing -> throwIO $ MkExceptionI @PathNotFound (view _MkPathI trashKey)
+        Nothing ->
+          throwIO $
+            MkExceptionI @PathNotFound (view _MkPathI trashKey)
         Just pd -> do
           throwIfTrashNonExtant trashHome pd
 
@@ -141,21 +148,21 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
 --
 -- @since 0.1
 readIndexWithFold ::
-  forall a.
-  Monoid a =>
+  forall m a.
+  (MonadIO m, Monoid a) =>
   -- | Fold function.
-  (IO a -> PathData -> IO a) ->
+  (m a -> PathData -> m a) ->
   -- | Path to index file.
   PathI TrashIndex ->
-  IO a
+  m a
 readIndexWithFold foldFn indexPath@(MkPathI fp) =
-  (BS.readFile >=> runFold mempty . decode) fp
+  ((liftIO . BS.readFile) >=> runFold (pure mempty) . decode) fp
   where
     decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
     -- NOTE: We fold over the Records manually because its Foldable instance
     -- swallows errors, whereas we would like to report any encountered
     -- immediately.
-    runFold :: IO a -> Records PathData -> IO a
+    runFold :: m a -> Records PathData -> m a
     -- Base case, we have parsed everything with no errors nor unconsumed
     -- input
     runFold macc (Nil Nothing "") = macc
@@ -189,12 +196,12 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 -- an existing path.
 --
 -- @since 0.1
-throwIfOrigCollision :: PathData -> IO ()
+throwIfOrigCollision :: MonadIO m => PathData -> m ()
 throwIfOrigCollision pd = do
   exists <- PathData.originalPathExists pd
-  if exists
-    then throwIO $ MkExceptionI @RestoreCollision (trashName, originalPath)
-    else pure ()
+  when exists $
+    throwIO $
+      MkExceptionI @RestoreCollision (trashName, originalPath)
   where
     trashName = pd ^. #fileName
     originalPath = pd ^. #originalPath
@@ -204,35 +211,36 @@ throwIfOrigCollision pd = do
 --
 -- @since 0.1
 throwIfDuplicates ::
+  MonadIO m =>
   PathI TrashIndex ->
   HashMap (PathI TrashName) PathData ->
   PathData ->
-  IO ()
+  m ()
 throwIfDuplicates indexPath trashMap pd =
-  if fileName `Map.member` trashMap
-    then throwIO $ MkExceptionI @DuplicateIndexPath (indexPath, fileName)
-    else pure ()
+  when (fileName `Map.member` trashMap) $
+    throwIO $
+      MkExceptionI @DuplicateIndexPath (indexPath, fileName)
   where
     fileName = pd ^. #fileName
 
 -- | Verifies that the 'PathData'\'s @fileName@ actually exists.
 --
 -- @since 0.1
-throwIfTrashNonExtant :: PathI TrashHome -> PathData -> IO ()
+throwIfTrashNonExtant :: MonadIO m => PathI TrashHome -> PathData -> m ()
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
-  if not exists
-    then throwIO $ MkExceptionI @TrashPathNotFound (trashHome, filePath)
-    else pure ()
+  unless exists $
+    throwIO $
+      MkExceptionI @TrashPathNotFound (trashHome, filePath)
   where
     filePath = pd ^. #fileName
 
 -- | Appends the path data to the trash index. The header is not included.
 --
 -- @since 0.1
-appendIndex :: PathI TrashIndex -> Index -> IO ()
+appendIndex :: MonadIO m => PathI TrashIndex -> Index -> m ()
 appendIndex (MkPathI indexPath) =
-  BS.appendFile indexPath
+  (liftIO . BS.appendFile indexPath)
     . BSL.toStrict
     . Csv.encode
     . Map.elems
@@ -242,9 +250,9 @@ appendIndex (MkPathI indexPath) =
 -- exists. The header is included.
 --
 -- @since 0.1
-writeIndex :: PathI TrashIndex -> Index -> IO ()
+writeIndex :: MonadIO m => PathI TrashIndex -> Index -> m ()
 writeIndex (MkPathI indexPath) =
-  BS.writeFile indexPath
+  (liftIO . BS.writeFile indexPath)
     . BSL.toStrict
     . Csv.encodeDefaultOrderedByName
     . Map.elems

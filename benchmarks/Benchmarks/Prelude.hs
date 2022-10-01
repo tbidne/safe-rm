@@ -12,7 +12,6 @@ import Data.ByteString.Char8 qualified as Char8
 import Data.List qualified as L
 import SafeRm.Data.PathData (headerNames)
 import SafeRm.Prelude as X
-import System.Directory qualified as Dir
 import Test.Tasty.Bench as X
   ( Benchmark,
     bench,
@@ -20,6 +19,7 @@ import Test.Tasty.Bench as X
     defaultMain,
     nfIO,
   )
+import UnliftIO.Directory qualified as Dir
 
 -- | Clears a directory by deleting it if it exists and then recreating it.
 --

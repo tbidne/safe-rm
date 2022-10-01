@@ -5,8 +5,9 @@ module Main (main) where
 
 import Benchmarks.Prelude
 import Benchmarks.ReadIndex qualified as ReadIndex
-import System.Directory qualified as Dir
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
+import System.IO (putStrLn)
+import UnliftIO.Directory qualified as Dir
 
 main :: IO ()
 main = bracket setup runBenchmarks teardown

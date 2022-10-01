@@ -26,12 +26,13 @@ module Functional.Prelude
   )
 where
 
+import Control.Monad.Reader (MonadReader (ask), ReaderT (ReaderT), runReaderT)
 import Data.ByteString qualified as BS
 import Data.Text qualified as T
-import SafeRm.Prelude as X
-import SafeRm.Runner (runSafeRmHandler)
-import System.Directory qualified as Dir
-import System.Environment qualified as SysEnv
+import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
+import SafeRm.Prelude as X hiding (IO)
+import SafeRm.Runner qualified as Runner
+import System.IO as X (IO)
 import Test.Tasty as X (TestTree, testGroup)
 import Test.Tasty.HUnit as X
   ( assertBool,
@@ -40,13 +41,38 @@ import Test.Tasty.HUnit as X
     testCase,
     (@=?),
   )
+import UnliftIO.Directory qualified as Dir
+import UnliftIO.Environment qualified as SysEnv
+
+-- NOTE: The weird "hiding IO ... import IO" lines are so we don't trigger
+-- -Wunused-packages wrt base (interferes with ghcid)
+
+-- | @since 0.1
+newtype FunctionalIO a = MkFunctionalIO (ReaderT (IORef Text) IO a)
+  deriving
+    ( Applicative,
+      Functor,
+      Monad,
+      MonadIO,
+      MonadReader (IORef Text),
+      MonadUnliftIO
+    )
+    via (ReaderT (IORef Text) IO)
+
+-- | @since 0.1
+instance Terminal FunctionalIO where
+  putStr s = ask >>= \ref -> modifyIORef' ref (<> T.pack s)
+  putStrLn = putStr
+
+-- | @since 0.1
+runFunctionalIO :: FunctionalIO a -> IORef Text -> IO a
+runFunctionalIO (MkFunctionalIO rdr) = runReaderT rdr
 
 -- | Runs safe-rm.
 --
 -- @since 0.1
 runSafeRm :: [String] -> IO ()
-runSafeRm argList =
-  SysEnv.withArgs argList (runSafeRmHandler (const (pure ())))
+runSafeRm argList = SysEnv.withArgs argList Runner.runSafeRm
 
 -- | Runs safe-rm and captures output.
 --
@@ -54,9 +80,10 @@ runSafeRm argList =
 captureSafeRm :: [String] -> IO [Text]
 captureSafeRm argList = do
   output <- newIORef ""
-  let handler txt = modifyIORef' output (<> txt)
-  SysEnv.withArgs argList (runSafeRmHandler handler)
+  runFunctionalIO funcIO output
   T.lines <$> readIORef output
+  where
+    funcIO = SysEnv.withArgs argList Runner.runSafeRm
 
 -- | Creates empty files at the specified paths.
 --
@@ -83,9 +110,7 @@ createDirectories paths =
 clearDirectory :: FilePath -> IO ()
 clearDirectory path = do
   exists <- Dir.doesDirectoryExist path
-  if exists
-    then Dir.removePathForcibly path
-    else pure ()
+  when exists $ Dir.removePathForcibly path
   createDirectoryIfMissing False path
 
 -- | Asserts that files exist.

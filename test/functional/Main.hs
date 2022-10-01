@@ -11,9 +11,10 @@ import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Prelude
 import Functional.TestArgs (TestArgs (MkTestArgs, tmpDir))
-import System.Directory qualified as Dir
+import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
+import UnliftIO.Directory qualified as Dir
 
 -- | Runs functional tests.
 --

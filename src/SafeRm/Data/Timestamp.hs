@@ -73,9 +73,9 @@ instance ToField Timestamp where
 -- | Retrieves the local time.
 --
 -- @since 0.1
-getCurrentLocalTime :: IO Timestamp
+getCurrentLocalTime :: MonadIO m => m Timestamp
 getCurrentLocalTime =
-  MkTimestamp . Local.zonedTimeToLocalTime <$> Local.getZonedTime
+  MkTimestamp . Local.zonedTimeToLocalTime <$> liftIO Local.getZonedTime
 
 toStr :: Timestamp -> String
 toStr =

@@ -26,8 +26,8 @@ where
 
 import Data.Csv (FromField, ToField)
 import SafeRm.Prelude
-import System.Directory qualified as Dir
 import System.FilePath qualified as FP
+import UnliftIO.Directory qualified as Dir
 
 -- | Types of filepaths used in SafeRm.
 --
@@ -137,7 +137,9 @@ indexToHome (MkPathI fp) = MkPathI $ FP.takeDirectory fp
 --
 -- @since 0.1
 getTrashAndIndex ::
-  Maybe (PathI TrashHome) -> IO (PathI TrashHome, PathI TrashIndex)
+  MonadIO m =>
+  Maybe (PathI TrashHome) ->
+  m (PathI TrashHome, PathI TrashIndex)
 getTrashAndIndex mfp = do
   res <- trashOrDefault mfp
   pure (res, liftPathI (</> ".index.csv") res)
@@ -146,13 +148,13 @@ getTrashAndIndex mfp = do
 -- trash location.
 --
 -- @since 0.1
-trashOrDefault :: Maybe (PathI TrashHome) -> IO (PathI TrashHome)
+trashOrDefault :: MonadIO m => Maybe (PathI TrashHome) -> m (PathI TrashHome)
 trashOrDefault = maybe getTrashHome pure
 
 -- | Retrieves the default trash directory.
 --
 -- @since 0.1
-getTrashHome :: IO (PathI TrashHome)
+getTrashHome :: MonadIO m => m (PathI TrashHome)
 getTrashHome = MkPathI . (</> ".trash") <$> Dir.getHomeDirectory
 
 -- | '(</>)' lifted to 'PathI'. Notice the index can change, so take care.

@@ -4,7 +4,6 @@
 module SafeRm.Runner
   ( -- * Main functions
     runSafeRm,
-    runSafeRmHandler,
 
     -- * Helpers
     FinalConfig (..),
@@ -15,7 +14,6 @@ where
 import Data.ByteString qualified as BS
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import SafeRm qualified
 import SafeRm.Args
@@ -31,43 +29,39 @@ import SafeRm.Args
     getArgs,
   )
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
 import SafeRm.Toml (TomlConfig (trashHome), mergeConfigs)
-import System.Directory (XdgDirectory (XdgConfig))
-import System.Directory qualified as Dir
 import TOML qualified
+import UnliftIO.Directory (XdgDirectory (XdgConfig))
+import UnliftIO.Directory qualified as Dir
 
--- | Reads cli args and prints the results to stdout.
+-- | Reads CLI args, optional Toml config, and runs SafeRm.
 --
 -- @since 0.1
-runSafeRm :: IO ()
-runSafeRm = runSafeRmHandler (putStrLn . T.unpack)
-
--- | Reads CLI args and applies the parameter handler.
---
--- @since 0.1
-runSafeRmHandler :: (Text -> IO ()) -> IO ()
-runSafeRmHandler handler = do
+runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
+runSafeRm = do
   -- Combine args and toml config to get final versions of shared config
   -- values. Right now, only the trash home is shared.
   finalConfig <- getConfiguration
   let finalTrashHome = finalConfig ^. #trashHome
 
   case finalConfig ^. #command of
-    SafeRmCommandDelete paths -> SafeRm.delete finalTrashHome (listToSet paths)
+    SafeRmCommandDelete paths ->
+      SafeRm.delete finalTrashHome (listToSet paths)
     SafeRmCommandPermDelete force paths ->
       SafeRm.deletePermanently finalTrashHome force (listToSet paths)
     SafeRmCommandEmpty -> SafeRm.empty finalTrashHome
     SafeRmCommandRestore paths ->
       SafeRm.restore finalTrashHome (listToSet paths)
     SafeRmCommandList -> do
-      listIndex handler finalTrashHome
-      printStats handler finalTrashHome
-    SafeRmCommandMetadata -> printStats handler finalTrashHome
+      listIndex finalTrashHome
+      printStats finalTrashHome
+    SafeRmCommandMetadata -> printStats finalTrashHome
 
 -- | Holds the final configuration data.
 --
@@ -93,10 +87,10 @@ data FinalConfig = MkFinalConfig
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: IO FinalConfig
+getConfiguration :: MonadIO m => m FinalConfig
 getConfiguration = do
   -- get CLI args
-  args <- getArgs
+  args <- liftIO getArgs
 
   -- get toml config
   tomlConfig <- case args ^. #tomlConfigPath of
@@ -123,7 +117,7 @@ getConfiguration = do
   where
     readConfig fp = do
       contents <-
-        BS.readFile fp >>= \contents' -> do
+        liftIO (BS.readFile fp) >>= \contents' -> do
           case TEnc.decodeUtf8' contents' of
             Right txt -> pure txt
             Left err -> throwIO err
@@ -131,15 +125,15 @@ getConfiguration = do
         Right cfg -> pure cfg
         Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
 
-listIndex :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
+listIndex :: (MonadIO m, Terminal m) => Maybe (PathI TrashHome) -> m ()
 listIndex = prettyDel SafeRm.getIndex
 
-printStats :: (Text -> IO a) -> Maybe (PathI TrashHome) -> IO a
+printStats :: (MonadIO m, Terminal m) => Maybe (PathI TrashHome) -> m ()
 printStats = prettyDel SafeRm.getMetadata
 
-prettyDel :: Pretty b => (a -> IO b) -> (Text -> IO c) -> a -> IO c
-prettyDel f handler =
-  handler
+prettyDel :: (Pretty b, Terminal m) => (a -> m b) -> a -> m ()
+prettyDel f =
+  putTextLn
     . renderStrict
     . layoutCompact
     . pretty

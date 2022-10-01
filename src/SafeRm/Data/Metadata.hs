@@ -14,13 +14,16 @@ import Data.HashMap.Strict qualified as Map
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
-import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
+import SafeRm.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (TrashHome, TrashIndex),
+  )
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
   )
 import SafeRm.Prelude
-import System.Directory qualified as Dir
+import UnliftIO.Directory qualified as Dir
 
 -- | Holds trash metadata.
 --
@@ -79,7 +82,10 @@ instance Pretty Metadata where
 -- | Returns metadata for the trash directory.
 --
 -- @since 0.1
-getMetadata :: (PathI TrashHome, PathI TrashIndex) -> IO Metadata
+getMetadata ::
+  MonadIO m =>
+  (PathI TrashHome, PathI TrashIndex) ->
+  m Metadata
 getMetadata (trashHome@(MkPathI th), trashIndex) = do
   (MkIndex index) <- Index.readIndex trashIndex
   let numIndex = Map.size index
@@ -93,11 +99,9 @@ getMetadata (trashHome@(MkPathI th), trashIndex) = do
   -- that there are no duplicate entries and each entry corresponds to a real
   -- trash path, this guarantees that the index exactly corresponds to the
   -- trash state.
-  if numEntries /= numIndex
-    then
-      throwIO $
-        MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
-    else pure ()
+  when (numEntries /= numIndex) $
+    throwIO $
+      MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
 
   pure $
     MkMetadata
@@ -115,7 +119,7 @@ getMetadata (trashHome@(MkPathI th), trashIndex) = do
     toNat :: Int -> Natural
     toNat = fromIntegral
 
-getAllFiles :: FilePath -> IO [FilePath]
+getAllFiles :: MonadIO m => FilePath -> m [FilePath]
 getAllFiles fp =
   Dir.doesFileExist fp >>= \case
     True -> pure [fp]

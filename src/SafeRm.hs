@@ -20,7 +20,6 @@ where
 
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
-import Data.Text qualified as T
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Metadata (Metadata)
@@ -33,17 +32,23 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp qualified as Timestamp
+import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Prelude
 import SafeRm.Utils qualified as Utils
-import System.Directory qualified as Dir
 import System.IO qualified as IO
+import UnliftIO.Directory qualified as Dir
 
 -- | @delete trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
 -- defaults to @~\/.trash@.
 --
 -- @since 0.1
-delete :: Maybe (PathI TrashHome) -> HashSet (PathI OriginalPath) -> IO ()
+delete ::
+  forall m.
+  MonadUnliftIO m =>
+  Maybe (PathI TrashHome) ->
+  HashSet (PathI OriginalPath) ->
+  m ()
 delete mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
@@ -73,10 +78,13 @@ delete mtrash paths = do
 --
 -- @since 0.1
 deletePermanently ::
+  ( MonadUnliftIO m,
+    Terminal m
+  ) =>
   Maybe (PathI TrashHome) ->
   Bool ->
   HashSet (PathI TrashName) ->
-  IO ()
+  m ()
 deletePermanently mtrash force paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
@@ -100,14 +108,15 @@ deletePermanently mtrash force paths = do
         --
         -- - No buffering on output so the "Permanently delete..." string gets
         --   printed w/o the newline.
-        IO.hSetBuffering IO.stdin NoBuffering
-        IO.hSetBuffering IO.stdout NoBuffering
+        liftIO $ do
+          IO.hSetBuffering IO.stdin NoBuffering
+          IO.hSetBuffering IO.stdout NoBuffering
 
         pure $ for_ toDelete $ \pd -> do
           let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
-          putStrLn $ T.unpack pdStr
+          putTextLn pdStr
           putStr "Permanently delete (y/n)? "
-          c <- Ch.toLower <$> IO.getChar
+          c <- Ch.toLower <$> liftIO IO.getChar
           if
               | c == 'y' -> deleteFn pd *> putStrLn ""
               | c == 'n' -> putStrLn ""
@@ -122,7 +131,10 @@ deletePermanently mtrash force paths = do
 -- file does not exist, returns empty.
 --
 -- @since 0.1
-getIndex :: Maybe (PathI TrashHome) -> IO Index
+getIndex ::
+  MonadIO m =>
+  Maybe (PathI TrashHome) ->
+  m Index
 getIndex mtrash = do
   indexPath <- view _2 <$> Paths.getTrashAndIndex mtrash
   Paths.applyPathI Dir.doesFileExist indexPath >>= \case
@@ -132,7 +144,10 @@ getIndex mtrash = do
 -- | Retrieves metadata for the trash directory.
 --
 -- @since 0.1
-getMetadata :: Maybe (PathI TrashHome) -> IO Metadata
+getMetadata ::
+  MonadIO m =>
+  Maybe (PathI TrashHome) ->
+  m Metadata
 getMetadata mtrash = do
   trashData@(trashHome, _) <- Paths.getTrashAndIndex mtrash
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
@@ -144,7 +159,11 @@ getMetadata mtrash = do
 -- e.g. @~\/.trash@.
 --
 -- @since 0.1
-restore :: Maybe (PathI TrashHome) -> HashSet (PathI TrashName) -> IO ()
+restore ::
+  MonadUnliftIO m =>
+  Maybe (PathI TrashHome) ->
+  HashSet (PathI TrashName) ->
+  m ()
 restore mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   index@(MkIndex indexMap) <- Index.readIndex indexPath
@@ -165,7 +184,10 @@ restore mtrash paths = do
 -- | Empties the trash. Deletes the index file.
 --
 -- @since 0.1
-empty :: Maybe (PathI TrashHome) -> IO ()
+empty ::
+  MonadIO m =>
+  Maybe (PathI TrashHome) ->
+  m ()
 empty = Paths.getTrashAndIndex >=> Dir.removeDirectoryRecursive . toTrashHome
   where
     toTrashHome = view (_1 % _MkPathI)
