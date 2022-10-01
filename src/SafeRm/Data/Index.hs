@@ -111,15 +111,13 @@ searchIndex ::
   -- | If true, errors if there is a collision between a found trash path
   -- and its original path.
   Bool ->
-  -- | Trash home. Used to verify that found trash paths actually exist.
-  PathI TrashHome ->
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
   HashSet (PathI TrashName) ->
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
   m ([SomeException], HashSet PathData)
-searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
+searchIndex errIfOrigCollision keys (MkIndex index) =
   Set.foldl' foldKeys (pure mempty) trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
@@ -137,25 +135,23 @@ searchIndex errIfOrigCollision trashHome keys (MkIndex index) =
               (MkExceptionI @PathNotFound (view _MkPathI trashKey))
               acc
         Just pd -> do
-          nonExtant <- trashNonExtant trashHome pd
-          if nonExtant
+          -- NOTE: Because the index passed to this function should have
+          -- been created via readIndex, thus we do not to check the following
+          -- invariants again:
+          --   - trash path existence
+          --   - duplicates
+
+          -- optional collision detection
+          collision <- mCollisionErr pd
+          if collision
             then
               pure $
                 prependEx
-                  (MkExceptionI @TrashPathNotFound (trashHome, pd ^. #fileName))
+                  ( MkExceptionI @RestoreCollision
+                      (pd ^. #fileName, pd ^. #originalPath)
+                  )
                   acc
-            else do
-              -- optional collision detection
-              collision <- mCollisionErr pd
-              if collision
-                then
-                  pure $
-                    prependEx
-                      ( MkExceptionI @RestoreCollision
-                          (pd ^. #fileName, pd ^. #originalPath)
-                      )
-                      acc
-                else pure (exs, Set.insert pd found)
+            else pure (exs, Set.insert pd found)
     mCollisionErr =
       if errIfOrigCollision
         then PathData.originalPathExists
@@ -240,9 +236,6 @@ throwIfTrashNonExtant trashHome pd = do
       MkExceptionI @TrashPathNotFound (trashHome, filePath)
   where
     filePath = pd ^. #fileName
-
-trashNonExtant :: MonadIO m => PathI TrashHome -> PathData -> m Bool
-trashNonExtant fp = fmap not . PathData.trashPathExists fp
 
 -- | Appends the path data to the trash index. The header is not included.
 --

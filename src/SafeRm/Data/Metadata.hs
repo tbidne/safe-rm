@@ -12,7 +12,7 @@ import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
-import SafeRm.Data.Index (Index (MkIndex))
+import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -87,7 +87,7 @@ getMetadata ::
   (PathI TrashHome, PathI TrashIndex) ->
   m Metadata
 getMetadata (trashHome@(MkPathI th), trashIndex) = do
-  (MkIndex index) <- Index.readIndex trashIndex
+  index <- view #unIndex <$> Index.readIndex trashIndex
   let numIndex = Map.size index
   numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
   allFiles <- getAllFiles th
