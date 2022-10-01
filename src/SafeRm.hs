@@ -86,7 +86,7 @@ delete verbose mtrash paths = do
   when verbose $
     putStrLn $
       "Successfully deleted the following path(s)\n"
-        <> showMapTrashPaths deletedPaths
+        <> showMapOrigPaths deletedPaths
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust exceptions $ throwIO . MkExceptionI @SomeExceptions
