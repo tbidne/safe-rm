@@ -1,5 +1,6 @@
-{-# OPTIONS_GHC -Wwarn #-}
-
+-- | Property tests for the SafeRm API.
+--
+-- @since 0.1
 module Unit.SafeRm
   ( tests,
   )
