@@ -31,6 +31,7 @@ tests testDir =
       deletePermanently testDir,
       deleteSomePermanently testDir,
       restore testDir,
+      restoreSome testDir,
       empty testDir
     ]
 
@@ -166,7 +167,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
 
 deleteSomePermanently :: IO FilePath -> TestTree
 deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
-  testPropertyNamed desc "deletePermanently" $ do
+  testPropertyNamed desc "deleteSomePermanently" $ do
     withTests limit $
       property $ do
         testDir <- (</> "x2") <$> liftIO mtestDir
@@ -259,6 +260,62 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         assert $ Map.null index
         assertFilesExist pathsSet
         assertFilesDoNotExist trashSet
+
+restoreSome :: IO FilePath -> TestTree
+restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
+  testPropertyNamed desc "restoreSome" $ do
+    withTests limit $
+      property $ do
+        testDir <- (</> "r2") <$> liftIO mtestDir
+        (goodFileNames, badFileNames) <- forAll gen2FileNameSets
+        let goodPathsSet = Set.map (testDir </>) goodFileNames
+            -- good + bad trash paths
+            allFileNames = Set.union goodFileNames badFileNames
+            trashDir = testDir </> ".trash"
+            trashSet = Set.map (trashDir </>) goodFileNames
+            mtrashHome = Just $ MkPathI trashDir
+
+        annotateShow goodPathsSet
+
+        -- create files and assert existence
+        liftIO $ do
+          clearDirectory testDir
+          createFilesMap Set.map goodPathsSet
+        assertFilesExist goodPathsSet
+
+        -- delete files
+        liftIO $ SafeRm.delete False mtrashHome (Set.map MkPathI goodPathsSet)
+
+        -- assert original files moved to trash
+        assertFilesExist trashSet
+        assertFilesDoNotExist goodPathsSet
+
+        -- restore
+        let fileNamesToRestore = Set.map MkPathI allFileNames
+        annotateShow fileNamesToRestore
+        caughtEx <-
+          liftIO $
+            (SafeRm.restore False mtrashHome fileNamesToRestore $> Nothing)
+              `catch` \(ex :: ExceptionI SomeExceptions) -> do
+                pure $ Just ex
+
+        (MkExceptionI exs) <-
+          maybe
+            (annotate "Expected exceptions, received none" *> failure)
+            pure
+            caughtEx
+
+        annotateShow exs
+
+        -- get index
+        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        annotateShow index
+
+        assert $ Map.null index
+        assertFilesExist goodPathsSet
+        assertFilesDoNotExist (Set.map (trashDir </>) goodFileNames)
+  where
+    desc = "Some trash entries are restored, others error"
 
 empty :: IO FilePath -> TestTree
 empty mtestDir = askOption $ \(MkMaxRuns limit) ->
