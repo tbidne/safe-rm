@@ -1,4 +1,4 @@
--- | Provides utils for file system assertions.
+-- | Provides utils for file system actions.
 --
 -- @since 0.1
 module SafeRm.FileUtils
