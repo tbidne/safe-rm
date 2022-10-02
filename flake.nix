@@ -41,9 +41,13 @@
                 (if withDevTools then devTools compiler else [ ]));
           overrides = final: prev: with compiler; {
             algebra-simple =
-              final.callCabal2nix "algebra-simple" algebra-simple-src { };
+              pkgs.haskell.lib.doJailbreak
+                (final.callCabal2nix "algebra-simple" algebra-simple-src { });
             byte-types =
-              final.callCabal2nix "byte-types" byte-types-src { };
+              pkgs.haskell.lib.doJailbreak
+                (final.callCabal2nix "byte-types" byte-types-src { });
+            package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
+            tasty-hedgehog = prev.tasty-hedgehog_1_3_0_0;
           };
         };
     in
