@@ -18,6 +18,7 @@ import Hedgehog as X
     annotate,
     annotateShow,
     assert,
+    failure,
     forAll,
     property,
     withTests,
@@ -32,7 +33,7 @@ import UnliftIO.Directory qualified as Dir
 -- | Asserts that files exist.
 --
 -- @since 0.1
-assertFilesExist :: (MonadIO m, MonadTest m) => [FilePath] -> m ()
+assertFilesExist :: (Foldable f, MonadIO m, MonadTest m) => f FilePath -> m ()
 assertFilesExist paths =
   for_ paths $ \p -> do
     exists <- liftIO $ Dir.doesFileExist p
@@ -42,7 +43,7 @@ assertFilesExist paths =
 -- | Asserts that files do not exist.
 --
 -- @since 0.1
-assertFilesDoNotExist :: (MonadIO m, MonadTest m) => [FilePath] -> m ()
+assertFilesDoNotExist :: (Foldable f, MonadIO m, MonadTest m) => f FilePath -> m ()
 assertFilesDoNotExist paths =
   for_ paths $ \p -> do
     exists <- liftIO $ Dir.doesFileExist p

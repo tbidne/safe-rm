@@ -138,7 +138,6 @@ test-suite unit
     , tagged                ^>=0.8.6
     , tasty                 >=1.1.0.3 && <1.5
     , tasty-hedgehog        >=1.2.0.0 && <1.4
-    , text
     , unliftio
     , unordered-containers
 

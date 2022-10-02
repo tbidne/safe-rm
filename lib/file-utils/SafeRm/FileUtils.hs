@@ -4,6 +4,7 @@
 module SafeRm.FileUtils
   ( -- * File System Operations
     createFiles,
+    createFilesMap,
     createFileContents,
     createDirectories,
     clearDirectory,
@@ -25,13 +26,26 @@ import UnliftIO.Directory qualified as Dir
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
-createFiles :: [FilePath] -> IO ()
-createFiles = createFileContents . fmap (,"")
+createFiles :: (Foldable f, Functor f) => f FilePath -> IO ()
+createFiles = createFilesMap fmap
+
+-- | Creates empty files at the specified paths.
+--
+-- @since 0.1
+createFilesMap ::
+  Foldable f =>
+  ( (FilePath -> (FilePath, ByteString)) ->
+    f FilePath ->
+    f (FilePath, ByteString)
+  ) ->
+  f FilePath ->
+  IO ()
+createFilesMap mapper = createFileContents . mapper (,"")
 
 -- | Creates files at the specified paths.
 --
 -- @since 0.1
-createFileContents :: [(FilePath, ByteString)] -> IO ()
+createFileContents :: Foldable f => f (FilePath, ByteString) -> IO ()
 createFileContents paths = for_ paths $
   \(p, c) ->
     BS.writeFile p c
@@ -50,7 +64,7 @@ createFileContents paths = for_ paths $
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
-createDirectories :: [FilePath] -> IO ()
+createDirectories :: Foldable f => f FilePath -> IO ()
 createDirectories paths =
   for_ paths $ \p -> Dir.createDirectoryIfMissing True p
 
@@ -79,6 +93,10 @@ data TextMatch
       Show
     )
 
+-- | If the texts do not match, returns an error string. Otherwise
+-- returns 'Nothing'.
+--
+-- @since 0.1
 matches :: [TextMatch] -> [Text] -> Maybe String
 matches [] [] = Nothing
 matches s@(_ : _) [] =
@@ -87,6 +105,10 @@ matches [] t@(_ : _) =
   Just $ "Empty expectations but non-empty result: " <> show t
 matches (e : es) (t : ts) = isMatch (e :| es) (t :| ts)
 
+-- | If the texts do not match, returns an error string. Otherwise
+-- returns 'Nothing'.
+--
+-- @since 0.1
 isMatch :: NonEmpty TextMatch -> NonEmpty Text -> Maybe String
 isMatch (s :| es) (r :| rs) =
   if isMatchHelper s (T.strip r)
@@ -107,6 +129,9 @@ isMatchHelper (Infix e) r = e `T.isInfixOf` r
 isMatchHelper (Suffix e) r = e `T.isSuffixOf` r
 isMatchHelper (Outfix e1 e2) r = e1 `T.isPrefixOf` r && e2 `T.isSuffixOf` r
 
+-- | Pretty show for multiple text matches.
+--
+-- @since 0.1
 unlineMatches :: [TextMatch] -> String
 unlineMatches [] = ""
 unlineMatches (t : ts) = showTextMatch t <> "\n" <> unlineMatches ts
