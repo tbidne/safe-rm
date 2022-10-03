@@ -62,7 +62,9 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist αTrash
+        annotate "Assert files do not exist"
         assertFilesDoNotExist αTest
 
         -- get index
@@ -115,7 +117,9 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         length exs === length β
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist (φ (trashDir </>) α)
+        annotate "Assert files do not exist"
         assertFilesDoNotExist (φ (trashDir </>) β)
 
         -- get index
@@ -151,7 +155,9 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist αTrash
+        annotate "Assert files do not exist"
         assertFilesDoNotExist αTest
 
         -- permanently delete files
@@ -195,7 +201,9 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI toDelete)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist trashSet
+        annotate "Assert files do not exist"
         assertFilesDoNotExist toDelete
 
         -- permanently delete files
@@ -224,7 +232,9 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         -- γ should still exist in the trash index
         toTestDir γ === indexOrigPaths
 
+        annotate "Assert files do not exist"
         assertFilesDoNotExist (φ (trashDir </>) (α ∪ β))
+        annotate "Assert files exist"
         assertFilesExist (φ (trashDir </>) γ)
   where
     desc = "Some trash entries are permanently deleted, others error"
@@ -253,7 +263,9 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist αTrash
+        annotate "Assert files do not exist"
         assertFilesDoNotExist αTest
 
         -- restore files
@@ -265,7 +277,9 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow index
 
         (∅) === index
+        annotate "Assert files exist"
         assertFilesExist αTest
+        annotate "Assert files do not exist"
         assertFilesDoNotExist αTrash
 
 restoreSome :: IO FilePath -> TestTree
@@ -296,7 +310,9 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI toDelete)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist trashSet
+        annotate "Assert files do not exist"
         assertFilesDoNotExist toDelete
 
         -- restore
@@ -325,7 +341,9 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         -- γ should still exist in the trash index
         toTestDir γ === indexOrigPaths
 
+        annotate "Assert files exist"
         assertFilesExist (toTestDir α ∪ toTrashDir γ)
+        annotate "Assert files do not exist"
         assertFilesDoNotExist (toTrashDir α)
   where
     desc = "Some trash entries are restored, others error"
@@ -355,7 +373,9 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI aTest)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist aTrash
+        annotate "Assert files do not exist"
         assertFilesDoNotExist aTest
 
         -- empty trash
@@ -366,8 +386,8 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow index
 
         (∅) === index
-        assertFilesDoNotExist aTest
-        assertFilesDoNotExist aTrash
+        annotate "Assert files do not exist"
+        assertFilesDoNotExist (aTest ∪ aTrash)
 
 metadata :: IO FilePath -> TestTree
 metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
@@ -394,7 +414,9 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ SafeRm.delete False mtrashHome (φ MkPathI aTest)
 
         -- assert original files moved to trash
+        annotate "Assert files exist"
         assertFilesExist aTrash
+        annotate "Assert files do not exist"
         assertFilesDoNotExist aTest
 
         -- empty trash
