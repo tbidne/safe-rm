@@ -450,30 +450,3 @@ genChar = Gen.filterT (not . badChars) Gen.unicode
 
 toOrigPath :: HashSet FilePath -> PathData -> HashSet FilePath
 toOrigPath acc pd = Set.insert (pd ^. #originalPath % _MkPathI) acc
-
-(∪) :: Hashable a => HashSet a -> HashSet a -> HashSet a
-(∪) = Set.union
-
-infixl 6 ∪
-
-(∈) :: Hashable a => a -> HashSet a -> Bool
-(∈) = Set.member
-
-infix 4 ∈
-
-(∉) :: Hashable a => a -> HashSet a -> Bool
-(∉) x = not . (∈) x
-
-infix 4 ∉
-
-φ :: Hashable b => (a -> b) -> HashSet a -> HashSet b
-φ = Set.map
-
-class Empty a where
-  (∅) :: a
-
-instance Empty (HashSet a) where
-  (∅) = Set.empty
-
-instance Empty (HashMap k v) where
-  (∅) = Map.empty

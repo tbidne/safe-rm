@@ -59,7 +59,7 @@ delete verbose mtrash paths = do
   (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
-  deletedPathsRef <- newIORef Map.empty
+  deletedPathsRef <- newIORef (∅)
   exceptionsRef <- newIORef Nothing
   currTime <- Timestamp.getCurrentLocalTime
 
@@ -108,7 +108,7 @@ deletePermanently verbose mtrash force paths = do
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toDelete) = Index.searchIndex paths index
-  deletedPathsRef <- newIORef Map.empty
+  deletedPathsRef <- newIORef (∅)
   exceptionsRef <- newIORef Nothing
 
   let deleteFn pd =
@@ -145,7 +145,7 @@ deletePermanently verbose mtrash force paths = do
 
   -- override old index
   deletedPaths <- readIORef deletedPathsRef
-  Index.writeIndex indexPath (MkIndex $ Map.difference indexMap deletedPaths)
+  Index.writeIndex indexPath (MkIndex $ indexMap ∖ deletedPaths)
 
   when verbose $
     putStrLn $
@@ -200,7 +200,7 @@ restore verbose mtrash paths = do
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
 
-  restoredPathsRef <- newIORef Map.empty
+  restoredPathsRef <- newIORef (∅)
   exceptionsRef <- newIORef Nothing
 
   -- move trash paths back to original location
@@ -213,7 +213,7 @@ restore verbose mtrash paths = do
 
   -- override old index
   restoredPaths <- readIORef restoredPathsRef
-  Index.writeIndex indexPath (MkIndex $ Map.difference indexMap restoredPaths)
+  Index.writeIndex indexPath (MkIndex $ indexMap ∖ restoredPaths)
 
   when verbose $
     putStrLn $

@@ -115,7 +115,7 @@ searchIndex keys (MkIndex index) =
   Set.foldl' foldKeys mempty trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
-    trashKeys = Set.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
+    trashKeys = φ (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
       ([SomeException], HashSet PathData) ->
       PathI TrashName ->
