@@ -55,7 +55,7 @@ runSafeRm = do
       SafeRm.delete (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
     SafeRmCommandPermDelete force paths ->
       SafeRm.deletePermanently (finalConfig ^. #verbose) finalTrashHome force (listToSet paths)
-    SafeRmCommandEmpty -> SafeRm.empty finalTrashHome
+    SafeRmCommandEmpty force -> SafeRm.empty force finalTrashHome
     SafeRmCommandRestore paths ->
       SafeRm.restore (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
     SafeRmCommandList -> do

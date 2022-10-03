@@ -379,7 +379,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        liftIO $ SafeRm.empty mtrashHome
+        liftIO $ SafeRm.empty True mtrashHome
 
         -- get index
         index <- view #unIndex <$> SafeRm.getIndex mtrashHome

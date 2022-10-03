@@ -68,7 +68,7 @@ data SafeRmCommand
   | -- | Empties the trash.
     --
     -- @since 0.1
-    SafeRmCommandEmpty
+    SafeRmCommandEmpty !Bool
   | -- | Restores a path.
     --
     -- @since 0.1
@@ -233,7 +233,7 @@ commandParser =
       SafeRmCommandPermDelete
         <$> forceParser
         <*> pathsParser
-    emptyParser = pure SafeRmCommandEmpty
+    emptyParser = SafeRmCommandEmpty <$> forceParser
     restoreParser = SafeRmCommandRestore <$> pathsParser
     listParser = pure SafeRmCommandList
     metadataParser = pure SafeRmCommandMetadata

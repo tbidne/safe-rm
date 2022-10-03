@@ -14,7 +14,8 @@ tests :: IO TestArgs -> TestTree
 tests args =
   testGroup
     "Empty (e)"
-    [ empty args
+    [ empty args,
+      emptyTwice args
     ]
 
 empty :: IO TestArgs -> TestTree
@@ -52,7 +53,7 @@ empty args = testCase "Empties trash" $ do
 
   -- EMPTY
 
-  let emptyArgList = ["e", "-t", trashDir]
+  let emptyArgList = ["e", "-f", "-t", trashDir]
   runSafeRm emptyArgList
 
   -- list output assertions
@@ -103,3 +104,12 @@ empty args = testCase "Empties trash" $ do
         Exact "Total Files:  0",
         Prefix "Size:"
       ]
+
+emptyTwice :: IO TestArgs -> TestTree
+emptyTwice args = testCase "Calling empty twice does not error" $ do
+  tmpDir <- view #tmpDir <$> args
+  let testDir = tmpDir </> "e1"
+      trashDir = testDir </> ".trash"
+
+  runSafeRm ["e", "-f", "-t", trashDir]
+  runSafeRm ["e", "-f", "-t", trashDir]

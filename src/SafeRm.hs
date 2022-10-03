@@ -129,9 +129,7 @@ deletePermanently verbose mtrash force paths = do
       --
       -- - No buffering on output so the "Permanently delete..." string gets
       --   printed w/o the newline.
-      liftIO $ do
-        IO.hSetBuffering IO.stdin NoBuffering
-        IO.hSetBuffering IO.stdout NoBuffering
+      noBuffering
 
       for_ toDelete $ \pd -> do
         let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
@@ -228,10 +226,28 @@ restore verbose mtrash paths = do
 --
 -- @since 0.1
 empty ::
-  MonadIO m =>
+  (MonadIO m, Terminal m) =>
+  Bool ->
   Maybe (PathI TrashHome) ->
   m ()
-empty = Paths.getTrashAndIndex >=> Dir.removeDirectoryRecursive . toTrashHome
+empty force mtrashHome = do
+  trashHome <- toTrashHome <$> Paths.getTrashAndIndex mtrashHome
+  exists <- Dir.doesDirectoryExist trashHome
+  if not exists
+    then putStrLn $ trashHome <> " is empty."
+    else
+      if force
+        then Dir.removeDirectoryRecursive trashHome
+        else do
+          noBuffering
+          putStr "Permanently delete all contents (y/n)? "
+          c <- Ch.toLower <$> liftIO IO.getChar
+          if
+              | c == 'y' -> do
+                  Dir.removeDirectoryRecursive trashHome
+                  putStrLn ""
+              | c == 'n' -> putStrLn ""
+              | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
   where
     toTrashHome = view (_1 % _MkPathI)
 
@@ -248,3 +264,8 @@ showMapElems toPathI =
     . Map.elems
   where
     foldStrs acc s = ("- " <> s <> "\n") <> acc
+
+noBuffering :: MonadIO m => m ()
+noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout
+  where
+    buffOff h = IO.hSetBuffering h NoBuffering

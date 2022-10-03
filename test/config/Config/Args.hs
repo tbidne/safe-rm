@@ -27,6 +27,7 @@ tests =
       permDelete,
       permDeleteForce,
       empty,
+      emptyForce,
       restore,
       list,
       metadata
@@ -63,9 +64,17 @@ empty :: TestTree
 empty = testCase "Parses empty" $ do
   finalConfig <- SysEnv.withArgs argList getConfiguration
   Nothing @=? finalConfig ^. #trashHome
-  Just () @=? finalConfig ^? (#command % _SafeRmCommandEmpty)
+  Just False @=? finalConfig ^? (#command % _SafeRmCommandEmpty)
   where
     argList = ["e"]
+
+emptyForce :: TestTree
+emptyForce = testCase "Parses empty with force" $ do
+  finalConfig <- SysEnv.withArgs argList getConfiguration
+  Nothing @=? finalConfig ^. #trashHome
+  Just True @=? finalConfig ^? (#command % _SafeRmCommandEmpty)
+  where
+    argList = ["e", "-f"]
 
 restore :: TestTree
 restore = testCase "Parses restore" $ do
