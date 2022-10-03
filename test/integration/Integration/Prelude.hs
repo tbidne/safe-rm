@@ -1,7 +1,7 @@
--- | Prelude for unit test suite.
+-- | Prelude for integration test suite.
 --
 -- @since 0.1
-module Unit.Prelude
+module Integration.Prelude
   ( module X,
 
     -- * Assertions

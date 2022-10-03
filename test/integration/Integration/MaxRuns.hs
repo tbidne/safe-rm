@@ -1,14 +1,14 @@
 -- | Provides the 'MaxRuns' typeclass.
-module Unit.MaxRuns
+module Integration.MaxRuns
   ( MaxRuns (..),
   )
 where
 
 import Data.Tagged (Tagged (..))
 import Hedgehog (TestLimit)
+import Integration.Prelude
 import Test.Tasty.Options (IsOption (..))
 import Text.Read qualified as TR
-import Unit.Prelude
 
 -- | Sets the maximum successful runs for each test.
 newtype MaxRuns = MkMaxRuns TestLimit

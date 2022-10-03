@@ -12,11 +12,11 @@ cradle:
     - path: "./app/Main.hs"
       component: "safe-rm:exe:sr"
 
-    - path: "./test/unit"
-      component: "safe-rm:test:unit"
-
     - path: "./test/config"
       component: "safe-rm:test:config"
+
+    - path: "./test/integration"
+      component: "safe-rm:test:integration"
 
     - path: "./test/functional"
       component: "safe-rm:test:functional"

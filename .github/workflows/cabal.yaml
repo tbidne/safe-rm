@@ -28,11 +28,11 @@ jobs:
       - name: Compile
         run: cabal build
 
-      - name: Unit Tests
-        run: cabal test unit --test-options '--max-runs 10000'
-
       - name: Config Tests
         run: cabal test config
+
+      - name: Integration Tests
+        run: cabal test integration --test-options '--max-runs 10000'
 
       - name: Functional Tests
         run: cabal test functional

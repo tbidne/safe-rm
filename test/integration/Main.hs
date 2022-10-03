@@ -1,19 +1,19 @@
--- | Entrypoint for functional tests.
+-- | Entrypoint for integration tests.
 --
 -- @since 0.1
 module Main (main) where
 
+import Integration.MaxRuns (MaxRuns)
+import Integration.Prelude
+import Integration.SafeRm qualified as SafeRm
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as T
 import Test.Tasty qualified as Tasty
 import Test.Tasty.Options (OptionDescription (Option))
-import Unit.MaxRuns (MaxRuns)
-import Unit.Prelude
-import Unit.SafeRm qualified as SafeRm
 import UnliftIO.Directory qualified as Dir
 
--- | Runs functional tests.
+-- | Runs integration tests.
 --
 -- @since 0.1
 main :: IO ()
@@ -23,13 +23,13 @@ main = do
   T.defaultMainWithIngredients ingredients $
     Tasty.withResource setup teardown $ \args ->
       testGroup
-        "Unit Tests"
+        "Integration Tests"
         [ SafeRm.tests args
         ]
 
 setup :: IO FilePath
 setup = do
-  tmpDir <- (</> "safe-rm/unit") <$> Dir.getTemporaryDirectory
+  tmpDir <- (</> "safe-rm/integration") <$> Dir.getTemporaryDirectory
 
   createDirectoryIfMissing True tmpDir
   pure tmpDir

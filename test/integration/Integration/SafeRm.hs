@@ -1,7 +1,7 @@
 -- | Property tests for the SafeRm API.
 --
 -- @since 0.1
-module Unit.SafeRm
+module Integration.SafeRm
   ( tests,
   )
 where
@@ -12,6 +12,8 @@ import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
+import Integration.MaxRuns (MaxRuns (MkMaxRuns))
+import Integration.Prelude
 import SafeRm qualified
 import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Metadata (Metadata (numEntries, numFiles))
@@ -21,8 +23,6 @@ import SafeRm.Data.Paths
     _MkPathI,
   )
 import SafeRm.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (SomeExceptions))
-import Unit.MaxRuns (MaxRuns (MkMaxRuns))
-import Unit.Prelude
 
 tests :: IO FilePath -> TestTree
 tests testDir =
