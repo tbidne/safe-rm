@@ -77,9 +77,9 @@ library
 library safe-rm-exe-internal
   import:           common-exts
   exposed-modules:
-    SafeRm.Args
     SafeRm.Runner
-    SafeRm.Toml
+    SafeRm.Runner.Args
+    SafeRm.Runner.Toml
 
   build-depends:
     , base

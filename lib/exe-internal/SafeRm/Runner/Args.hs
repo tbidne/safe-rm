@@ -3,7 +3,7 @@
 -- | Provides CLI args functionality.
 --
 -- @since 0.1
-module SafeRm.Args
+module SafeRm.Runner.Args
   ( getArgs,
     Args (..),
     SafeRmCommand (..),

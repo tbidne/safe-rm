@@ -16,7 +16,15 @@ import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding qualified as TEnc
 import SafeRm qualified
-import SafeRm.Args
+import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
+import SafeRm.Effects.Terminal (Terminal, putTextLn)
+import SafeRm.Env (Env (MkEnv, trashHome, verbose), HasTrashHome)
+import SafeRm.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (TomlDecode),
+  )
+import SafeRm.Prelude
+import SafeRm.Runner.Args
   ( Args (command, tomlConfigPath),
     SafeRmCommand
       ( SafeRmCommandDelete,
@@ -28,15 +36,7 @@ import SafeRm.Args
       ),
     getArgs,
   )
-import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import SafeRm.Effects.Terminal (Terminal, putTextLn)
-import SafeRm.Env (Env (MkEnv, trashHome, verbose), HasTrashHome)
-import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (TomlDecode),
-  )
-import SafeRm.Prelude
-import SafeRm.Toml (TomlConfig (trashHome, verbose), mergeConfigs)
+import SafeRm.Runner.Toml (TomlConfig (trashHome, verbose), mergeConfigs)
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir

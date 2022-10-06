@@ -1,15 +1,15 @@
 -- | Provides TOML configuration.
 --
 -- @since 0.1
-module SafeRm.Toml
+module SafeRm.Runner.Toml
   ( TomlConfig (..),
     mergeConfigs,
   )
 where
 
-import SafeRm.Args (Args (trashHome, verbose))
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 import SafeRm.Prelude
+import SafeRm.Runner.Args (Args (trashHome, verbose))
 import TOML
   ( DecodeTOML (..),
     getFieldOptWith,

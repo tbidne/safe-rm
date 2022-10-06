@@ -7,7 +7,10 @@ module Config.Args
 where
 
 import Config.Prelude
-import SafeRm.Args
+import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Env (Env (trashHome))
+import SafeRm.Runner (getConfiguration)
+import SafeRm.Runner.Args
   ( _SafeRmCommandDelete,
     _SafeRmCommandEmpty,
     _SafeRmCommandList,
@@ -15,9 +18,6 @@ import SafeRm.Args
     _SafeRmCommandPermDelete,
     _SafeRmCommandRestore,
   )
-import SafeRm.Data.Paths (PathI (MkPathI))
-import SafeRm.Env (Env (trashHome))
-import SafeRm.Runner (getConfiguration)
 import System.Environment qualified as SysEnv
 
 -- | @since 0.1
