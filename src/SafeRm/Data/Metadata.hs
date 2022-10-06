@@ -14,10 +14,8 @@ import Data.HashMap.Strict qualified as Map
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Index qualified as Index
-import SafeRm.Data.Paths
-  ( PathI (MkPathI),
-    PathIndex (TrashHome, TrashIndex),
-  )
+import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Env (HasTrashHome, getTrashPaths)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
@@ -83,10 +81,13 @@ instance Pretty Metadata where
 --
 -- @since 0.1
 getMetadata ::
-  MonadIO m =>
-  (PathI TrashHome, PathI TrashIndex) ->
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m
+  ) =>
   m Metadata
-getMetadata (trashHome@(MkPathI th), trashIndex) = do
+getMetadata = do
+  (trashHome@(MkPathI th), trashIndex) <- asks getTrashPaths
   index <- view #unIndex <$> Index.readIndex trashIndex
   let numIndex = Map.size index
   numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th

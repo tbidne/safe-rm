@@ -20,7 +20,6 @@ module Functional.Prelude
   )
 where
 
-import Control.Monad.Reader (MonadReader (ask), ReaderT (ReaderT), runReaderT)
 import Data.List qualified as L
 import Data.Text qualified as T
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))

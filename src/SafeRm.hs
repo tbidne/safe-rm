@@ -27,13 +27,19 @@ import SafeRm.Data.Metadata qualified as Metadata
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
-  ( PathI,
-    PathIndex (OriginalPath, TrashHome, TrashName),
+  ( PathI (MkPathI),
+    PathIndex (OriginalPath, TrashName),
     _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp qualified as Timestamp
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
+import SafeRm.Env
+  ( HasTrashHome (getTrashHome),
+    HasVerbose (getVerbose),
+    getTrashIndex,
+    getTrashPaths,
+  )
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (SomeExceptions),
@@ -49,14 +55,18 @@ import UnliftIO.Directory qualified as Dir
 --
 -- @since 0.1
 delete ::
-  forall m.
-  (MonadUnliftIO m, Terminal m) =>
-  Bool ->
-  Maybe (PathI TrashHome) ->
+  forall env m.
+  ( HasTrashHome env,
+    HasVerbose env,
+    MonadReader env m,
+    MonadUnliftIO m,
+    Terminal m
+  ) =>
   HashSet (PathI OriginalPath) ->
   m ()
-delete verbose mtrash paths = do
-  (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
+delete paths = do
+  (trashHome, indexPath) <- asks getTrashPaths
+  verbose <- asks getVerbose
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
   deletedPathsRef <- newIORef (∅)
@@ -95,16 +105,19 @@ delete verbose mtrash paths = do
 --
 -- @since 0.1
 deletePermanently ::
-  ( MonadUnliftIO m,
+  forall env m.
+  ( HasTrashHome env,
+    HasVerbose env,
+    MonadReader env m,
+    MonadUnliftIO m,
     Terminal m
   ) =>
   Bool ->
-  Maybe (PathI TrashHome) ->
-  Bool ->
   HashSet (PathI TrashName) ->
   m ()
-deletePermanently verbose mtrash force paths = do
-  (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
+deletePermanently force paths = do
+  (trashHome, indexPath) <- asks getTrashPaths
+  verbose <- asks getVerbose
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toDelete) = Index.searchIndex paths index
@@ -159,11 +172,14 @@ deletePermanently verbose mtrash force paths = do
 --
 -- @since 0.1
 getIndex ::
-  MonadIO m =>
-  Maybe (PathI TrashHome) ->
+  forall env m.
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m
+  ) =>
   m Index
-getIndex mtrash = do
-  indexPath <- view _2 <$> Paths.getTrashAndIndex mtrash
+getIndex = do
+  indexPath <- asks getTrashIndex
   Paths.applyPathI Dir.doesFileExist indexPath >>= \case
     True -> Index.readIndex indexPath
     False -> pure mempty
@@ -172,13 +188,16 @@ getIndex mtrash = do
 --
 -- @since 0.1
 getMetadata ::
-  MonadIO m =>
-  Maybe (PathI TrashHome) ->
+  forall env m.
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m
+  ) =>
   m Metadata
-getMetadata mtrash = do
-  trashData@(trashHome, _) <- Paths.getTrashAndIndex mtrash
+getMetadata = do
+  trashHome <- asks getTrashHome
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
-    True -> Metadata.getMetadata trashData
+    True -> Metadata.getMetadata
     False -> pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
@@ -187,13 +206,18 @@ getMetadata mtrash = do
 --
 -- @since 0.1
 restore ::
-  (MonadUnliftIO m, Terminal m) =>
-  Bool ->
-  Maybe (PathI TrashHome) ->
+  forall env m.
+  ( HasTrashHome env,
+    HasVerbose env,
+    MonadReader env m,
+    MonadUnliftIO m,
+    Terminal m
+  ) =>
   HashSet (PathI TrashName) ->
   m ()
-restore verbose mtrash paths = do
-  (trashHome, indexPath) <- Paths.getTrashAndIndex mtrash
+restore paths = do
+  (trashHome, indexPath) <- asks getTrashPaths
+  verbose <- asks getVerbose
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
@@ -226,12 +250,16 @@ restore verbose mtrash paths = do
 --
 -- @since 0.1
 empty ::
-  (MonadIO m, Terminal m) =>
+  forall env m.
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m,
+    Terminal m
+  ) =>
   Bool ->
-  Maybe (PathI TrashHome) ->
   m ()
-empty force mtrashHome = do
-  trashHome <- toTrashHome <$> Paths.getTrashAndIndex mtrashHome
+empty force = do
+  MkPathI trashHome <- asks getTrashHome
   exists <- Dir.doesDirectoryExist trashHome
   if not exists
     then putStrLn $ trashHome <> " is empty."
@@ -248,8 +276,6 @@ empty force mtrashHome = do
                   putStrLn ""
               | c == 'n' -> putStrLn ""
               | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
-  where
-    toTrashHome = view (_1 % _MkPathI)
 
 showMapTrashPaths :: HashMap (PathI 'TrashName) PathData -> String
 showMapTrashPaths = showMapElems #fileName

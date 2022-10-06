@@ -7,7 +7,9 @@ module Config.Toml
 where
 
 import Config.Prelude
-import SafeRm.Runner (FinalConfig (trashHome, verbose), getConfiguration)
+import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Env (Env (trashHome, verbose))
+import SafeRm.Runner (getConfiguration)
 import System.Environment qualified as SysEnv
 
 -- | @since 0.1
@@ -22,17 +24,19 @@ tests =
 
 parsesExample :: TestTree
 parsesExample = testCase "Parses Example" $ do
-  finalConfig <- SysEnv.withArgs argList getConfiguration
-  Just "./tmp" @=? finalConfig ^. #trashHome
-  False @=? finalConfig ^. #verbose
+  (env, _) <- SysEnv.withArgs argList getConfiguration
+
+  "./tmp" @=? env ^. #trashHome
+  False @=? env ^. #verbose
   where
     argList = ["-c", "examples/config.toml", "d", "foo"]
 
 argsOverridesToml :: TestTree
 argsOverridesToml = testCase "Args overrides Toml" $ do
-  finalConfig <- SysEnv.withArgs argList getConfiguration
-  Just "not-tmp" @=? finalConfig ^. #trashHome
-  True @=? finalConfig ^. #verbose
+  (env, _) <- SysEnv.withArgs argList getConfiguration
+
+  "not-tmp" @=? env ^. #trashHome
+  True @=? env ^. #verbose
   where
     argList =
       [ "-c",
@@ -46,9 +50,11 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
 
 defaultConfig :: TestTree
 defaultConfig = testCase "Default config" $ do
-  finalConfig <- SysEnv.withArgs argList getConfiguration
-  Nothing @=? finalConfig ^. #trashHome
-  False @=? finalConfig ^. #verbose
+  defTrash <- getDefaultTrash
+  (env, _) <- SysEnv.withArgs argList getConfiguration
+
+  MkPathI defTrash @=? env ^. #trashHome
+  False @=? env ^. #verbose
   where
     argList =
       [ "d",

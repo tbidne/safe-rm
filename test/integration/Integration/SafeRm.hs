@@ -22,6 +22,7 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     _MkPathI,
   )
+import SafeRm.Env (Env (MkEnv))
 import SafeRm.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (SomeExceptions))
 
 tests :: IO FilePath -> TestTree
@@ -48,7 +49,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         let αTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             αTrash = φ (trashDir </>) α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow αTest
 
@@ -59,7 +60,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -68,7 +69,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist αTest
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -86,7 +87,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
 
             αTest = toTestDir α
             trashDir = testDir </> ".trash"
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow αTest
 
@@ -101,7 +102,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         let toDelete = αTest ∪ toTestDir β
         caughtEx <-
           liftIO $
-            (SafeRm.delete False mtrashHome (φ MkPathI toDelete) $> Nothing)
+            (runReaderT (SafeRm.delete (φ MkPathI toDelete)) env $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -123,7 +124,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist (φ (trashDir </>) β)
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -141,7 +142,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         let trashDir = testDir </> ".trash"
             αTest = φ (testDir </>) α
             αTrash = φ (trashDir </>) α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow αTest
 
@@ -152,7 +153,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -162,10 +163,10 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         -- permanently delete files
         let toPermDelete = φ MkPathI α
-        liftIO $ SafeRm.deletePermanently False mtrashHome True toPermDelete
+        liftIO $ runReaderT (SafeRm.deletePermanently True toPermDelete) env
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
 
         (∅) === index
@@ -186,7 +187,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
             toDelete = toTestDir (α ∪ γ)
             trashDir = testDir </> ".trash"
             trashSet = toTrashDir (α ∪ γ)
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow testDir
         annotateShow toDelete
@@ -198,7 +199,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist toDelete
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI toDelete)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI toDelete)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -212,7 +213,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow toPermDelete
         caughtEx <-
           liftIO $
-            (SafeRm.deletePermanently False mtrashHome True toPermDelete $> Nothing)
+            (runReaderT (SafeRm.deletePermanently True toPermDelete) env $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -225,7 +226,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -249,7 +250,7 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         let αTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             αTrash = φ (trashDir </>) α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow αTest
 
@@ -260,7 +261,7 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI αTest)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -270,10 +271,10 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         -- restore files
         let toRestore = φ MkPathI α
-        liftIO $ SafeRm.restore False mtrashHome toRestore
+        liftIO $ runReaderT (SafeRm.restore toRestore) env
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
 
         (∅) === index
@@ -295,7 +296,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
             toDelete = toTestDir (α ∪ γ)
             trashDir = testDir </> ".trash"
             trashSet = toTrashDir α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow testDir
         annotateShow toDelete
@@ -307,7 +308,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist toDelete
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI toDelete)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI toDelete)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -321,7 +322,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow toRestore
         caughtEx <-
           liftIO $
-            (SafeRm.restore False mtrashHome toRestore $> Nothing)
+            (runReaderT (SafeRm.restore toRestore) env $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -334,7 +335,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -358,7 +359,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         let aTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             aTrash = φ (trashDir </>) α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow testDir
         annotateShow aTest
@@ -370,7 +371,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist aTest
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI aTest)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI aTest)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -379,10 +380,10 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        liftIO $ SafeRm.empty True mtrashHome
+        liftIO $ runReaderT (SafeRm.empty True) env
 
         -- get index
-        index <- view #unIndex <$> SafeRm.getIndex mtrashHome
+        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
         annotateShow index
 
         (∅) === index
@@ -399,7 +400,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         let aTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             aTrash = φ (trashDir </>) α
-            mtrashHome = Just $ MkPathI trashDir
+            env = mkEnv trashDir
 
         annotateShow testDir
         annotateShow aTest
@@ -411,7 +412,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist aTest
 
         -- delete files
-        liftIO $ SafeRm.delete False mtrashHome (φ MkPathI aTest)
+        liftIO $ runReaderT (SafeRm.delete (φ MkPathI aTest)) env
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -420,7 +421,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        metadata' <- liftIO $ SafeRm.getMetadata mtrashHome
+        metadata' <- liftIO $ runReaderT SafeRm.getMetadata env
 
         length α === natToInt (metadata' ^. #numEntries)
         length α === natToInt (metadata' ^. #numFiles)
@@ -472,3 +473,10 @@ genChar = Gen.filterT (not . badChars) Gen.unicode
 
 toOrigPath :: HashSet FilePath -> PathData -> HashSet FilePath
 toOrigPath acc pd = Set.insert (pd ^. #originalPath % _MkPathI) acc
+
+-- data Env = MkEnv
+--  { trashHome
+--  }
+
+mkEnv :: FilePath -> Env
+mkEnv fp = MkEnv (MkPathI fp) False

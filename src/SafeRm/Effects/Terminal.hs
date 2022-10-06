@@ -33,6 +33,10 @@ instance Terminal IO where
   putStr = IO.putStr
   putStrLn = IO.putStrLn
 
+instance Terminal m => Terminal (ReaderT e m) where
+  putStr = lift . putStr
+  putStrLn = lift . putStrLn
+
 -- | @since 0.1
 putText :: Terminal m => Text -> m ()
 putText = putStr . T.unpack

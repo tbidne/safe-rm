@@ -3,6 +3,7 @@
 -- @since 0.1
 module Config.Prelude
   ( module X,
+    getDefaultTrash,
   )
 where
 
@@ -15,3 +16,7 @@ import Test.Tasty.HUnit as X
     testCase,
     (@=?),
   )
+import UnliftIO.Directory qualified as Dir
+
+getDefaultTrash :: IO FilePath
+getDefaultTrash = (</> ".trash") <$> Dir.getHomeDirectory

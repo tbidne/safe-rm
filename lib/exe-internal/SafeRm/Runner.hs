@@ -4,9 +4,9 @@
 module SafeRm.Runner
   ( -- * Main functions
     runSafeRm,
+    withEnv,
 
     -- * Helpers
-    FinalConfig (..),
     getConfiguration,
   )
 where
@@ -28,8 +28,9 @@ import SafeRm.Args
       ),
     getArgs,
   )
-import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
+import SafeRm.Env (Env (MkEnv, trashHome, verbose), HasTrashHome)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (TomlDecode),
@@ -47,38 +48,26 @@ runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
 runSafeRm = do
   -- Combine args and toml config to get final versions of shared config
   -- values. Right now, only the trash home is shared.
-  finalConfig <- getConfiguration
-  let finalTrashHome = finalConfig ^. #trashHome
+  (env, cmd) <- getConfiguration
 
-  case finalConfig ^. #command of
+  case cmd of
     SafeRmCommandDelete paths ->
-      SafeRm.delete (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
+      runReaderT (SafeRm.delete (listToSet paths)) env
     SafeRmCommandPermDelete force paths ->
-      SafeRm.deletePermanently (finalConfig ^. #verbose) finalTrashHome force (listToSet paths)
-    SafeRmCommandEmpty force -> SafeRm.empty force finalTrashHome
+      runReaderT (SafeRm.deletePermanently force (listToSet paths)) env
+    SafeRmCommandEmpty force -> runReaderT (SafeRm.empty force) env
     SafeRmCommandRestore paths ->
-      SafeRm.restore (finalConfig ^. #verbose) finalTrashHome (listToSet paths)
-    SafeRmCommandList -> do
-      listIndex finalTrashHome
-      printStats finalTrashHome
-    SafeRmCommandMetadata -> printStats finalTrashHome
+      runReaderT (SafeRm.restore (listToSet paths)) env
+    SafeRmCommandList ->
+      runReaderT (printIndex *> printMetadata) env
+    SafeRmCommandMetadata ->
+      runReaderT printMetadata env
 
--- | Holds the final configuration data.
+-- | Retrieves the configuration and runs the param function.
 --
 -- @since 0.1
-data FinalConfig = MkFinalConfig
-  { trashHome :: !(Maybe (PathI TrashHome)),
-    verbose :: !Bool,
-    command :: !SafeRmCommand
-  }
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
+withEnv :: MonadIO m => ((Env, SafeRmCommand) -> m a) -> m a
+withEnv = (>>=) getConfiguration
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the full
 -- configuration. For values shared between the CLI and Toml file, the CLI
@@ -88,7 +77,7 @@ data FinalConfig = MkFinalConfig
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: MonadIO m => m FinalConfig
+getConfiguration :: MonadIO m => m (Env, SafeRmCommand)
 getConfiguration = do
   -- get CLI args
   args <- liftIO getArgs
@@ -110,12 +99,13 @@ getConfiguration = do
 
   -- merge share CLI and toml values
   let mergedConfig = mergeConfigs args tomlConfig
-  pure $
-    MkFinalConfig
-      { trashHome = mergedConfig ^. #trashHome,
-        verbose = fromMaybe False (mergedConfig ^. #verbose),
-        command = args ^. #command
-      }
+  trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
+  let env =
+        MkEnv
+          { trashHome,
+            verbose = fromMaybe False (mergedConfig ^. #verbose)
+          }
+  pure (env, args ^. #command)
   where
     readConfig fp = do
       contents <-
@@ -127,19 +117,43 @@ getConfiguration = do
         Right cfg -> pure cfg
         Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
 
-listIndex :: (MonadIO m, Terminal m) => Maybe (PathI TrashHome) -> m ()
-listIndex = prettyDel SafeRm.getIndex
+printIndex ::
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m,
+    Terminal m
+  ) =>
+  m ()
+printIndex = SafeRm.getIndex >>= prettyDel
 
-printStats :: (MonadIO m, Terminal m) => Maybe (PathI TrashHome) -> m ()
-printStats = prettyDel SafeRm.getMetadata
+printMetadata ::
+  ( HasTrashHome env,
+    MonadReader env m,
+    MonadIO m,
+    Terminal m
+  ) =>
+  m ()
+printMetadata = SafeRm.getMetadata >>= prettyDel
 
-prettyDel :: (Pretty b, Terminal m) => (a -> m b) -> a -> m ()
-prettyDel f =
+prettyDel :: (Pretty a, Terminal m) => a -> m ()
+prettyDel =
   putTextLn
     . renderStrict
     . layoutCompact
     . pretty
-    <=< f
 
 listToSet :: Hashable a => NonEmpty a -> HashSet a
 listToSet = Set.fromList . NE.toList
+
+-- | If the argument is given, returns it. Otherwise searches for the default
+-- trash location.
+--
+-- @since 0.1
+trashOrDefault :: MonadIO m => Maybe (PathI TrashHome) -> m (PathI TrashHome)
+trashOrDefault = maybe getTrashHome pure
+
+-- | Retrieves the default trash directory.
+--
+-- @since 0.1
+getTrashHome :: MonadIO m => m (PathI TrashHome)
+getTrashHome = MkPathI . (</> ".trash") <$> Dir.getHomeDirectory

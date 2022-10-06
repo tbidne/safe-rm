@@ -33,6 +33,8 @@ import Control.Monad as X
   )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
+import Control.Monad.Reader as X (MonadReader (ask), ReaderT, asks, runReaderT)
+import Control.Monad.Trans as X (MonadTrans (lift))
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)

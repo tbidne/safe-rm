@@ -46,6 +46,7 @@ library
     SafeRm.Data.PathType
     SafeRm.Data.Timestamp
     SafeRm.Effects.Terminal
+    SafeRm.Env
     SafeRm.Exceptions
     SafeRm.Prelude
     SafeRm.Utils
@@ -59,6 +60,7 @@ library
     , deepseq               ^>=1.4.6.0
     , filepath              ^>=1.4.2.1
     , hashable              ^>=1.4.0.2
+    , mtl                   >=2.2.1    && <2.4
     , optics-core           ^>=0.4
     , prettyprinter         ^>=1.7.1
     , text                  >=1.2.4.0  && <2.1
@@ -135,6 +137,7 @@ test-suite config
     , safe-rm-exe-internal
     , tasty                 >=1.1.0.3 && <1.5
     , tasty-hunit           >=0.9     && <0.11
+    , unliftio
 
   hs-source-dirs:   test/config
   default-language: GHC2021
@@ -182,7 +185,6 @@ test-suite functional
     , bytestring
     , env-guard             ^>=0.2
     , file-utils
-    , mtl                   >=2.2.1 && <2.4
     , safe-rm
     , safe-rm-exe-internal
     , tasty
