@@ -79,6 +79,7 @@ library runner
   exposed-modules:
     SafeRm.Runner
     SafeRm.Runner.Args
+    SafeRm.Runner.Command
     SafeRm.Runner.Toml
 
   build-depends:

@@ -10,13 +10,13 @@ import Config.Prelude
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Env (Env (trashHome))
 import SafeRm.Runner (getConfiguration)
-import SafeRm.Runner.Args
-  ( _SafeRmCommandDelete,
-    _SafeRmCommandEmpty,
-    _SafeRmCommandList,
-    _SafeRmCommandMetadata,
-    _SafeRmCommandPermDelete,
-    _SafeRmCommandRestore,
+import SafeRm.Runner.Command
+  ( _Delete,
+    _DeletePerm,
+    _Empty,
+    _List,
+    _Metadata,
+    _Restore,
   )
 import System.Environment qualified as SysEnv
 
@@ -41,7 +41,7 @@ delete = testCase "Parses delete" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  expectedPaths @=? cmd ^? _SafeRmCommandDelete
+  expectedPaths @=? cmd ^? _Delete
   where
     argList = ["d", "foo", "bar"]
     expectedPaths = Just $ "foo" :| ["bar"]
@@ -52,7 +52,7 @@ permDelete = testCase "Parses perm delete" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  expectedPaths @=? cmd ^? _SafeRmCommandPermDelete
+  expectedPaths @=? cmd ^? _DeletePerm
   where
     argList = ["x", "foo", "bar"]
     expectedPaths = Just (False, "foo" :| ["bar"])
@@ -63,7 +63,7 @@ permDeleteForce = testCase "Parses perm delete with force" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  expectedPaths @=? cmd ^? _SafeRmCommandPermDelete
+  expectedPaths @=? cmd ^? _DeletePerm
   where
     argList = ["x", "-f", "foo", "bar"]
     expectedPaths = Just (True, "foo" :| ["bar"])
@@ -74,7 +74,7 @@ empty = testCase "Parses empty" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  Just False @=? cmd ^? _SafeRmCommandEmpty
+  Just False @=? cmd ^? _Empty
   where
     argList = ["e"]
 
@@ -84,7 +84,7 @@ emptyForce = testCase "Parses empty with force" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  Just True @=? cmd ^? _SafeRmCommandEmpty
+  Just True @=? cmd ^? _Empty
   where
     argList = ["e", "-f"]
 
@@ -94,7 +94,7 @@ restore = testCase "Parses restore" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  expectedPaths @=? cmd ^? _SafeRmCommandRestore
+  expectedPaths @=? cmd ^? _Restore
   where
     argList = ["r", "foo", "bar"]
     expectedPaths = Just $ "foo" :| ["bar"]
@@ -105,7 +105,7 @@ list = testCase "Parses list" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  Just () @=? cmd ^? _SafeRmCommandList
+  Just () @=? cmd ^? _List
   where
     argList = ["l"]
 
@@ -115,6 +115,6 @@ metadata = testCase "Parses metadata" $ do
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  Just () @=? cmd ^? _SafeRmCommandMetadata
+  Just () @=? cmd ^? _Metadata
   where
     argList = ["m"]

@@ -24,17 +24,16 @@ import SafeRm.Exceptions
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Runner.Args
-  ( Args (command, tomlConfigPath),
-    SafeRmCommand
-      ( SafeRmCommandDelete,
-        SafeRmCommandEmpty,
-        SafeRmCommandList,
-        SafeRmCommandMetadata,
-        SafeRmCommandPermDelete,
-        SafeRmCommandRestore
+import SafeRm.Runner.Args (Args (command, tomlConfigPath), getArgs)
+import SafeRm.Runner.Command
+  ( Command
+      ( Delete,
+        DeletePerm,
+        Empty,
+        List,
+        Metadata,
+        Restore
       ),
-    getArgs,
   )
 import SafeRm.Runner.Toml (TomlConfig (trashHome, verbose), mergeConfigs)
 import TOML qualified
@@ -51,22 +50,22 @@ runSafeRm = do
   (env, cmd) <- getConfiguration
 
   case cmd of
-    SafeRmCommandDelete paths ->
+    Delete paths ->
       runReaderT (SafeRm.delete (listToSet paths)) env
-    SafeRmCommandPermDelete force paths ->
+    DeletePerm force paths ->
       runReaderT (SafeRm.deletePermanently force (listToSet paths)) env
-    SafeRmCommandEmpty force -> runReaderT (SafeRm.empty force) env
-    SafeRmCommandRestore paths ->
+    Empty force -> runReaderT (SafeRm.empty force) env
+    Restore paths ->
       runReaderT (SafeRm.restore (listToSet paths)) env
-    SafeRmCommandList ->
+    List ->
       runReaderT (printIndex *> printMetadata) env
-    SafeRmCommandMetadata ->
+    Metadata ->
       runReaderT printMetadata env
 
 -- | Retrieves the configuration and runs the param function.
 --
 -- @since 0.1
-withEnv :: MonadIO m => ((Env, SafeRmCommand) -> m a) -> m a
+withEnv :: MonadIO m => ((Env, Command) -> m a) -> m a
 withEnv = (>>=) getConfiguration
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the full
@@ -77,7 +76,7 @@ withEnv = (>>=) getConfiguration
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: MonadIO m => m (Env, SafeRmCommand)
+getConfiguration :: MonadIO m => m (Env, Command)
 getConfiguration = do
   -- get CLI args
   args <- liftIO getArgs

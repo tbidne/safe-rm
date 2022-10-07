@@ -6,13 +6,6 @@
 module SafeRm.Runner.Args
   ( getArgs,
     Args (..),
-    SafeRmCommand (..),
-    _SafeRmCommandDelete,
-    _SafeRmCommandPermDelete,
-    _SafeRmCommandEmpty,
-    _SafeRmCommandRestore,
-    _SafeRmCommandList,
-    _SafeRmCommandMetadata,
   )
 where
 
@@ -20,7 +13,6 @@ import Control.Applicative qualified as A
 import Data.List qualified as L
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
-import Optics.TH (makePrisms)
 import Options.Applicative
   ( CommandFields,
     InfoMod,
@@ -41,54 +33,18 @@ import Options.Applicative
 import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
-import SafeRm.Data.Paths
-  ( PathI,
-    PathIndex
-      ( OriginalPath,
-        TrashHome,
-        TrashName
+import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Prelude
+import SafeRm.Runner.Command
+  ( Command
+      ( Delete,
+        DeletePerm,
+        Empty,
+        List,
+        Metadata,
+        Restore
       ),
   )
-import SafeRm.Prelude
-
--- | Action to run.
---
--- @since 0.1
-data SafeRmCommand
-  = -- | Deletes a path.
-    --
-    -- @since 0.1
-    SafeRmCommandDelete !(NonEmpty (PathI OriginalPath))
-  | -- | Permanently deletes a path from the trash.
-    --
-    -- @since 0.1
-    SafeRmCommandPermDelete
-      !Bool
-      !(NonEmpty (PathI TrashName))
-  | -- | Empties the trash.
-    --
-    -- @since 0.1
-    SafeRmCommandEmpty !Bool
-  | -- | Restores a path.
-    --
-    -- @since 0.1
-    SafeRmCommandRestore (NonEmpty (PathI TrashName))
-  | -- | List all trash contents.
-    --
-    -- @since 0.1
-    SafeRmCommandList
-  | -- | Prints trash size.
-    --
-    -- @since 0.1
-    SafeRmCommandMetadata
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Show
-    )
-
-makePrisms ''SafeRmCommand
 
 -- | Retrieves CLI args.
 --
@@ -115,7 +71,7 @@ data Args = MkArgs
     -- | Command to run.
     --
     -- @since 0.1
-    command :: !SafeRmCommand
+    command :: !Command
   }
   deriving stock
     ( -- | @since 0.1
@@ -192,7 +148,7 @@ configParser =
           "the xdg config directory e.g. ~/.config/safe-rm/config.toml"
         ]
 
-commandParser :: Parser SafeRmCommand
+commandParser :: Parser Command
 commandParser =
   OA.hsubparser
     ( mconcat
@@ -227,16 +183,15 @@ commandParser =
     listTxt = OA.progDesc "Lists all trash contents and metadata."
     metadataTxt = OA.progDesc "Prints trash metadata."
 
-    delParser =
-      SafeRmCommandDelete <$> pathsParser
+    delParser = Delete <$> pathsParser
     permDelParser =
-      SafeRmCommandPermDelete
+      DeletePerm
         <$> forceParser
         <*> pathsParser
-    emptyParser = SafeRmCommandEmpty <$> forceParser
-    restoreParser = SafeRmCommandRestore <$> pathsParser
-    listParser = pure SafeRmCommandList
-    metadataParser = pure SafeRmCommandMetadata
+    emptyParser = Empty <$> forceParser
+    restoreParser = Restore <$> pathsParser
+    listParser = pure List
+    metadataParser = pure Metadata
 
 forceParser :: Parser Bool
 forceParser =
