@@ -22,9 +22,17 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     _MkPathI,
   )
-import SafeRm.Effects.Logger (LogContext (MkLogContext), LogLevel (None), logLevel, namespace)
-import SafeRm.Env (Env (MkEnv), logContext, logPath, trashHome, verbose)
-import SafeRm.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (SomeExceptions))
+import SafeRm.Effects.Logger
+  ( LogContext (MkLogContext),
+    LogLevel (None),
+    logLevel,
+    namespace,
+  )
+import SafeRm.Env (Env (MkEnv), logContext, logPath, trashHome)
+import SafeRm.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (SomeExceptions),
+  )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
 
 -- TODO: Right now we are using runner's SafeRmT to run the tests. This works
@@ -489,7 +497,6 @@ mkEnv :: FilePath -> Env
 mkEnv fp =
   MkEnv
     { trashHome = MkPathI fp,
-      verbose = False,
       logContext =
         MkLogContext
           { namespace = (∅),

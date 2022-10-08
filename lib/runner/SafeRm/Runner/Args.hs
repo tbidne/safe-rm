@@ -66,10 +66,6 @@ data Args = MkArgs
     --
     -- @since 0.1
     trashHome :: !(Maybe (PathI TrashHome)),
-    -- | verbose
-    --
-    -- @since 0.1
-    verbose :: !(Maybe Bool),
     -- | The logging level
     --
     -- @since 0.1
@@ -116,7 +112,6 @@ argsParser =
   MkArgs
     <$> configParser
     <*> trashParser
-    <*> verboseParser
     <*> logLevelParser
     <*> commandParser
     <**> OA.helper
@@ -229,18 +224,6 @@ trashParser =
           "it exists. If neither is given then we use the xdg home directory ",
           "e.g. ~/.trash"
         ]
-
-verboseParser :: Parser (Maybe Bool)
-verboseParser =
-  A.optional $
-    OA.switch $
-      mconcat
-        [ OA.long "verbose",
-          OA.short 'v',
-          OA.help helpTxt
-        ]
-  where
-    helpTxt = "Verbosity level e.g. if we print data that is deleted/restored."
 
 logLevelParser :: Parser (Maybe LogLevel)
 logLevelParser =

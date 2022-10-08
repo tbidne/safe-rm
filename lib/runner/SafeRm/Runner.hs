@@ -35,8 +35,7 @@ import SafeRm.Env
       ( MkEnv,
         logContext,
         logPath,
-        trashHome,
-        verbose
+        trashHome
       ),
     HasTrashHome,
   )
@@ -57,7 +56,7 @@ import SafeRm.Runner.Command
       ),
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
-import SafeRm.Runner.Toml (TomlConfig (logLevel, trashHome, verbose), mergeConfigs)
+import SafeRm.Runner.Toml (TomlConfig (logLevel, trashHome), mergeConfigs)
 import System.Exit (ExitCode (ExitSuccess))
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
@@ -142,7 +141,6 @@ getConfiguration = do
       env =
         MkEnv
           { trashHome,
-            verbose = fromMaybe False (mergedConfig ^. #verbose),
             logContext,
             logPath
           }

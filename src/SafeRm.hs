@@ -39,7 +39,6 @@ import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Env
   ( HasTrashHome (getTrashHome),
-    HasVerbose (getVerbose),
     getTrashIndex,
     getTrashPaths,
   )
@@ -60,11 +59,9 @@ import UnliftIO.Directory qualified as Dir
 delete ::
   forall env m.
   ( HasTrashHome env,
-    HasVerbose env,
     Logger m,
     MonadReader env m,
-    MonadUnliftIO m,
-    Terminal m
+    MonadUnliftIO m
   ) =>
   HashSet (PathI OriginalPath) ->
   m ()
@@ -72,7 +69,6 @@ delete paths = addNamespace "delete" $ do
   (trashHome, indexPath) <- asks getTrashPaths
   Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
 
-  verbose <- asks getVerbose
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
   deletedPathsRef <- newIORef (∅)
@@ -102,12 +98,7 @@ delete paths = addNamespace "delete" $ do
     then Index.appendIndex indexPath (MkIndex deletedPaths)
     else Index.writeIndex indexPath (MkIndex deletedPaths)
 
-  when verbose $ do
-    putStrLn $
-      "Successfully deleted the following path(s)\n"
-        <> showMapOrigPaths deletedPaths
-
-  Logger.logInfo ("Deleted: " <> showt deletedPaths)
+  Logger.logInfo ("Deleted: " <> showMapOrigPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust exceptions $
@@ -123,7 +114,6 @@ delete paths = addNamespace "delete" $ do
 deletePermanently ::
   forall env m.
   ( HasTrashHome env,
-    HasVerbose env,
     Logger m,
     MonadReader env m,
     MonadUnliftIO m,
@@ -134,7 +124,6 @@ deletePermanently ::
   m ()
 deletePermanently force paths = addNamespace "deletePermanently" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  verbose <- asks getVerbose
   Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
 
   index <- Index.readIndex indexPath
@@ -181,12 +170,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
   deletedPaths <- readIORef deletedPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ deletedPaths)
 
-  when verbose $
-    putStrLn $
-      "Successfully deleted the following path(s)\n"
-        <> showMapTrashPaths deletedPaths
-
-  Logger.logInfo ("Deleted: " <> showt deletedPaths)
+  Logger.logInfo ("Deleted: " <> showMapTrashPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -241,18 +225,15 @@ getMetadata = addNamespace "getMetadata" $ do
 restore ::
   forall env m.
   ( HasTrashHome env,
-    HasVerbose env,
     Logger m,
     MonadReader env m,
-    MonadUnliftIO m,
-    Terminal m
+    MonadUnliftIO m
   ) =>
   HashSet (PathI TrashName) ->
   m ()
 restore paths = addNamespace "restore" $ do
   (trashHome, indexPath) <- asks getTrashPaths
   Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
-  verbose <- asks getVerbose
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
@@ -275,12 +256,7 @@ restore paths = addNamespace "restore" $ do
   restoredPaths <- readIORef restoredPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ restoredPaths)
 
-  when verbose $
-    putStrLn $
-      "Successfully restored the following path(s)\n"
-        <> showMapOrigPaths restoredPaths
-
-  Logger.logInfo ("Restored: " <> showt restoredPaths)
+  Logger.logInfo ("Restored: " <> showMapOrigPaths restoredPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -324,16 +300,16 @@ empty force = addNamespace "getMetadata" $ do
                   putStrLn ""
               | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
-showMapTrashPaths :: HashMap (PathI 'TrashName) PathData -> String
+showMapTrashPaths :: HashMap (PathI 'TrashName) PathData -> Text
 showMapTrashPaths = showMapElems #fileName
 
-showMapOrigPaths :: HashMap (PathI 'TrashName) PathData -> String
+showMapOrigPaths :: HashMap (PathI 'TrashName) PathData -> Text
 showMapOrigPaths = showMapElems #originalPath
 
-showMapElems :: Lens' PathData (PathI i) -> HashMap (PathI TrashName) PathData -> String
+showMapElems :: Lens' PathData (PathI i) -> HashMap (PathI TrashName) PathData -> Text
 showMapElems toPathI =
   foldl' foldStrs ""
-    . fmap (view (toPathI % _MkPathI))
+    . fmap (T.pack . view (toPathI % _MkPathI))
     . Map.elems
   where
     foldStrs acc s = ("- " <> s <> "\n") <> acc

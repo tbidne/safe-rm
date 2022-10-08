@@ -5,7 +5,6 @@ module SafeRm.Env
   ( HasTrashHome (..),
     getTrashPaths,
     getTrashIndex,
-    HasVerbose (..),
     Env (..),
   )
 where
@@ -47,29 +46,12 @@ getTrashPaths x = (getTrashHome x, getTrashIndex x)
 getTrashIndex :: HasTrashHome a => a -> PathI TrashIndex
 getTrashIndex = liftPathI (</> ".index.csv") . getTrashHome
 
--- | Class for retrieving verbosity.
---
--- @since 0.1
-class HasVerbose a where
-  -- | Retrieves the verbose flag.
-  --
-  -- @since 0.1
-  getVerbose :: a -> Bool
-  default getVerbose ::
-    ( Is k A_Getter,
-      LabelOptic' "verbose" k a Bool
-    ) =>
-    a ->
-    Bool
-  getVerbose = view #verbose
-
 -- | Concrete environment type that can be used for running SafeRm
 -- functions.
 --
 -- @since 0.1
 data Env = MkEnv
   { trashHome :: !(PathI TrashHome),
-    verbose :: !Bool,
     logContext :: !LogContext,
     logPath :: !(PathI TrashLog)
   }
@@ -83,7 +65,5 @@ data Env = MkEnv
     )
   deriving anyclass
     ( -- | @since 0.1
-      HasTrashHome,
-      -- | @since 0.1
-      HasVerbose
+      HasTrashHome
     )

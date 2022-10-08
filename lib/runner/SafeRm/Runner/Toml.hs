@@ -10,7 +10,7 @@ where
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 import SafeRm.Effects.Logger (LogLevel, readLogLevel)
 import SafeRm.Prelude
-import SafeRm.Runner.Args (Args (logLevel, trashHome, verbose))
+import SafeRm.Runner.Args (Args (logLevel, trashHome))
 import TOML
   ( DecodeTOML (..),
     getFieldOptWith,
@@ -21,7 +21,6 @@ import TOML
 -- @since 0.1
 data TomlConfig = MkTomlConfig
   { trashHome :: !(Maybe (PathI TrashHome)),
-    verbose :: !(Maybe Bool),
     logLevel :: !(Maybe LogLevel)
   }
   deriving stock
@@ -35,25 +34,22 @@ data TomlConfig = MkTomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
-  MkTomlConfig a b c <> MkTomlConfig a' b' c' =
-    MkTomlConfig (a <|> a') (b <|> b') (c <|> c')
+  MkTomlConfig a b <> MkTomlConfig a' b' =
+    MkTomlConfig (a <|> a') (b <|> b')
 
 -- | @since 0.1
 instance Monoid TomlConfig where
-  mempty = MkTomlConfig Nothing Nothing Nothing
+  mempty = MkTomlConfig Nothing Nothing
 
 -- | @since 0.5
 instance DecodeTOML TomlConfig where
   tomlDecoder =
     MkTomlConfig
       <$> decodeTrashHome
-      <*> decodeVerbose
       <*> decodeLogLevel
     where
       decodeTrashHome =
         fmap MkPathI <$> getFieldOptWith tomlDecoder "trash-home"
-      decodeVerbose =
-        getFieldOptWith tomlDecoder "verbose"
       decodeLogLevel =
         getFieldOptWith (tomlDecoder >>= readLogLevel) "log-level"
 
@@ -66,4 +62,7 @@ mergeConfigs args = (argsToTomlConfig args <>)
 
 argsToTomlConfig :: Args -> TomlConfig
 argsToTomlConfig args =
-  MkTomlConfig (args ^. #trashHome) (args ^. #verbose) (args ^. #logLevel)
+  MkTomlConfig
+    { trashHome = args ^. #trashHome,
+      logLevel = args ^. #logLevel
+    }

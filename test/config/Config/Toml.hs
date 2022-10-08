@@ -11,7 +11,7 @@ where
 import Config.Prelude
 import SafeRm.Data.Paths (PathI (MkPathI), (<//>))
 import SafeRm.Effects.Logger (LogContext (logLevel, namespace), LogLevel (Info, None))
-import SafeRm.Env (Env (logContext, logPath, trashHome, verbose))
+import SafeRm.Env (Env (logContext, logPath, trashHome))
 import SafeRm.Runner (getConfiguration)
 import System.Environment qualified as SysEnv
 
@@ -30,7 +30,6 @@ parsesExample = testCase "Parses Example" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   "./tmp" @=? env ^. #trashHome
-  False @=? env ^. #verbose
   "./tmp/.log" @=? env ^. #logPath
   ["runner"] @=? env ^. (#logContext % #namespace)
   Info @=? env ^. (#logContext % #logLevel)
@@ -42,7 +41,6 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   "not-tmp" @=? env ^. #trashHome
-  True @=? env ^. #verbose
   "not-tmp/.log" @=? env ^. #logPath
   ["runner"] @=? env ^. (#logContext % #namespace)
   None @=? env ^. (#logContext % #logLevel)
@@ -52,7 +50,6 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
         "examples/config.toml",
         "-t",
         "not-tmp",
-        "--verbose",
         "--log-level",
         "none",
         "d",
@@ -65,7 +62,6 @@ defaultConfig = testCase "Default config" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  False @=? env ^. #verbose
   MkPathI defTrash <//> ".log" @=? env ^. #logPath
   ["runner"] @=? env ^. (#logContext % #namespace)
   None @=? env ^. (#logContext % #logLevel)
