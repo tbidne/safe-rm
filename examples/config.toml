@@ -1,8 +1,8 @@
 # Path to the trash home. Overridden by the CLI -t option.
 trash-home = "./tmp"
 
-# General verbosity flag.
-verbose = false
+# Stdout log level
+console-log-level = "info"
 
-# Log level
-log-level = "info"
+# File log level
+file-log-level = "debug"

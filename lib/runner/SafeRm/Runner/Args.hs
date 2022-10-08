@@ -62,14 +62,18 @@ data Args = MkArgs
     --
     -- @since 0.1
     tomlConfigPath :: !(Maybe FilePath),
-    -- | Path to trash home..
+    -- | Path to trash home.
     --
     -- @since 0.1
     trashHome :: !(Maybe (PathI TrashHome)),
-    -- | The logging level
+    -- | The stdout logging level.
     --
     -- @since 0.1
-    logLevel :: !(Maybe LogLevel),
+    consoleLogLevel :: !(Maybe LogLevel),
+    -- | The file logging level.
+    --
+    -- @since 0.1
+    fileLogLevel :: !(Maybe LogLevel),
     -- | Command to run.
     --
     -- @since 0.1
@@ -112,7 +116,8 @@ argsParser =
   MkArgs
     <$> configParser
     <*> trashParser
-    <*> logLevelParser
+    <*> consoleLogLevelParser
+    <*> fileLogLevelParser
     <*> commandParser
     <**> OA.helper
     <**> version
@@ -225,14 +230,24 @@ trashParser =
           "e.g. ~/.trash"
         ]
 
-logLevelParser :: Parser (Maybe LogLevel)
-logLevelParser =
+fileLogLevelParser :: Parser (Maybe LogLevel)
+fileLogLevelParser =
   A.optional $
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
-        [ OA.long "log-level",
+        [ OA.long "file-log-level",
           OA.metavar "[none|error|info|debug]",
-          OA.help "The level in which to log."
+          OA.help "The file level in which to log. Defaults to none."
+        ]
+
+consoleLogLevelParser :: Parser (Maybe LogLevel)
+consoleLogLevelParser =
+  A.optional $
+    OA.option (OA.str >>= Logger.readLogLevel) $
+      mconcat
+        [ OA.long "console-log-level",
+          OA.metavar "[none|error|info|debug]",
+          OA.help "The console level in which to log. Defaults to error."
         ]
 
 pathsParser :: IsString a => Parser (NonEmpty a)

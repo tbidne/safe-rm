@@ -22,19 +22,20 @@ import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome), (<//>))
 import SafeRm.Effects.Logger
   ( LogContext
       ( MkLogContext,
-        logLevel,
+        consoleLogLevel,
+        fileLogLevel,
         namespace
       ),
-    LogLevel (None),
+    LogLevel (Error, None),
     Logger,
   )
 import SafeRm.Effects.Logger qualified as Logger
-import SafeRm.Effects.Terminal (Terminal (putStrLn), putTextLn)
+import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Env
   ( Env
       ( MkEnv,
+        fileLogPath,
         logContext,
-        logPath,
         trashHome
       ),
     HasTrashHome,
@@ -56,7 +57,14 @@ import SafeRm.Runner.Command
       ),
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
-import SafeRm.Runner.Toml (TomlConfig (logLevel, trashHome), mergeConfigs)
+import SafeRm.Runner.Toml
+  ( TomlConfig
+      ( consoleLogLevel,
+        fileLogLevel,
+        trashHome
+      ),
+    mergeConfigs,
+  )
 import System.Exit (ExitCode (ExitSuccess))
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
@@ -89,7 +97,6 @@ runSafeRm = do
     doNothingOnSuccess ex = throwIO ex
 
     handleEx ex = do
-      putStrLn . displayException $ ex
       -- TODO: maybe better logging here?
       Logger.logException ex
       throwIO ex
@@ -132,17 +139,18 @@ getConfiguration = do
   let mergedConfig = mergeConfigs args tomlConfig
   trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
 
-  let logPath = trashHome <//> ".log"
+  let fileLogPath = trashHome <//> ".log"
       logContext =
         MkLogContext
-          { logLevel = fromMaybe None (mergedConfig ^. #logLevel),
+          { consoleLogLevel = fromMaybe Error (mergedConfig ^. #consoleLogLevel),
+            fileLogLevel = fromMaybe None (mergedConfig ^. #fileLogLevel),
             namespace = ["runner"]
           }
       env =
         MkEnv
           { trashHome,
             logContext,
-            logPath
+            fileLogPath
           }
   pure (env, args ^. #command)
   where

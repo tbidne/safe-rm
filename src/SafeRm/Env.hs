@@ -53,7 +53,7 @@ getTrashIndex = liftPathI (</> ".index.csv") . getTrashHome
 data Env = MkEnv
   { trashHome :: !(PathI TrashHome),
     logContext :: !LogContext,
-    logPath :: !(PathI TrashLog)
+    fileLogPath :: !(PathI TrashLog)
   }
   deriving stock
     ( -- | @since 0.1

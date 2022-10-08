@@ -10,8 +10,11 @@ where
 
 import Config.Prelude
 import SafeRm.Data.Paths (PathI (MkPathI), (<//>))
-import SafeRm.Effects.Logger (LogContext (logLevel, namespace), LogLevel (Info, None))
-import SafeRm.Env (Env (logContext, logPath, trashHome))
+import SafeRm.Effects.Logger
+  ( LogContext (consoleLogLevel, fileLogLevel, namespace),
+    LogLevel (Debug, Error, Info, None),
+  )
+import SafeRm.Env (Env (fileLogPath, logContext, trashHome))
 import SafeRm.Runner (getConfiguration)
 import System.Environment qualified as SysEnv
 
@@ -30,9 +33,10 @@ parsesExample = testCase "Parses Example" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   "./tmp" @=? env ^. #trashHome
-  "./tmp/.log" @=? env ^. #logPath
+  "./tmp/.log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  Info @=? env ^. (#logContext % #logLevel)
+  Info @=? env ^. (#logContext % #consoleLogLevel)
+  Debug @=? env ^. (#logContext % #fileLogLevel)
   where
     argList = ["-c", "examples/config.toml", "d", "foo"]
 
@@ -41,16 +45,19 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   "not-tmp" @=? env ^. #trashHome
-  "not-tmp/.log" @=? env ^. #logPath
+  "not-tmp/.log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  None @=? env ^. (#logContext % #logLevel)
+  Error @=? env ^. (#logContext % #consoleLogLevel)
+  None @=? env ^. (#logContext % #fileLogLevel)
   where
     argList =
       [ "-c",
         "examples/config.toml",
         "-t",
         "not-tmp",
-        "--log-level",
+        "--console-log-level",
+        "error",
+        "--file-log-level",
         "none",
         "d",
         "foo"
@@ -62,9 +69,10 @@ defaultConfig = testCase "Default config" $ do
   (env, _) <- SysEnv.withArgs argList getConfiguration
 
   MkPathI defTrash @=? env ^. #trashHome
-  MkPathI defTrash <//> ".log" @=? env ^. #logPath
+  MkPathI defTrash <//> ".log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  None @=? env ^. (#logContext % #logLevel)
+  Error @=? env ^. (#logContext % #consoleLogLevel)
+  None @=? env ^. (#logContext % #fileLogLevel)
   where
     argList =
       [ "d",

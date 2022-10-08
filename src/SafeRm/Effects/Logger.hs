@@ -27,8 +27,7 @@ module SafeRm.Effects.Logger
     logException,
 
     -- * Low level
-    guardWithTime,
-    logWithTime,
+    formatLog,
   )
 where
 
@@ -45,10 +44,14 @@ data LogContext = MkLogContext
     --
     -- @since 0.1
     namespace :: !(Seq Text),
-    -- | The level in which to log.
+    -- | The console level in which to log.
     --
     -- @since 0.1
-    logLevel :: !LogLevel
+    consoleLogLevel :: !LogLevel,
+    -- | The file level in which to log.
+    --
+    -- @since 0.1
+    fileLogLevel :: !LogLevel
   }
   deriving stock
     ( -- | @since 0.1
@@ -67,7 +70,7 @@ class Monad m => Logger m where
   -- | Logs a string.
   --
   -- @since 0.1
-  putLog :: Text -> m ()
+  putLog :: LogLevel -> Text -> m ()
 
   -- | Determines the level in which to log.
   --
@@ -108,31 +111,21 @@ data LogLevel
       Show
     )
 
--- | If the parameter 'LogLevel' is > than 'logLevel', calls
--- 'logWithTime'. Otherwise does nothing.
+-- | Formats a log.
 --
 -- @since 0.1
-guardWithTime :: (Logger m, MonadIO m) => LogLevel -> Text -> m ()
-guardWithTime lvl msg = do
-  baseLevel <- view #logLevel <$> getContext
-  when (lvl <= baseLevel) (logWithTime lvl msg)
-
--- | Logs a string, prepending the current time.
---
--- @since 0.1
-logWithTime :: (Logger m, MonadIO m) => LogLevel -> Text -> m ()
-logWithTime lvl str = do
-  t <- Timestamp.getCurrentLocalTime
-  namespace <- view #namespace <$> getContext
+formatLog :: MonadIO m => Seq Text -> LogLevel -> Text -> m Text
+formatLog namespace lvl msg = do
+  t <- Timestamp.toText <$> Timestamp.getCurrentLocalTime
   let namespaces = foldMap' id $ Seq.intersperse "." namespace
       formatted =
         mconcat
-          [ withBrackets False (Timestamp.toText t),
+          [ withBrackets False t,
             withBrackets False namespaces,
             withBrackets True (showt lvl),
-            str
+            msg
           ]
-  putLog formatted
+  pure formatted
   where
     withBrackets False s = "[" <> s <> "]"
     withBrackets True s = "[" <> s <> "] "
@@ -140,19 +133,19 @@ logWithTime lvl str = do
 -- | Logs at the 'Error' level with current time and guarding.
 --
 -- @since 0.1
-logError :: (Logger m, MonadIO m) => Text -> m ()
+logError :: Logger m => Text -> m ()
 logError = logText Error
 
 -- | Logs at the 'Info' level with current time and guarding.
 --
 -- @since 0.1
-logInfo :: (Logger m, MonadIO m) => Text -> m ()
+logInfo :: Logger m => Text -> m ()
 logInfo = logText Info
 
 -- | Logs at the 'Debug' level with current time and guarding.
 --
 -- @since 0.1
-logDebug :: (Logger m, MonadIO m) => Text -> m ()
+logDebug :: Logger m => Text -> m ()
 logDebug = logText Debug
 
 -- | Runs the action, logging any exceptions before rethrowing.
@@ -164,25 +157,25 @@ withExLogging = handleAny $ \e -> logException e *> throwIO e
 -- | Logs via show with current time and guarding.
 --
 -- @since 0.1
-logShow :: (Logger m, MonadIO m, Show a) => LogLevel -> a -> m ()
+logShow :: (Logger m, Show a) => LogLevel -> a -> m ()
 logShow lvl = logText lvl . showt
 
 -- | 'String' version of 'logText'.
 --
 -- @since 0.1
-logString :: (Logger m, MonadIO m) => LogLevel -> String -> m ()
+logString :: Logger m => LogLevel -> String -> m ()
 logString lvl = logText lvl . T.pack
 
--- | Alias for 'guardWithTime'.
+-- | Alias for 'putLog'.
 --
 -- @since 0.1
-logText :: (Logger m, MonadIO m) => LogLevel -> Text -> m ()
-logText = guardWithTime
+logText :: Logger m => LogLevel -> Text -> m ()
+logText = putLog
 
 -- | Logs an 'Exception'. Uses 'logString' at the 'Error' level.
 --
 -- @since 0.1
-logException :: (Exception e, Logger m, MonadIO m) => e -> m ()
+logException :: (Exception e, Logger m) => e -> m ()
 logException = logString Error . displayException
 
 -- | Parses a log level.

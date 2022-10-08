@@ -12,11 +12,12 @@ import Data.ByteString qualified as BS
 import Data.Text.Encoding qualified as TEnc
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Effects.Logger
-  ( LogContext (namespace),
+  ( LogContext (consoleLogLevel, fileLogLevel, namespace),
     Logger (addNamespace, getContext, putLog),
   )
-import SafeRm.Effects.Terminal (Terminal)
-import SafeRm.Env (Env (logContext, logPath))
+import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.Terminal (Terminal, putTextLn)
+import SafeRm.Env (Env (fileLogPath, logContext))
 import SafeRm.Prelude
 import UnliftIO.Directory qualified as Dir
 
@@ -44,16 +45,22 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
     via (ReaderT env m)
 
 -- | @since 0.1
-instance MonadIO m => Logger (SafeRmT Env m) where
-  putLog t = do
-    MkPathI fp <- asks (view #logPath)
-    exists <- Dir.doesFileExist fp
-    liftIO $
-      if exists
-        then BS.appendFile fp (TEnc.encodeUtf8 t')
-        else BS.writeFile fp (TEnc.encodeUtf8 t')
-    where
-      t' = t <> "\n"
+instance (MonadIO m, Terminal m) => Logger (SafeRmT Env m) where
+  putLog lvl msg = do
+    consoleLogLevel <- asks (view (#logContext % #consoleLogLevel))
+    fileLogLevel <- asks (view (#logContext % #fileLogLevel))
+    MkPathI fileLogPath <- asks (view #fileLogPath)
+    namespace <- view #namespace <$> getContext
+    formatted <- Logger.formatLog namespace lvl msg
+
+    when (lvl <= consoleLogLevel) (putTextLn formatted)
+    when (lvl <= fileLogLevel) $ do
+      exists <- Dir.doesFileExist fileLogPath
+      let formatted' = formatted <> "\n"
+      liftIO $
+        if exists
+          then BS.appendFile fileLogPath (TEnc.encodeUtf8 formatted')
+          else BS.writeFile fileLogPath (TEnc.encodeUtf8 formatted')
 
   getContext = asks (view #logContext)
 

@@ -25,10 +25,16 @@ import SafeRm.Data.Paths
 import SafeRm.Effects.Logger
   ( LogContext (MkLogContext),
     LogLevel (None),
-    logLevel,
+    consoleLogLevel,
+    fileLogLevel,
     namespace,
   )
-import SafeRm.Env (Env (MkEnv), logContext, logPath, trashHome)
+import SafeRm.Env
+  ( Env (MkEnv),
+    fileLogPath,
+    logContext,
+    trashHome,
+  )
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (SomeExceptions),
@@ -84,7 +90,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist αTest
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -139,7 +145,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist (φ (trashDir </>) β)
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -181,7 +187,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ usingSafeRmT env $ SafeRm.deletePermanently True toPermDelete
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -241,7 +247,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -289,7 +295,7 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ usingSafeRmT env $ SafeRm.restore toRestore
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -350,7 +356,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -398,7 +404,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         liftIO $ usingSafeRmT env $ SafeRm.empty True
 
         -- get index
-        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+        index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -500,7 +506,8 @@ mkEnv fp =
       logContext =
         MkLogContext
           { namespace = (∅),
-            logLevel = None
+            consoleLogLevel = None,
+            fileLogLevel = None
           },
-      logPath = ""
+      fileLogPath = ""
     }
