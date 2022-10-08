@@ -10,7 +10,13 @@ module SafeRm.Env
   )
 where
 
+import Optics.Core (A_Getter, Is, LabelOptic')
 import SafeRm.Data.Paths
+  ( PathI,
+    PathIndex (TrashHome, TrashIndex, TrashLog),
+    liftPathI,
+  )
+import SafeRm.Effects.Logger (LogContext)
 import SafeRm.Prelude
 
 -- | Class for retrieving the trash home.
@@ -21,6 +27,13 @@ class HasTrashHome a where
   --
   -- @since 0.1
   getTrashHome :: a -> PathI TrashHome
+  default getTrashHome ::
+    ( Is k A_Getter,
+      LabelOptic' "trashHome" k a (PathI TrashHome)
+    ) =>
+    a ->
+    PathI TrashHome
+  getTrashHome = view #trashHome
 
 -- | Retrieves all trash paths.
 --
@@ -42,6 +55,13 @@ class HasVerbose a where
   --
   -- @since 0.1
   getVerbose :: a -> Bool
+  default getVerbose ::
+    ( Is k A_Getter,
+      LabelOptic' "verbose" k a Bool
+    ) =>
+    a ->
+    Bool
+  getVerbose = view #verbose
 
 -- | Concrete environment type that can be used for running SafeRm
 -- functions.
@@ -49,7 +69,9 @@ class HasVerbose a where
 -- @since 0.1
 data Env = MkEnv
   { trashHome :: !(PathI TrashHome),
-    verbose :: !Bool
+    verbose :: !Bool,
+    logContext :: !LogContext,
+    logPath :: !(PathI TrashLog)
   }
   deriving stock
     ( -- | @since 0.1
@@ -59,11 +81,9 @@ data Env = MkEnv
       -- | @since 0.1
       Show
     )
-
--- | @since 0.1
-instance HasTrashHome Env where
-  getTrashHome = view #trashHome
-
--- | @since 0.1
-instance HasVerbose Env where
-  getVerbose = view #verbose
+  deriving anyclass
+    ( -- | @since 0.1
+      HasTrashHome,
+      -- | @since 0.1
+      HasVerbose
+    )

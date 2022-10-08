@@ -3,3 +3,6 @@ trash-home = "./tmp"
 
 # General verbosity flag.
 verbose = false
+
+# Log level
+log-level = "info"

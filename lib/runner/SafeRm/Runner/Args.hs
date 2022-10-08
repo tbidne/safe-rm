@@ -34,6 +34,8 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Effects.Logger
+import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Prelude
 import SafeRm.Runner.Command
   ( Command
@@ -68,6 +70,10 @@ data Args = MkArgs
     --
     -- @since 0.1
     verbose :: !(Maybe Bool),
+    -- | The logging level
+    --
+    -- @since 0.1
+    logLevel :: !(Maybe LogLevel),
     -- | Command to run.
     --
     -- @since 0.1
@@ -111,6 +117,7 @@ argsParser =
     <$> configParser
     <*> trashParser
     <*> verboseParser
+    <*> logLevelParser
     <*> commandParser
     <**> OA.helper
     <**> version
@@ -234,6 +241,16 @@ verboseParser =
         ]
   where
     helpTxt = "Verbosity level e.g. if we print data that is deleted/restored."
+
+logLevelParser :: Parser (Maybe LogLevel)
+logLevelParser =
+  A.optional $
+    OA.option (OA.str >>= Logger.readLogLevel) $
+      mconcat
+        [ OA.long "log-level",
+          OA.metavar "[none|error|info|debug]",
+          OA.help "The level in which to log."
+        ]
 
 pathsParser :: IsString a => Parser (NonEmpty a)
 pathsParser =

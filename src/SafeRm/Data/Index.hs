@@ -24,6 +24,7 @@ import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List qualified as L
+import Data.Text qualified as T
 import SafeRm.Data.PathData (PathData, sortDefault)
 import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
@@ -32,6 +33,8 @@ import SafeRm.Data.Paths
     _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Effects.Logger (Logger (addNamespace))
+import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex
@@ -86,14 +89,18 @@ instance Pretty Index where
 --
 -- @since 0.1
 readIndex ::
-  MonadIO m =>
+  ( Logger m,
+    MonadIO m
+  ) =>
   PathI TrashIndex ->
   m Index
-readIndex indexPath =
+readIndex indexPath = addNamespace "readIndex" $ do
+  Logger.logDebug $ "Index path: " <> T.pack (indexPath ^. _MkPathI)
   fmap MkIndex . readIndexWithFold foldVec $ indexPath
   where
     trashHome = Paths.indexToHome indexPath
     foldVec macc pd = do
+      Logger.logDebug $ "Found: " <> showt pd
       acc <- macc
       throwIfDuplicates indexPath acc pd
       throwIfTrashNonExtant trashHome pd
@@ -140,14 +147,15 @@ searchIndex keys (MkIndex index) =
 -- @since 0.1
 readIndexWithFold ::
   forall m a.
-  (MonadIO m, Monoid a) =>
+  (Logger m, MonadIO m, Monoid a) =>
   -- | Fold function.
   (m a -> PathData -> m a) ->
   -- | Path to index file.
   PathI TrashIndex ->
   m a
 readIndexWithFold foldFn indexPath@(MkPathI fp) =
-  ((liftIO . BS.readFile) >=> runFold (pure mempty) . decode) fp
+  addNamespace "readIndexWithFold" $
+    ((liftIO . BS.readFile) >=> runFold (pure mempty) . decode) fp
   where
     decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
     -- NOTE: We fold over the Records manually because its Foldable instance
@@ -158,7 +166,8 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- input
     runFold macc (Nil Nothing "") = macc
     -- End of stream w/ an error.
-    runFold _ (Nil (Just err) rest) =
+    runFold _ (Nil (Just err) rest) = do
+      Logger.logError ("Error end of stream: " <> T.pack err)
       throwIO $
         MkExceptionI @ReadIndex
           ( indexPath,
@@ -171,12 +180,14 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
           )
     -- No errors but there is unconsumed input. This is probably impossible,
     -- but just to cover all cases...
-    runFold _ (Nil _ rest) =
+    runFold _ (Nil _ rest) = do
+      Logger.logError ("Unconsumed input: " <> T.pack (lbsToStr rest))
       throwIO $
         MkExceptionI @ReadIndex
           (indexPath, "Unconsumed input: " <> lbsToStr rest)
     -- Encountered an error.
-    runFold _ (Cons (Left err) _) =
+    runFold _ (Cons (Left err) _) = do
+      Logger.logError ("Error reading stream: " <> T.pack err)
       throwIO $ MkExceptionI @ReadIndex (indexPath, err)
     -- Inductive case, run fold and recurse
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest

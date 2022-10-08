@@ -22,8 +22,15 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     _MkPathI,
   )
-import SafeRm.Env (Env (MkEnv))
+import SafeRm.Effects.Logger (LogContext (MkLogContext), LogLevel (None), logLevel, namespace)
+import SafeRm.Env (Env (MkEnv), logContext, logPath, trashHome, verbose)
 import SafeRm.Exceptions (ExceptionI (MkExceptionI), ExceptionIndex (SomeExceptions))
+import SafeRm.Runner.SafeRmT (usingSafeRmT)
+
+-- TODO: Right now we are using runner's SafeRmT to run the tests. This works
+-- fine and means we do not have to use our own custom type. But it also
+-- means we cannot test the logging, and the may be something we want to do
+-- at some point. Consider if we want to do this.
 
 tests :: IO FilePath -> TestTree
 tests testDir =
@@ -60,7 +67,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI αTest)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -69,7 +76,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist αTest
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -102,7 +109,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         let toDelete = αTest ∪ toTestDir β
         caughtEx <-
           liftIO $
-            (runReaderT (SafeRm.delete (φ MkPathI toDelete)) env $> Nothing)
+            (usingSafeRmT env (SafeRm.delete (φ MkPathI toDelete)) $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -124,7 +131,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist (φ (trashDir </>) β)
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
@@ -153,7 +160,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI αTest)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -163,10 +170,10 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         -- permanently delete files
         let toPermDelete = φ MkPathI α
-        liftIO $ runReaderT (SafeRm.deletePermanently True toPermDelete) env
+        liftIO $ usingSafeRmT env $ SafeRm.deletePermanently True toPermDelete
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -199,7 +206,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist toDelete
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI toDelete)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI toDelete)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -213,7 +220,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow toPermDelete
         caughtEx <-
           liftIO $
-            (runReaderT (SafeRm.deletePermanently True toPermDelete) env $> Nothing)
+            (usingSafeRmT env (SafeRm.deletePermanently True toPermDelete) $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -226,7 +233,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -261,7 +268,7 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist αTest
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI αTest)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI αTest)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -271,10 +278,10 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         -- restore files
         let toRestore = φ MkPathI α
-        liftIO $ runReaderT (SafeRm.restore toRestore) env
+        liftIO $ usingSafeRmT env $ SafeRm.restore toRestore
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -308,7 +315,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist toDelete
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI toDelete)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI toDelete)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -322,7 +329,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow toRestore
         caughtEx <-
           liftIO $
-            (runReaderT (SafeRm.restore toRestore) env $> Nothing)
+            (usingSafeRmT env (SafeRm.restore toRestore) $> Nothing)
               `catch` \(ex :: ExceptionI SomeExceptions) -> do
                 pure $ Just ex
 
@@ -335,7 +342,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         annotateShow exs
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
@@ -371,7 +378,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist aTest
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI aTest)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI aTest)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -380,10 +387,10 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        liftIO $ runReaderT (SafeRm.empty True) env
+        liftIO $ usingSafeRmT env $ SafeRm.empty True
 
         -- get index
-        index <- view #unIndex <$> runReaderT SafeRm.getIndex env
+        index <- view #unIndex <$> usingSafeRmT env SafeRm.getIndex
         annotateShow index
 
         (∅) === index
@@ -412,7 +419,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesExist aTest
 
         -- delete files
-        liftIO $ runReaderT (SafeRm.delete (φ MkPathI aTest)) env
+        liftIO $ usingSafeRmT env $ SafeRm.delete (φ MkPathI aTest)
 
         -- assert original files moved to trash
         annotate "Assert files exist"
@@ -421,7 +428,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        metadata' <- liftIO $ runReaderT SafeRm.getMetadata env
+        metadata' <- liftIO $ usingSafeRmT env SafeRm.getMetadata
 
         length α === natToInt (metadata' ^. #numEntries)
         length α === natToInt (metadata' ^. #numFiles)
@@ -479,4 +486,14 @@ toOrigPath acc pd = Set.insert (pd ^. #originalPath % _MkPathI) acc
 --  }
 
 mkEnv :: FilePath -> Env
-mkEnv fp = MkEnv (MkPathI fp) False
+mkEnv fp =
+  MkEnv
+    { trashHome = MkPathI fp,
+      verbose = False,
+      logContext =
+        MkLogContext
+          { namespace = (∅),
+            logLevel = None
+          },
+      logPath = ""
+    }

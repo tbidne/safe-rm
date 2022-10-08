@@ -11,10 +11,13 @@ import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
+import Data.Text qualified as T
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Effects.Logger (Logger (addNamespace))
+import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Env (HasTrashHome, getTrashPaths)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -82,19 +85,26 @@ instance Pretty Metadata where
 -- @since 0.1
 getMetadata ::
   ( HasTrashHome env,
+    Logger m,
     MonadReader env m,
     MonadIO m
   ) =>
   m Metadata
-getMetadata = do
+getMetadata = addNamespace "getMetadata" $ do
   (trashHome@(MkPathI th), trashIndex) <- asks getTrashPaths
+  Logger.logDebug ("Trash home: " <> T.pack th)
   index <- view #unIndex <$> Index.readIndex trashIndex
   let numIndex = Map.size index
+  Logger.logDebug ("Index size: " <> showt numIndex)
   numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
+  Logger.logDebug ("Num entries: " <> showt numEntries)
   allFiles <- getAllFiles th
   allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
   let numFiles = length allFiles - 1
       normalized = Bytes.normalize (MkBytes @B allSizes)
+
+  Logger.logDebug ("Num all files: " <> showt numFiles)
+  Logger.logDebug ("Total size: " <> showt normalized)
 
   -- NOTE: Verify that sizes are the same. Because reading the index verifies
   -- that there are no duplicate entries and each entry corresponds to a real
@@ -120,7 +130,7 @@ getMetadata = do
     toNat :: Int -> Natural
     toNat = fromIntegral
 
-getAllFiles :: MonadIO m => FilePath -> m [FilePath]
+getAllFiles :: (Logger m, MonadIO m) => FilePath -> m [FilePath]
 getAllFiles fp =
   Dir.doesFileExist fp >>= \case
     True -> pure [fp]

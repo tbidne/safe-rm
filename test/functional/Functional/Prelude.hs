@@ -42,6 +42,14 @@ import UnliftIO.Environment qualified as SysEnv
 -- NOTE: The weird "hiding IO ... import IO" lines are so we don't trigger
 -- -Wunused-packages wrt base (interferes with ghcid)
 
+-- NOTE: If we ever want to test logging, two options:
+--
+-- 1. Do not use Runner's runSafeRm. Instead, use its withEnv function with our
+--    FunctionalIO, and ensure the latter implements Logger.
+--
+-- 2. Use golden tests for the logs. This will currently fail due to
+--    timestamps, so abstract that to its own typeclass.
+
 -- | @since 0.1
 newtype FunctionalIO a = MkFunctionalIO (ReaderT (IORef Text) IO a)
   deriving

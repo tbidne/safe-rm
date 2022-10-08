@@ -4,11 +4,14 @@
 module SafeRm.Data.Timestamp
   ( Timestamp (..),
     getCurrentLocalTime,
+    toString,
+    toText,
   )
 where
 
 import Data.ByteString.Char8 qualified as Char8
 import Data.Csv (FromField (parseField), ToField (toField))
+import Data.Text qualified as T
 import Data.Time.Format qualified as Format
 import Data.Time.LocalTime qualified as Local
 import Data.Time.LocalTime.Compat (LocalTime)
@@ -49,7 +52,7 @@ newtype Timestamp = MkTimestamp LocalTime
 
 -- | @since 0.1
 instance Pretty Timestamp where
-  pretty = fromString . toStr
+  pretty = fromString . toString
 
 -- | @since 0.1
 _MkTimestamp :: Iso' Timestamp LocalTime
@@ -68,7 +71,7 @@ instance FromField Timestamp where
 
 -- | @since 0.1
 instance ToField Timestamp where
-  toField = str2Bs . toStr
+  toField = str2Bs . toString
 
 -- | Retrieves the local time.
 --
@@ -77,12 +80,21 @@ getCurrentLocalTime :: MonadIO m => m Timestamp
 getCurrentLocalTime =
   MkTimestamp . Local.zonedTimeToLocalTime <$> liftIO Local.getZonedTime
 
-toStr :: Timestamp -> String
-toStr =
+-- | Formats the time.
+--
+-- @since 0.1
+toString :: Timestamp -> String
+toString =
   -- NOTE: If we ever handle timezones we will want to change this locale
   -- to one that handles more timezones (e.g see time-conv)
   Format.formatTime Format.defaultTimeLocale format
     . view _MkTimestamp
+
+-- | Formats the time.
+--
+-- @since 0.1
+toText :: Timestamp -> Text
+toText = T.pack . toString
 
 format :: String
 format = "%Y-%m-%d %H:%M:%S"

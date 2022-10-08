@@ -52,6 +52,10 @@ data PathIndex
     --
     -- @since 0.1
     TrashPath
+  | -- | The trash log file.
+    --
+    -- @since 0.1
+    TrashLog
 
 -- | Indexed 'FilePath' so that we can prevent mixing up different filepaths.
 --
