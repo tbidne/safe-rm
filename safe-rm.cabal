@@ -122,6 +122,7 @@ executable sr
   build-depends:
     , base
     , runner
+    , unliftio
 
   hs-source-dirs:     app
   ghc-options:        -threaded -with-rtsopts=-N

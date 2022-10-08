@@ -4,8 +4,8 @@
 module Main (main) where
 
 import SafeRm.Runner (runSafeRm)
+import System.Exit (exitFailure)
+import UnliftIO.Exception (catchAny)
 
 main :: IO ()
--- TODO: translate any exceptions here to exitFailure. Runner is already
--- logging them.
-main = runSafeRm
+main = runSafeRm `catchAny` const exitFailure
