@@ -98,7 +98,7 @@ runSafeRm = do
 
     handleEx ex = do
       -- TODO: maybe better logging here?
-      Logger.logException ex
+      Logger.logErrorException ex
       throwIO ex
 
 -- | Retrieves the configuration and runs the param function.

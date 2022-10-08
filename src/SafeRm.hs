@@ -84,7 +84,7 @@ delete paths = addNamespace "delete" $ do
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        Logger.logException ex
+        Logger.logWarnException ex
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -139,7 +139,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
             modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            Logger.logException ex
+            Logger.logWarnException ex
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
@@ -249,7 +249,7 @@ restore paths = addNamespace "restore" $ do
         modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        Logger.logException ex
+        Logger.logWarnException ex
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index

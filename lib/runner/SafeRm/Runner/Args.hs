@@ -236,7 +236,7 @@ fileLogLevelParser =
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
         [ OA.long "file-log-level",
-          OA.metavar "[none|error|info|debug]",
+          OA.metavar "[none|error|warn|info|debug]",
           OA.help "The file level in which to log. Defaults to none."
         ]
 
@@ -246,7 +246,7 @@ consoleLogLevelParser =
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
         [ OA.long "console-log-level",
-          OA.metavar "[none|error|info|debug]",
+          OA.metavar "[none|error|warn|info|debug]",
           OA.help "The console level in which to log. Defaults to error."
         ]
 

@@ -16,6 +16,7 @@ module SafeRm.Effects.Logger
 
     -- * Log Levels
     logError,
+    logWarn,
     logInfo,
     logDebug,
 
@@ -24,7 +25,8 @@ module SafeRm.Effects.Logger
     logString,
     logText,
     withExLogging,
-    logException,
+    logErrorException,
+    logWarnException,
 
     -- * Low level
     formatLog,
@@ -94,6 +96,10 @@ data LogLevel
     --
     -- @since 0.1
     Error
+  | -- | Log warn messages.
+    --
+    -- @since 0.1
+    Warn
   | -- | Log info messages.
     --
     -- @since 0.1
@@ -130,19 +136,25 @@ formatLog namespace lvl msg = do
     withBrackets False s = "[" <> s <> "]"
     withBrackets True s = "[" <> s <> "] "
 
--- | Logs at the 'Error' level with current time and guarding.
+-- | Logs at the 'Error'.
 --
 -- @since 0.1
 logError :: Logger m => Text -> m ()
 logError = logText Error
 
--- | Logs at the 'Info' level with current time and guarding.
+-- | Logs at the 'warn' level.
+--
+-- @since 0.1
+logWarn :: Logger m => Text -> m ()
+logWarn = logText Warn
+
+-- | Logs at the 'Info' level.
 --
 -- @since 0.1
 logInfo :: Logger m => Text -> m ()
 logInfo = logText Info
 
--- | Logs at the 'Debug' level with current time and guarding.
+-- | Logs at the 'Debug' level.
 --
 -- @since 0.1
 logDebug :: Logger m => Text -> m ()
@@ -152,7 +164,7 @@ logDebug = logText Debug
 --
 -- @since 0.1
 withExLogging :: (Logger m, MonadUnliftIO m) => m a -> m a
-withExLogging = handleAny $ \e -> logException e *> throwIO e
+withExLogging = handleAny $ \e -> logWarnException e *> throwIO e
 
 -- | Logs via show with current time and guarding.
 --
@@ -175,8 +187,14 @@ logText = putLog
 -- | Logs an 'Exception'. Uses 'logString' at the 'Error' level.
 --
 -- @since 0.1
-logException :: (Exception e, Logger m) => e -> m ()
-logException = logString Error . displayException
+logErrorException :: (Exception e, Logger m) => e -> m ()
+logErrorException = logString Error . displayException
+
+-- | Logs an 'Exception'. Uses 'logString' at the 'Warn' level.
+--
+-- @since 0.1
+logWarnException :: (Exception e, Logger m) => e -> m ()
+logWarnException = logString Warn . displayException
 
 -- | Parses a log level.
 --
@@ -184,11 +202,12 @@ logException = logString Error . displayException
 readLogLevel :: MonadFail m => Text -> m LogLevel
 readLogLevel "none" = pure None
 readLogLevel "error" = pure Error
+readLogLevel "warn" = pure Warn
 readLogLevel "info" = pure Info
 readLogLevel "debug" = pure Debug
 readLogLevel other =
   fail $
     mconcat
-      [ "Expected log-level [none|error|info|debug], received: ",
+      [ "Expected log-level [none|error|warn|info|debug], received: ",
         T.unpack other
       ]
