@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Provides the 'Logger' typeclass.
 --
 -- @since 0.1
@@ -12,202 +14,140 @@ module SafeRm.Effects.Logger
     LogLevel (..),
     readLogLevel,
 
-    -- ** Functions
+    -- * Functions
 
-    -- * Log Levels
-    logError,
-    logWarn,
-    logInfo,
-    logDebug,
+    -- ** TH
+    logErrorTH,
+    logWarnTH,
+    logInfoTH,
+    logDebugTH,
+    logShowTH,
+    logExceptionTH,
 
-    -- * High level
-    logShow,
-    logString,
-    logText,
-    withExLogging,
-    logErrorException,
-    logWarnException,
+    -- ** Non-TH
+    logErrorM,
+    logWarnM,
+    logInfoM,
+    logDebugM,
+    logShowM,
+    logExceptionM,
 
-    -- * Low level
-    formatLog,
+    -- ** Low level
+    logM,
+    logTH,
   )
 where
 
-import Data.Sequence qualified as Seq
 import Data.Text qualified as T
-import SafeRm.Data.Timestamp qualified as Timestamp
+import Language.Haskell.TH.Syntax (Exp, Loc (Loc), Q, qLocation)
+import Language.Haskell.TH.Syntax qualified as THS
+import SafeRm.Effects.Logger.Types
 import SafeRm.Prelude
 
--- | Contains context for logging.
+-- | Logs 'Error' with no location.
 --
 -- @since 0.1
-data LogContext = MkLogContext
-  { -- | List of namespaces.
-    --
-    -- @since 0.1
-    namespace :: !(Seq Text),
-    -- | The console level in which to log.
-    --
-    -- @since 0.1
-    consoleLogLevel :: !LogLevel,
-    -- | The file level in which to log.
-    --
-    -- @since 0.1
-    fileLogLevel :: !LogLevel
-  }
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
-    )
+logErrorM :: (Logger m, MonadIO m) => Text -> m ()
+logErrorM = logM Error
 
--- | Represents a terminal.
+-- | Logs 'Error' with location.
 --
 -- @since 0.1
-type Logger :: (Type -> Type) -> Constraint
-class Monad m => Logger m where
-  -- | Logs a string.
-  --
-  -- @since 0.1
-  putLog :: LogLevel -> Text -> m ()
+logErrorTH :: Q Exp
+logErrorTH = logTH Error
 
-  -- | Determines the level in which to log.
-  --
-  -- @since 0.1
-  getContext :: m LogContext
-
-  -- | Adds checkpoints.
-  --
-  -- @since 0.1
-  addNamespace :: Text -> m a -> m a
-
--- | Log levels.
+-- | Logs 'Warn' without location.
 --
 -- @since 0.1
-data LogLevel
-  = -- | No logging.
-    --
-    -- @since 0.1
-    None
-  | -- | Log error messages.
-    --
-    -- @since 0.1
-    Error
-  | -- | Log warn messages.
-    --
-    -- @since 0.1
-    Warn
-  | -- | Log info messages.
-    --
-    -- @since 0.1
-    Info
-  | -- | Log debug messages.
-    --
-    -- @since 0.1
-    Debug
-  deriving stock
-    ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Ord,
-      -- | @since 0.1
-      Show
-    )
+logWarnM :: (Logger m, MonadIO m) => Text -> m ()
+logWarnM = logM Warn
 
--- | Formats a log.
+-- | Logs 'Warn' with location.
 --
 -- @since 0.1
-formatLog :: MonadIO m => Seq Text -> LogLevel -> Text -> m Text
-formatLog namespace lvl msg = do
-  t <- Timestamp.toText <$> Timestamp.getCurrentLocalTime
-  let namespaces = foldMap' id $ Seq.intersperse "." namespace
-      formatted =
-        mconcat
-          [ withBrackets False t,
-            withBrackets False namespaces,
-            withBrackets True (showt lvl),
-            msg
-          ]
-  pure formatted
-  where
-    withBrackets False s = "[" <> s <> "]"
-    withBrackets True s = "[" <> s <> "] "
+logWarnTH :: Q Exp
+logWarnTH = logTH Warn
 
--- | Logs at the 'Error'.
+-- | Logs 'Info' without location.
 --
 -- @since 0.1
-logError :: Logger m => Text -> m ()
-logError = logText Error
+logInfoM :: (Logger m, MonadIO m) => Text -> m ()
+logInfoM = logM Info
 
--- | Logs at the 'warn' level.
+-- | Logs 'Info' with location.
 --
 -- @since 0.1
-logWarn :: Logger m => Text -> m ()
-logWarn = logText Warn
+logInfoTH :: Q Exp
+logInfoTH = logTH Info
 
--- | Logs at the 'Info' level.
+--- | Logs 'Debug' without location.
 --
 -- @since 0.1
-logInfo :: Logger m => Text -> m ()
-logInfo = logText Info
+logDebugM :: (Logger m, MonadIO m) => Text -> m ()
+logDebugM = logM Debug
 
--- | Logs at the 'Debug' level.
+-- | Logs 'Debug' with location.
 --
 -- @since 0.1
-logDebug :: Logger m => Text -> m ()
-logDebug = logText Debug
+logDebugTH :: Q Exp
+logDebugTH = logTH Debug
 
--- | Runs the action, logging any exceptions before rethrowing.
+-- | Logs 'Show' without location.
 --
 -- @since 0.1
-withExLogging :: (Logger m, MonadUnliftIO m) => m a -> m a
-withExLogging = handleAny $ \e -> logWarnException e *> throwIO e
+logShowM :: (Logger m, MonadIO m, Show a) => LogLevel -> a -> m ()
+logShowM lvl = logM lvl . showt
 
--- | Logs via show with current time and guarding.
+-- | Logs 'Show' with location.
 --
 -- @since 0.1
-logShow :: (Logger m, Show a) => LogLevel -> a -> m ()
-logShow lvl = logText lvl . showt
+logShowTH :: LogLevel -> Q Exp
+logShowTH lvl = [|log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl) . showt|]
 
--- | 'String' version of 'logText'.
+-- | Logs 'Exception' without location.
 --
 -- @since 0.1
-logString :: Logger m => LogLevel -> String -> m ()
-logString lvl = logText lvl . T.pack
+logExceptionM :: (Exception e, Logger m, MonadIO m) => LogLevel -> e -> m ()
+logExceptionM lvl = logM lvl . T.pack . displayException
 
--- | Alias for 'putLog'.
+-- | Logs 'Exception' with location.
 --
 -- @since 0.1
-logText :: Logger m => LogLevel -> Text -> m ()
-logText = putLog
+logExceptionTH :: LogLevel -> Q Exp
+logExceptionTH lvl =
+  [|
+    log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl)
+      . T.pack
+      . displayException
+    |]
 
--- | Logs an 'Exception'. Uses 'logString' at the 'Error' level.
+-- | Logs without location.
 --
 -- @since 0.1
-logErrorException :: (Exception e, Logger m) => e -> m ()
-logErrorException = logString Error . displayException
+logM :: (Logger m, MonadIO m) => LogLevel -> Text -> m ()
+logM = log' Nothing
 
--- | Logs an 'Exception'. Uses 'logString' at the 'Warn' level.
+-- | Logs with location.
 --
 -- @since 0.1
-logWarnException :: (Exception e, Logger m) => e -> m ()
-logWarnException = logString Warn . displayException
+logTH :: LogLevel -> Q Exp
+-- NOTE: can't use typed TH because it does not handle constraints correctly.
+logTH lvl = [|log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl)|]
 
--- | Parses a log level.
---
--- @since 0.1
-readLogLevel :: MonadFail m => Text -> m LogLevel
-readLogLevel "none" = pure None
-readLogLevel "error" = pure Error
-readLogLevel "warn" = pure Warn
-readLogLevel "info" = pure Info
-readLogLevel "debug" = pure Debug
-readLogLevel other =
-  fail $
-    mconcat
-      [ "Expected log-level [none|error|warn|info|debug], received: ",
-        T.unpack other
-      ]
+log' :: (Logger m, MonadIO m) => Maybe Loc -> LogLevel -> Text -> m ()
+log' mloc lvl txt = do
+  ctx <- getContext
+  let namespace = ctx ^. #namespace
+  for_ (ctx ^. #scribes) $ \(MkScribe logFn scribeLvl) -> do
+    when (lvl <= scribeLvl) $ liftIO $ logFn namespace mloc lvl txt
+
+liftLoc :: Loc -> Q Exp
+liftLoc (Loc a b c (d1, d2) (e1, e2)) =
+  [|
+    Loc
+      $(THS.lift a)
+      $(THS.lift b)
+      $(THS.lift c)
+      ($(THS.lift d1), $(THS.lift d2))
+      ($(THS.lift e1), $(THS.lift e2))
+    |]

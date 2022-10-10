@@ -28,8 +28,8 @@ tests =
     [ delete,
       permDelete,
       permDeleteForce,
-      empty,
-      emptyForce,
+      emptyTrash,
+      emptyTrashForce,
       restore,
       list,
       metadata
@@ -68,8 +68,8 @@ permDeleteForce = testCase "Parses perm delete with force" $ do
     argList = ["x", "-f", "foo", "bar"]
     expectedPaths = Just (True, "foo" :| ["bar"])
 
-empty :: TestTree
-empty = testCase "Parses empty" $ do
+emptyTrash :: TestTree
+emptyTrash = testCase "Parses empty" $ do
   defTrash <- getDefaultTrash
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 
@@ -78,8 +78,8 @@ empty = testCase "Parses empty" $ do
   where
     argList = ["e"]
 
-emptyForce :: TestTree
-emptyForce = testCase "Parses empty with force" $ do
+emptyTrashForce :: TestTree
+emptyTrashForce = testCase "Parses empty with force" $ do
   defTrash <- getDefaultTrash
   (env, cmd) <- SysEnv.withArgs argList getConfiguration
 

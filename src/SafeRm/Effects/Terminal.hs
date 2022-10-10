@@ -9,6 +9,7 @@ module SafeRm.Effects.Terminal
   )
 where
 
+import Control.Monad.Trans (MonadTrans (lift))
 import Data.Text qualified as T
 import SafeRm.Prelude
 import System.IO qualified as IO

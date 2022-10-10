@@ -34,8 +34,9 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.Logger
 import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.Logger.Types (LogLevel)
+import SafeRm.Effects.Logger.Types qualified as LogTypes
 import SafeRm.Prelude
 import SafeRm.Runner.Command
   ( Command
@@ -236,7 +237,7 @@ fileLogLevelParser =
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
         [ OA.long "file-log-level",
-          OA.metavar "[none|error|warn|info|debug]",
+          OA.metavar LogTypes.logLevelStrings,
           OA.help "The file level in which to log. Defaults to none."
         ]
 
@@ -246,7 +247,7 @@ consoleLogLevelParser =
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
         [ OA.long "console-log-level",
-          OA.metavar "[none|error|warn|info|debug]",
+          OA.metavar LogTypes.logLevelStrings,
           OA.help "The console level in which to log. Defaults to error."
         ]
 

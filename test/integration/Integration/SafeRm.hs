@@ -24,10 +24,8 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Effects.Logger
   ( LogContext (MkLogContext),
-    LogLevel (None),
-    consoleLogLevel,
-    fileLogLevel,
     namespace,
+    scribes,
   )
 import SafeRm.Env
   ( Env (MkEnv),
@@ -56,7 +54,7 @@ tests testDir =
       deleteSomePermanently testDir,
       restore testDir,
       restoreSome testDir,
-      empty testDir,
+      emptyTrash testDir,
       metadata testDir
     ]
 
@@ -370,8 +368,8 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
   where
     desc = "Some trash entries are restored, others error"
 
-empty :: IO FilePath -> TestTree
-empty mtestDir = askOption $ \(MkMaxRuns limit) ->
+emptyTrash :: IO FilePath -> TestTree
+emptyTrash mtestDir = askOption $ \(MkMaxRuns limit) ->
   testPropertyNamed "Empties the trash" "empty" $ do
     withTests limit $
       property $ do
@@ -401,7 +399,7 @@ empty mtestDir = askOption $ \(MkMaxRuns limit) ->
         assertFilesDoNotExist aTest
 
         -- empty trash
-        liftIO $ usingSafeRmT env $ SafeRm.empty True
+        liftIO $ usingSafeRmT env $ SafeRm.emptyTrash True
 
         -- get index
         index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
@@ -506,8 +504,7 @@ mkEnv fp =
       logContext =
         MkLogContext
           { namespace = (∅),
-            consoleLogLevel = None,
-            fileLogLevel = None
+            scribes = (∅)
           },
       fileLogPath = ""
     }

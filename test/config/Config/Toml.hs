@@ -9,10 +9,13 @@ module Config.Toml
 where
 
 import Config.Prelude
+import Data.HashMap.Strict qualified as Map
+import Data.List qualified as L
 import SafeRm.Data.Paths (PathI (MkPathI), (<//>))
-import SafeRm.Effects.Logger
-  ( LogContext (consoleLogLevel, fileLogLevel, namespace),
-    LogLevel (Debug, Error, Info, None),
+import SafeRm.Effects.Logger.Types
+  ( LogContext (namespace, scribes),
+    LogLevel (Debug, Error, Info),
+    Scribe (logLevel),
   )
 import SafeRm.Env (Env (fileLogPath, logContext, trashHome))
 import SafeRm.Runner (getConfiguration)
@@ -35,10 +38,10 @@ parsesExample = testCase "Parses Example" $ do
   "./tmp" @=? env ^. #trashHome
   "./tmp/.log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  Info @=? env ^. (#logContext % #consoleLogLevel)
-  Debug @=? env ^. (#logContext % #fileLogLevel)
+  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
   where
     argList = ["-c", "examples/config.toml", "d", "foo"]
+    scribes = [("console", Info), ("file", Debug)]
 
 argsOverridesToml :: TestTree
 argsOverridesToml = testCase "Args overrides Toml" $ do
@@ -47,8 +50,7 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
   "not-tmp" @=? env ^. #trashHome
   "not-tmp/.log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  Error @=? env ^. (#logContext % #consoleLogLevel)
-  None @=? env ^. (#logContext % #fileLogLevel)
+  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
   where
     argList =
       [ "-c",
@@ -58,10 +60,11 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
         "--console-log-level",
         "error",
         "--file-log-level",
-        "none",
+        "info",
         "d",
         "foo"
       ]
+    scribes = [("console", Error), ("file", Info)]
 
 defaultConfig :: TestTree
 defaultConfig = testCase "Default config" $ do
@@ -71,10 +74,15 @@ defaultConfig = testCase "Default config" $ do
   MkPathI defTrash @=? env ^. #trashHome
   MkPathI defTrash <//> ".log" @=? env ^. #fileLogPath
   ["runner"] @=? env ^. (#logContext % #namespace)
-  Error @=? env ^. (#logContext % #consoleLogLevel)
-  None @=? env ^. (#logContext % #fileLogLevel)
+  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
   where
     argList =
       [ "d",
         "foo"
       ]
+    scribes = [("console", Error)]
+
+scribeInfo :: HashMap Text Scribe -> [(Text, LogLevel)]
+scribeInfo = L.sortOn (view _1) . Map.foldMapWithKey f
+  where
+    f name scribe = [(name, scribe ^. #logLevel)]

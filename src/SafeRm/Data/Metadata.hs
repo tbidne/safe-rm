@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Provides metadata functionality.
 --
 -- @since 0.1
@@ -92,19 +94,19 @@ getMetadata ::
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
   (trashHome@(MkPathI th), trashIndex) <- asks getTrashPaths
-  Logger.logDebug ("Trash home: " <> T.pack th)
+  $(Logger.logDebugTH) ("Trash home: " <> T.pack th)
   index <- view #unIndex <$> Index.readIndex trashIndex
   let numIndex = Map.size index
-  Logger.logDebug ("Index size: " <> showt numIndex)
+  $(Logger.logDebugTH) ("Index size: " <> showt numIndex)
   numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
-  Logger.logDebug ("Num entries: " <> showt numEntries)
+  $(Logger.logDebugTH) ("Num entries: " <> showt numEntries)
   allFiles <- getAllFiles th
   allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
   let numFiles = length allFiles - 1
       normalized = Bytes.normalize (MkBytes @B allSizes)
 
-  Logger.logDebug ("Num all files: " <> showt numFiles)
-  Logger.logDebug ("Total size: " <> showt normalized)
+  $(Logger.logDebugTH) ("Num all files: " <> showt numFiles)
+  $(Logger.logDebugTH) ("Total size: " <> showt normalized)
 
   -- NOTE: Verify that sizes are the same. Because reading the index verifies
   -- that there are no duplicate entries and each entry corresponds to a real

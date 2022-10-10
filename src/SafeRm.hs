@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Provides functionality for moving a file to a trash location.
 --
@@ -7,7 +8,7 @@ module SafeRm
   ( -- * Delete
     delete,
     deletePermanently,
-    empty,
+    emptyTrash,
 
     -- * Restore
     restore,
@@ -67,7 +68,7 @@ delete ::
   m ()
 delete paths = addNamespace "delete" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
+  $(Logger.logDebugTH) (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
 
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
@@ -79,12 +80,12 @@ delete paths = addNamespace "delete" $ do
   addNamespace "deleting" $ for_ paths $ \fp ->
     ( do
         pd <- PathData.toPathData currTime trashHome fp
-        Logger.logDebug (showt pd)
+        $(Logger.logDebugTH) (showt pd)
         PathData.mvOriginalToTrash trashHome pd
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        Logger.logWarnException ex
+        $(Logger.logExceptionTH Warn) ex
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -98,7 +99,7 @@ delete paths = addNamespace "delete" $ do
     then Index.appendIndex indexPath (MkIndex deletedPaths)
     else Index.writeIndex indexPath (MkIndex deletedPaths)
 
-  Logger.logInfo ("Deleted: " <> showMapOrigPaths deletedPaths)
+  $(Logger.logInfoTH) ("Deleted: " <> showMapOrigPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust exceptions $
@@ -124,7 +125,7 @@ deletePermanently ::
   m ()
 deletePermanently force paths = addNamespace "deletePermanently" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
+  $(Logger.logDebugTH) (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
 
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
@@ -134,12 +135,12 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 
   let deleteFn pd =
         ( do
-            Logger.logDebug (showt pd)
+            $(Logger.logDebugTH) (showt pd)
             PathData.deletePathData trashHome pd
             modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            Logger.logWarnException ex
+            $(Logger.logExceptionTH Warn) ex
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
@@ -170,7 +171,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
   deletedPaths <- readIORef deletedPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ deletedPaths)
 
-  Logger.logInfo ("Deleted: " <> showMapTrashPaths deletedPaths)
+  $(Logger.logInfoTH) ("Deleted: " <> showMapTrashPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -190,11 +191,11 @@ getIndex ::
   m Index
 getIndex = addNamespace "getIndex" $ do
   indexPath <- asks getTrashIndex
-  Logger.logDebug (T.pack $ "Index path: " <> indexPath ^. _MkPathI)
+  $(Logger.logDebugTH) (T.pack $ "Index path: " <> indexPath ^. _MkPathI)
   Paths.applyPathI Dir.doesFileExist indexPath >>= \case
     True -> Index.readIndex indexPath
     False -> do
-      Logger.logDebug "Index does not exist."
+      $(Logger.logDebugTH) "Index does not exist."
       pure mempty
 
 -- | Retrieves metadata for the trash directory.
@@ -210,11 +211,11 @@ getMetadata ::
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
   trashHome <- asks getTrashHome
-  Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
+  $(Logger.logDebugTH) (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
     True -> Metadata.getMetadata
     False -> do
-      Logger.logDebug "Trash home directory does not exist."
+      $(Logger.logDebugTH) "Trash home directory does not exist."
       pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
@@ -233,7 +234,7 @@ restore ::
   m ()
 restore paths = addNamespace "restore" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  Logger.logDebug (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
+  $(Logger.logDebugTH) (T.pack $ "Trash home: " <> trashHome ^. _MkPathI)
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
@@ -244,19 +245,19 @@ restore paths = addNamespace "restore" $ do
   -- move trash paths back to original location
   addNamespace "restoring" $ for_ toRestore $ \pd ->
     ( do
-        Logger.logDebug (showt pd)
+        $(Logger.logDebugTH) (showt pd)
         PathData.mvTrashToOriginal trashHome pd
         modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        Logger.logWarnException ex
+        $(Logger.logExceptionTH Warn) ex
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
   restoredPaths <- readIORef restoredPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ restoredPaths)
 
-  Logger.logInfo ("Restored: " <> showMapOrigPaths restoredPaths)
+  $(Logger.logInfoTH) ("Restored: " <> showMapOrigPaths restoredPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -265,7 +266,7 @@ restore paths = addNamespace "restore" $ do
 -- | Empties the trash. Deletes the index file.
 --
 -- @since 0.1
-empty ::
+emptyTrash ::
   forall env m.
   ( HasTrashHome env,
     Logger m,
@@ -275,13 +276,13 @@ empty ::
   ) =>
   Bool ->
   m ()
-empty force = addNamespace "getMetadata" $ do
+emptyTrash force = addNamespace "getMetadata" $ do
   MkPathI trashHome <- asks getTrashHome
-  Logger.logDebug (T.pack $ "Trash home: " <> trashHome)
+  $(Logger.logDebugTH) (T.pack $ "Trash home: " <> trashHome)
   exists <- Dir.doesDirectoryExist trashHome
   if not exists
     then do
-      Logger.logDebug "Trash home does not exist."
+      $(Logger.logDebugTH) "Trash home does not exist."
       putStrLn $ trashHome <> " is empty."
     else
       if force
@@ -292,11 +293,11 @@ empty force = addNamespace "getMetadata" $ do
           c <- Ch.toLower <$> liftIO IO.getChar
           if
               | c == 'y' -> do
-                  Logger.logDebug "Deleting contents."
+                  $(Logger.logDebugTH) "Deleting contents."
                   Dir.removeDirectoryRecursive trashHome
                   putStrLn ""
               | c == 'n' -> do
-                  Logger.logDebug "Not deleting contents."
+                  $(Logger.logDebugTH) "Not deleting contents."
                   putStrLn ""
               | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 

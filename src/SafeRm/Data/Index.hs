@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Provides types.
 --
 -- @since 0.1
@@ -95,12 +97,12 @@ readIndex ::
   PathI TrashIndex ->
   m Index
 readIndex indexPath = addNamespace "readIndex" $ do
-  Logger.logDebug $ "Index path: " <> T.pack (indexPath ^. _MkPathI)
+  $(Logger.logDebugTH) $ "Index path: " <> T.pack (indexPath ^. _MkPathI)
   fmap MkIndex . readIndexWithFold foldVec $ indexPath
   where
     trashHome = Paths.indexToHome indexPath
     foldVec macc pd = do
-      Logger.logDebug $ "Found: " <> showt pd
+      $(Logger.logDebugTH) $ "Found: " <> showt pd
       acc <- macc
       throwIfDuplicates indexPath acc pd
       throwIfTrashNonExtant trashHome pd
@@ -167,7 +169,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     runFold macc (Nil Nothing "") = macc
     -- End of stream w/ an error.
     runFold _ (Nil (Just err) rest) = do
-      Logger.logError ("Error end of stream: " <> T.pack err)
+      $(Logger.logErrorTH) ("Error end of stream: " <> T.pack err)
       throwIO $
         MkExceptionI @ReadIndex
           ( indexPath,
@@ -181,13 +183,13 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- No errors but there is unconsumed input. This is probably impossible,
     -- but just to cover all cases...
     runFold _ (Nil _ rest) = do
-      Logger.logError ("Unconsumed input: " <> T.pack (lbsToStr rest))
+      $(Logger.logErrorTH) ("Unconsumed input: " <> T.pack (lbsToStr rest))
       throwIO $
         MkExceptionI @ReadIndex
           (indexPath, "Unconsumed input: " <> lbsToStr rest)
     -- Encountered an error.
     runFold _ (Cons (Left err) _) = do
-      Logger.logError ("Error reading stream: " <> T.pack err)
+      $(Logger.logErrorTH) ("Error reading stream: " <> T.pack err)
       throwIO $ MkExceptionI @ReadIndex (indexPath, err)
     -- Inductive case, run fold and recurse
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest

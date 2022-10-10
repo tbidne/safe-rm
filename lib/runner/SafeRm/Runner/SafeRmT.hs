@@ -5,21 +5,21 @@ module SafeRm.Runner.SafeRmT
   ( SafeRmT,
     runSafeRmT,
     usingSafeRmT,
+    -- putLogFile,
   )
 where
 
-import Data.ByteString qualified as BS
-import Data.Text.Encoding qualified as TEnc
-import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Effects.Logger
-  ( LogContext (consoleLogLevel, fileLogLevel, namespace),
-    Logger (addNamespace, getContext, putLog),
+  ( LogContext (namespace),
+    Logger (addNamespace, getContext),
   )
 import SafeRm.Effects.Logger qualified as Logger
-import SafeRm.Effects.Terminal (Terminal, putTextLn)
-import SafeRm.Env (Env (fileLogPath, logContext))
+import SafeRm.Effects.Terminal (Terminal)
+import SafeRm.Env (Env (logContext))
 import SafeRm.Prelude
-import UnliftIO.Directory qualified as Dir
+
+-- import System.Console.Pretty (Color)
+-- import System.Console.Pretty qualified as P
 
 -- | `SafeRmT` is the main application type that runs shell commands.
 --
@@ -45,24 +45,10 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
     via (ReaderT env m)
 
 -- | @since 0.1
-instance (MonadIO m, Terminal m) => Logger (SafeRmT Env m) where
-  putLog lvl msg = do
-    consoleLogLevel <- asks (view (#logContext % #consoleLogLevel))
-    fileLogLevel <- asks (view (#logContext % #fileLogLevel))
-    MkPathI fileLogPath <- asks (view #fileLogPath)
-    namespace <- view #namespace <$> getContext
-    formatted <- Logger.formatLog namespace lvl msg
-
-    when (lvl <= consoleLogLevel) (putTextLn formatted)
-    when (lvl <= fileLogLevel) $ do
-      exists <- Dir.doesFileExist fileLogPath
-      let formatted' = formatted <> "\n"
-      liftIO $
-        if exists
-          then BS.appendFile fileLogPath (TEnc.encodeUtf8 formatted')
-          else BS.writeFile fileLogPath (TEnc.encodeUtf8 formatted')
-
+instance Monad m => Logger (SafeRmT Env m) where
   getContext = asks (view #logContext)
+
+  localContext = local . over' #logContext
 
   addNamespace t = local (over' (#logContext % #namespace) appendNS)
     where

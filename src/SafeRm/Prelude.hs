@@ -20,7 +20,7 @@ module SafeRm.Prelude
 where
 
 import Control.Applicative as X
-  ( Alternative ((<|>)),
+  ( Alternative (empty, (<|>)),
     Applicative (pure, (<*>)),
     (*>),
   )
@@ -43,7 +43,6 @@ import Control.Monad.Reader as X
     local,
     runReaderT,
   )
-import Control.Monad.Trans as X (MonadTrans (lift))
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)
@@ -63,7 +62,11 @@ import Data.List as X (zipWith)
 import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe)
 import Data.Monoid as X (Monoid (mconcat, mempty))
-import Data.Ord as X (Ord (compare, (<=), (>), (>=)), Ordering (EQ, GT, LT))
+import Data.Ord as X
+  ( Ord (compare, (<=), (>), (>=)),
+    Ordering (EQ, GT, LT),
+    min,
+  )
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq, (<|), (|>))
@@ -90,6 +93,7 @@ import Optics.Core as X
     iso,
     over',
     review,
+    set',
     view,
     (%),
     (^.),

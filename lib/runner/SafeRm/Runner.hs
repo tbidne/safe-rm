@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | This modules provides an executable for running safe-rm.
 --
@@ -14,22 +15,25 @@ module SafeRm.Runner
 where
 
 import Data.ByteString qualified as BS
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding qualified as TEnc
 import SafeRm qualified
-import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome), (<//>))
-import SafeRm.Effects.Logger
-  ( LogContext
-      ( MkLogContext,
-        consoleLogLevel,
-        fileLogLevel,
-        namespace
-      ),
-    LogLevel (Error, None),
-    Logger,
+import SafeRm.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (TrashHome, TrashLog),
+    (<//>),
   )
 import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.Logger.Format
+import SafeRm.Effects.Logger.Format qualified as Format
+import SafeRm.Effects.Logger.Types
+  ( LogContext (MkLogContext, namespace, scribes),
+    LogLevel (Error),
+    Logger,
+    Scribe (MkScribe, logLevel, logger),
+  )
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Env
   ( Env
@@ -88,7 +92,7 @@ runSafeRm = do
       Delete paths -> SafeRm.delete (listToSet paths)
       DeletePerm force paths ->
         SafeRm.deletePermanently force (listToSet paths)
-      Empty force -> SafeRm.empty force
+      Empty force -> SafeRm.emptyTrash force
       Restore paths -> SafeRm.restore (listToSet paths)
       List -> printIndex *> printMetadata
       Metadata -> printMetadata
@@ -97,9 +101,14 @@ runSafeRm = do
     doNothingOnSuccess ex = throwIO ex
 
     handleEx ex = do
-      -- TODO: maybe better logging here?
-      Logger.logErrorException ex
+      -- REVIEW: is this good enough?
+      -- Logger.localContext consoleLoggingOff $
+      $(Logger.logExceptionTH Error) ex
       throwIO ex
+
+-- consoleLoggingOff :: LogContext -> LogContext
+-- consoleLoggingOff =
+--  over' #scribes (Map.filterWithKey (\k _ -> k /= "console"))
 
 -- | Retrieves the configuration and runs the param function.
 --
@@ -142,9 +151,8 @@ getConfiguration = do
   let fileLogPath = trashHome <//> ".log"
       logContext =
         MkLogContext
-          { consoleLogLevel = fromMaybe Error (mergedConfig ^. #consoleLogLevel),
-            fileLogLevel = fromMaybe None (mergedConfig ^. #fileLogLevel),
-            namespace = ["runner"]
+          { namespace = ["runner"],
+            scribes = mkScribes mergedConfig fileLogPath
           }
       env =
         MkEnv
@@ -163,6 +171,50 @@ getConfiguration = do
       case TOML.decode contents of
         Right cfg -> pure cfg
         Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
+
+mkScribes :: TomlConfig -> PathI TrashLog -> HashMap Text Scribe
+mkScribes mergedConfig (MkPathI trashLog) = Map.fromList scribes
+  where
+    scribes =
+      ("console", consoleScribe) : mfileScribe
+    -- Default to no file scribe. Only provide one if the user asks for it.
+    mfileScribe = maybe [] lvlToScribe (mergedConfig ^. #fileLogLevel)
+    lvlToScribe = (: []) . ("file",) . mkFileScribe
+
+    -- Log to file. Full decoration.
+    mkFileScribe fileLevel =
+      MkScribe
+        { logger = \ns mloc lvl msg -> do
+            let fmt =
+                  MkLogFormat
+                    { logLoc = LogLocPartial <$> mloc,
+                      namespace = Just ns,
+                      withTimestamp = True,
+                      newline = True
+                    }
+            exists <- Dir.doesFileExist trashLog
+            formatted <- Format.formatLog fmt lvl msg
+            -- TODO: just create the file in our setup so we are not doing this
+            -- check every time.
+            if exists
+              then BS.appendFile trashLog (TEnc.encodeUtf8 formatted)
+              else BS.writeFile trashLog (TEnc.encodeUtf8 formatted),
+          logLevel = fileLevel
+        }
+    -- Log to console. Limited decoration.
+    consoleScribe =
+      MkScribe
+        { logger = \_ _ lvl msg -> do
+            let fmt =
+                  MkLogFormat
+                    { logLoc = Nothing,
+                      namespace = Nothing,
+                      withTimestamp = False,
+                      newline = False
+                    }
+            Format.formatLog fmt lvl msg >>= putTextLn,
+          logLevel = fromMaybe Error (mergedConfig ^. #consoleLogLevel)
+        }
 
 printIndex ::
   ( HasTrashHome env,

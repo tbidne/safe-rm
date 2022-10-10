@@ -14,12 +14,12 @@ tests :: IO TestArgs -> TestTree
 tests args =
   testGroup
     "Empty (e)"
-    [ empty args,
-      emptyTwice args
+    [ emptyTrash args,
+      emptyTrashTwice args
     ]
 
-empty :: IO TestArgs -> TestTree
-empty args = testCase "Empties trash" $ do
+emptyTrash :: IO TestArgs -> TestTree
+emptyTrash args = testCase "Empties trash" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "e1"
       trashDir = testDir </> ".trash"
@@ -105,8 +105,8 @@ empty args = testCase "Empties trash" $ do
         Prefix "Size:"
       ]
 
-emptyTwice :: IO TestArgs -> TestTree
-emptyTwice args = testCase "Calling empty twice does not error" $ do
+emptyTrashTwice :: IO TestArgs -> TestTree
+emptyTrashTwice args = testCase "Calling empty twice does not error" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "e1"
       trashDir = testDir </> ".trash"

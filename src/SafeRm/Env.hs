@@ -15,7 +15,7 @@ import SafeRm.Data.Paths
     PathIndex (TrashHome, TrashIndex, TrashLog),
     liftPathI,
   )
-import SafeRm.Effects.Logger (LogContext)
+import SafeRm.Effects.Logger.Types (LogContext)
 import SafeRm.Prelude
 
 -- | Class for retrieving the trash home.
@@ -57,11 +57,7 @@ data Env = MkEnv
   }
   deriving stock
     ( -- | @since 0.1
-      Eq,
-      -- | @since 0.1
-      Generic,
-      -- | @since 0.1
-      Show
+      Generic
     )
   deriving anyclass
     ( -- | @since 0.1
