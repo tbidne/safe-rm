@@ -5,7 +5,6 @@
 -- @since 0.1
 module SafeRm.Exceptions
   ( ExceptionI (..),
-    _MkExceptionI,
     ExceptionIndex (..),
     ExceptionF,
   )
@@ -117,10 +116,6 @@ instance (Show (ExceptionF i), Typeable i) => Show (ExceptionI i) where
 
 -- | @since 0.1
 deriving anyclass instance NFData (ExceptionF i) => NFData (ExceptionI i)
-
--- | @since 0.1
-_MkExceptionI :: Iso' (ExceptionI i) (ExceptionF i)
-_MkExceptionI = iso (\(MkExceptionI e) -> e) MkExceptionI
 
 -- | @since 0.1
 instance Exception (ExceptionI PathNotFound) where

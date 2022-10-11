@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides CLI args functionality.
 --
@@ -47,12 +48,6 @@ import SafeRm.Runner.Command
       ),
   )
 
--- | Retrieves CLI args.
---
--- @since 0.1
-getArgs :: IO Args
-getArgs = OA.execParser parserInfoArgs
-
 -- | CLI args.
 --
 -- @since 0.1
@@ -86,6 +81,14 @@ data Args = MkArgs
       -- | @since 0.1
       Show
     )
+
+makeFieldLabelsNoPrefix ''Args
+
+-- | Retrieves CLI args.
+--
+-- @since 0.1
+getArgs :: IO Args
+getArgs = OA.execParser parserInfoArgs
 
 parserInfoArgs :: ParserInfo Args
 parserInfoArgs =

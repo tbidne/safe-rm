@@ -16,13 +16,8 @@ import Integration.MaxRuns (MaxRuns (MkMaxRuns))
 import Integration.Prelude
 import Katip qualified as K
 import SafeRm qualified
-import SafeRm.Data.Index (Index (unIndex))
-import SafeRm.Data.Metadata (Metadata (numEntries, numFiles))
-import SafeRm.Data.PathData (PathData (originalPath))
-import SafeRm.Data.Paths
-  ( PathI (MkPathI),
-    _MkPathI,
-  )
+import SafeRm.Data.PathData (PathData)
+import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Env
   ( Env (MkEnv),
     logContexts,
@@ -488,7 +483,7 @@ genChar = Gen.filterT (not . badChars) Gen.unicode
     badChars c = Ch.isControl c || L.elem c ['/', '.']
 
 toOrigPath :: HashSet FilePath -> PathData -> HashSet FilePath
-toOrigPath acc pd = Set.insert (pd ^. #originalPath % _MkPathI) acc
+toOrigPath acc pd = Set.insert (pd ^. #originalPath % #unPathI) acc
 
 -- data Env = MkEnv
 --  { trashHome

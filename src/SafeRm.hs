@@ -32,7 +32,6 @@ import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (OriginalPath, TrashName),
-    _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp qualified as Timestamp
@@ -124,7 +123,7 @@ deletePermanently ::
   m ()
 deletePermanently force paths = katipAddNamespace "deletePermanently" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  $(K.logTM) DebugS (K.ls $ "TrashHome: " <> trashHome ^. _MkPathI)
+  $(K.logTM) DebugS (K.ls $ "TrashHome: " <> trashHome ^. #unPathI)
 
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
@@ -189,7 +188,7 @@ getIndex ::
   m Index
 getIndex = katipAddNamespace "getIndex" $ do
   indexPath <- asks getTrashIndex
-  $(K.logTM) DebugS (K.ls $ "Index path: " <> indexPath ^. _MkPathI)
+  $(K.logTM) DebugS (K.ls $ "Index path: " <> indexPath ^. #unPathI)
   Paths.applyPathI Dir.doesFileExist indexPath >>= \case
     True -> Index.readIndex indexPath
     False -> do
@@ -306,7 +305,7 @@ showMapOrigPaths = showMapElems #originalPath
 showMapElems :: Lens' PathData (PathI i) -> HashMap (PathI TrashName) PathData -> Text
 showMapElems toPathI =
   foldl' foldStrs ""
-    . fmap (T.pack . view (toPathI % _MkPathI))
+    . fmap (T.pack . view (toPathI % #unPathI))
     . Map.elems
   where
     foldStrs acc s = ("- " <> s <> "\n") <> acc
@@ -318,4 +317,4 @@ noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout
 
 logTrashHome :: KatipContext m => PathI i -> m ()
 logTrashHome trashHome =
-  $(K.logTM) DebugS (K.ls $ "Trash home: " <> trashHome ^. _MkPathI)
+  $(K.logTM) DebugS (K.ls $ "Trash home: " <> trashHome ^. #unPathI)

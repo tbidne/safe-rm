@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides types.
 --
@@ -47,7 +49,6 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (OriginalPath, TrashHome, TrashName, TrashPath),
     (<//>),
-    _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp (Timestamp)
@@ -99,6 +100,8 @@ data PathData = MkPathData
       ToRecord
     )
 
+makeFieldLabelsNoPrefix ''PathData
+
 -- | @since 0.1
 instance FromNamedRecord PathData where
   parseNamedRecord m =
@@ -130,8 +133,8 @@ instance Pretty PathData where
       strs = zipWith (flip ($)) headerNames labelFn
       labelFn =
         [ \x -> x <> ":     " <+> pretty (pd ^. #pathType),
-          \x -> x <> ":     " <+> pretty (pd ^. #fileName % _MkPathI),
-          \x -> x <> ": " <+> pretty (pd ^. #originalPath % _MkPathI),
+          \x -> x <> ":     " <+> pretty (pd ^. #fileName % #unPathI),
+          \x -> x <> ": " <+> pretty (pd ^. #originalPath % #unPathI),
           \x -> x <> ":  " <+> pretty (pd ^. #created)
         ]
 
@@ -190,7 +193,7 @@ toPathData currTime trashHome originalPath = do
                 pathType = PathTypeDirectory,
                 created = currTime
               }
-        else throwIO $ MkExceptionI @PathNotFound (origPath ^. _MkPathI)
+        else throwIO $ MkExceptionI @PathNotFound (origPath ^. #unPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -261,11 +264,11 @@ mvTrashToOriginal (MkPathI trashHome) pd = do
   when exists $
     throwIO $
       MkExceptionI @RestoreCollision (fileName, originalPath)
-  renameFn trashPath (pd ^. #originalPath % _MkPathI)
+  renameFn trashPath (pd ^. #originalPath % #unPathI)
   where
     originalPath = pd ^. #originalPath
     fileName = pd ^. #fileName
-    trashPath = trashHome </> (fileName ^. _MkPathI)
+    trashPath = trashHome </> (fileName ^. #unPathI)
     renameFn = case pd ^. #pathType of
       PathTypeFile -> Dir.renameFile
       PathTypeDirectory -> Dir.renameDirectory
@@ -280,7 +283,7 @@ deletePathData ::
   m ()
 deletePathData (MkPathI trashHome) pd = Dir.removePathForcibly trashPath
   where
-    trashPath = trashHome </> (pd ^. #fileName % _MkPathI)
+    trashPath = trashHome </> (pd ^. #fileName % #unPathI)
 
 -- | Moves the 'PathData'\'s @originalPath@ to the trash.
 --
@@ -291,7 +294,7 @@ mvOriginalToTrash ::
   PathData ->
   m ()
 mvOriginalToTrash trashHome pd =
-  renameFn (pd ^. #originalPath % _MkPathI) trashPath
+  renameFn (pd ^. #originalPath % #unPathI) trashPath
   where
     MkPathI trashPath = pathDataToTrashPath trashHome pd
     renameFn = case pd ^. #pathType of
@@ -309,7 +312,7 @@ trashPathExists ::
   m Bool
 trashPathExists (MkPathI trashHome) pd = existsFn trashPath
   where
-    trashPath = trashHome </> (pd ^. #fileName % _MkPathI)
+    trashPath = trashHome </> (pd ^. #fileName % #unPathI)
     existsFn = case pd ^. #pathType of
       PathTypeFile -> Dir.doesFileExist
       PathTypeDirectory -> Dir.doesDirectoryExist
@@ -322,7 +325,7 @@ originalPathExists ::
   MonadIO m =>
   PathData ->
   m Bool
-originalPathExists pd = existsFn (pd ^. #originalPath % _MkPathI)
+originalPathExists pd = existsFn (pd ^. #originalPath % #unPathI)
   where
     existsFn = case pd ^. #pathType of
       PathTypeFile -> Dir.doesFileExist

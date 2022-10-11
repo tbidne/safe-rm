@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides types.
 --
@@ -32,7 +33,6 @@ import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashName),
-    _MkPathI,
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Exceptions
@@ -73,6 +73,8 @@ newtype Index = MkIndex
     )
     via (HashMap (PathI TrashName) PathData)
 
+makeFieldLabelsNoPrefix ''Index
+
 -- | @since 0.1
 instance Pretty Index where
   pretty =
@@ -94,7 +96,7 @@ readIndex ::
   PathI TrashIndex ->
   m Index
 readIndex indexPath = katipAddNamespace "readIndex" $ do
-  $(K.logTM) DebugS (K.ls $ "Index path: " <> (indexPath ^. _MkPathI))
+  $(K.logTM) DebugS (K.ls $ "Index path: " <> (indexPath ^. #unPathI))
   fmap MkIndex . readIndexWithFold foldVec $ indexPath
   where
     trashHome = Paths.indexToHome indexPath
@@ -134,7 +136,7 @@ searchIndex keys (MkIndex index) =
           -- Nevertheless we turn these into exceptions since it makes the
           -- callers' lives easier.
           prependEx
-            (MkExceptionI @PathNotFound (view _MkPathI trashKey))
+            (MkExceptionI @PathNotFound (view #unPathI trashKey))
             acc
         Just pd -> (exs, Set.insert pd found)
     prependEx ex = over' _1 (toException ex :)

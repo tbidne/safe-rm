@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides metadata functionality.
 --
@@ -15,7 +16,6 @@ import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
 import Katip qualified as K
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
-import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Env (HasTrashHome, getTrashPaths)
@@ -56,6 +56,8 @@ data Metadata = MkMetadata
     ( -- | @since 0.1
       NFData
     )
+
+makeFieldLabelsNoPrefix ''Metadata
 
 -- | @since 0.1
 instance Semigroup Metadata where

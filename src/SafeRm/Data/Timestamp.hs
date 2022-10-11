@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Timestamp functionality.
 --
 -- @since 0.1
@@ -29,7 +32,9 @@ import SafeRm.Prelude
 -- | Represents a point in time.
 --
 -- @since 0.1
-newtype Timestamp = MkTimestamp LocalTime
+newtype Timestamp = MkTimestamp
+  { unTimestamp :: LocalTime
+  }
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -50,13 +55,11 @@ newtype Timestamp = MkTimestamp LocalTime
     )
     via LocalTime
 
+makeFieldLabelsNoPrefix ''Timestamp
+
 -- | @since 0.1
 instance Pretty Timestamp where
   pretty = fromString . toString
-
--- | @since 0.1
-_MkTimestamp :: Iso' Timestamp LocalTime
-_MkTimestamp = iso (\(MkTimestamp x) -> x) MkTimestamp
 
 -- | @since 0.1
 instance FromField Timestamp where
@@ -88,7 +91,7 @@ toString =
   -- NOTE: If we ever handle timezones we will want to change this locale
   -- to one that handles more timezones (e.g see time-conv)
   Format.formatTime Format.defaultTimeLocale format
-    . view _MkTimestamp
+    . view #unTimestamp
 
 -- | Formats the time.
 --

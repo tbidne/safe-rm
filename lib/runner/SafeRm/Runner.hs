@@ -40,7 +40,7 @@ import SafeRm.Exceptions
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Runner.Args (Args (command, tomlConfigPath), getArgs)
+import SafeRm.Runner.Args (getArgs)
 import SafeRm.Runner.Command
   ( Command
       ( Delete,

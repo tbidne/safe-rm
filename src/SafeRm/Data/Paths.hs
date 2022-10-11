@@ -1,10 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides functionality for distinguishing path types.
 --
 -- @since 0.1
 module SafeRm.Data.Paths
   ( -- * Types
     PathI (..),
-    _MkPathI,
     PathIndex (..),
 
     -- * Functions
@@ -61,7 +63,9 @@ data PathIndex
 --
 -- @since 0.1
 type PathI :: PathIndex -> Type
-newtype PathI (i :: PathIndex) = MkPathI FilePath
+newtype PathI (i :: PathIndex) = MkPathI
+  { unPathI :: FilePath
+  }
   deriving stock
     ( -- | @since 0.1
       Eq,
@@ -92,9 +96,7 @@ newtype PathI (i :: PathIndex) = MkPathI FilePath
     )
     via FilePath
 
--- | @since 0.1
-_MkPathI :: Iso' (PathI i) FilePath
-_MkPathI = iso (\(MkPathI fp) -> fp) MkPathI
+makeFieldLabelsNoPrefix ''PathI
 
 -- | Modifies the index.
 --
@@ -133,7 +135,7 @@ liftPathIF' = liftPathIF
 --
 -- @since 0.1
 applyPathI :: (FilePath -> a) -> PathI i -> a
-applyPathI f = f . view _MkPathI
+applyPathI f = f . view #unPathI
 
 -- | Returns the trash index's home directory.
 --

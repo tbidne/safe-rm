@@ -13,7 +13,7 @@ where
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
 import SafeRm.Effects.Logger (readLogLevel)
 import SafeRm.Prelude
-import SafeRm.Runner.Args (Args (consoleLog, fileLog, trashHome))
+import SafeRm.Runner.Args (Args)
 import TOML
   ( DecodeTOML (..),
     getFieldOptWith,
@@ -35,6 +35,8 @@ data TomlConfig = MkTomlConfig
       -- | @since 0.1
       Show
     )
+
+makeFieldLabelsNoPrefix ''TomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
@@ -72,5 +74,3 @@ argsToTomlConfig args =
       fileLog = args ^. #fileLog,
       consoleLog = args ^. #consoleLog
     }
-
-makeFieldLabelsNoPrefix ''TomlConfig
