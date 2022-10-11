@@ -95,10 +95,6 @@ type family ExceptionF e where
 -- @since 0.1
 type ExceptionI :: ExceptionIndex -> Type
 newtype ExceptionI i = MkExceptionI (ExceptionF i)
-  deriving stock
-    ( -- | @since 0.1
-      Generic
-    )
 
 -- | @since 0.1
 deriving stock instance Eq (ExceptionF i) => Eq (ExceptionI i)
@@ -113,9 +109,6 @@ instance (Show (ExceptionF i), Typeable i) => Show (ExceptionI i) where
     where
       baseName = "MkExceptionI (" <> show rep <> ") "
       rep = typeOf @(Proxy i) Proxy
-
--- | @since 0.1
-deriving anyclass instance NFData (ExceptionF i) => NFData (ExceptionI i)
 
 -- | @since 0.1
 instance Exception (ExceptionI PathNotFound) where

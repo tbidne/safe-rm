@@ -58,13 +58,11 @@ data Env = MkEnv
     logContexts :: !LogContexts,
     logNamespace :: !Namespace
   }
-  deriving stock
-    ( -- | @since 0.1
-      Generic
-    )
-  deriving anyclass
-    ( -- | @since 0.1
-      HasTrashHome
-    )
 
 makeFieldLabelsNoPrefix ''Env
+
+-- NOTE: manual because if we derive it anyclass then, because of TH
+-- restrictions, the default signature actually can't see the instance.
+-- It uses the 'Generic' optics implementation instead, if it exists.
+instance HasTrashHome Env where
+  getTrashHome = view #trashHome
