@@ -40,7 +40,7 @@ delete = testCase "Parses delete" $ do
   Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _Delete
   where
-    argList = ["d", "foo", "bar"]
+    argList = ["d", "foo", "bar", "-c", "none"]
     expectedPaths = Just $ "foo" :| ["bar"]
 
 permDelete :: TestTree
@@ -50,7 +50,7 @@ permDelete = testCase "Parses perm delete" $ do
   Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _DeletePerm
   where
-    argList = ["x", "foo", "bar"]
+    argList = ["x", "foo", "bar", "-c", "none"]
     expectedPaths = Just (False, "foo" :| ["bar"])
 
 permDeleteForce :: TestTree
@@ -60,7 +60,7 @@ permDeleteForce = testCase "Parses perm delete with force" $ do
   Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _DeletePerm
   where
-    argList = ["x", "-f", "foo", "bar"]
+    argList = ["x", "-f", "foo", "bar", "-c", "none"]
     expectedPaths = Just (True, "foo" :| ["bar"])
 
 emptyTrash :: TestTree
@@ -70,7 +70,7 @@ emptyTrash = testCase "Parses empty" $ do
   Nothing @=? cfg ^. #trashHome
   Just False @=? cmd ^? _Empty
   where
-    argList = ["e"]
+    argList = ["e", "-c", "none"]
 
 emptyTrashForce :: TestTree
 emptyTrashForce = testCase "Parses empty with force" $ do
@@ -79,7 +79,7 @@ emptyTrashForce = testCase "Parses empty with force" $ do
   Nothing @=? cfg ^. #trashHome
   Just True @=? cmd ^? _Empty
   where
-    argList = ["e", "-f"]
+    argList = ["e", "-f", "-c", "none"]
 
 restore :: TestTree
 restore = testCase "Parses restore" $ do
@@ -88,7 +88,7 @@ restore = testCase "Parses restore" $ do
   Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _Restore
   where
-    argList = ["r", "foo", "bar"]
+    argList = ["r", "foo", "bar", "-c", "none"]
     expectedPaths = Just $ "foo" :| ["bar"]
 
 list :: TestTree
@@ -98,7 +98,7 @@ list = testCase "Parses list" $ do
   Nothing @=? cfg ^. #trashHome
   Just () @=? cmd ^? _List
   where
-    argList = ["l"]
+    argList = ["l", "-c", "none"]
 
 metadata :: TestTree
 metadata = testCase "Parses metadata" $ do
@@ -107,4 +107,4 @@ metadata = testCase "Parses metadata" $ do
   Nothing @=? cfg ^. #trashHome
   Just () @=? cmd ^? _Metadata
   where
-    argList = ["m"]
+    argList = ["m", "-c", "none"]

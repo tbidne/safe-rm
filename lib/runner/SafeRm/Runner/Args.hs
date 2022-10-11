@@ -7,6 +7,10 @@
 module SafeRm.Runner.Args
   ( getArgs,
     Args (..),
+    TomlConfigPath (..),
+    _TomlNone,
+    _TomlDefault,
+    _TomlPath,
   )
 where
 
@@ -48,6 +52,31 @@ import SafeRm.Runner.Command
       ),
   )
 
+-- | Toml path config.
+--
+-- @since 0.1
+data TomlConfigPath
+  = -- | Do not use any Toml config.
+    --
+    -- @since 0.1
+    TomlNone
+  | -- | Attempts to read the Toml file at the default path.
+    --
+    -- @since 0.1
+    TomlDefault
+  | -- | Path to Toml file.
+    --
+    -- @since 0.1
+    TomlPath !FilePath
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
+makePrisms ''TomlConfigPath
+
 -- | CLI args.
 --
 -- @since 0.1
@@ -55,7 +84,7 @@ data Args = MkArgs
   { -- | Path to toml config.
     --
     -- @since 0.1
-    tomlConfigPath :: !(Maybe FilePath),
+    tomlConfigPath :: !TomlConfigPath,
     -- | Path to trash home.
     --
     -- @since 0.1
@@ -139,23 +168,29 @@ version = OA.infoOption txt (OA.long "version")
 versNum :: String
 versNum = "Version: " <> $$(PV.packageVersionStringTH "safe-rm.cabal")
 
-configParser :: Parser (Maybe FilePath)
+configParser :: Parser TomlConfigPath
 configParser =
-  A.optional
-    $ OA.option
-      OA.str
+  OA.option
+    readTomlPath
     $ mconcat
-      [ OA.long "config",
+      [ OA.value TomlDefault,
+        OA.long "config",
         OA.short 'c',
-        OA.metavar "PATH",
+        OA.metavar "[none|PATH]",
         OA.help helpTxt
       ]
   where
     helpTxt =
       mconcat
-        [ "Path to the toml config file. If none is given we default to ",
-          "the xdg config directory e.g. ~/.config/safe-rm/config.toml"
+        [ "Path to the toml config file. Can be the string 'none' -- in which ",
+          "case no toml config is used -- or a path to the config file. If ",
+          "not specified then we look in the xdg config directory ",
+          "e.g. ~/.config/safe-rm/config.toml"
         ]
+    readTomlPath =
+      OA.str >>= \case
+        "none" -> pure TomlNone
+        path -> pure $ TomlPath path
 
 commandParser :: Parser Command
 commandParser =

@@ -63,5 +63,7 @@ defaultConfig = testCase "Default config" $ do
   where
     argList =
       [ "d",
-        "foo"
+        "foo",
+        "-c",
+        "none"
       ]

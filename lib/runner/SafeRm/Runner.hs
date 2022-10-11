@@ -41,7 +41,7 @@ import SafeRm.Exceptions
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Runner.Args (getArgs)
+import SafeRm.Runner.Args (getArgs, TomlConfigPath (TomlPath, TomlDefault, TomlNone))
 import SafeRm.Runner.Command
   ( Command
       ( Delete,
@@ -155,9 +155,9 @@ getConfiguration = do
   -- get toml config
   tomlConfig <- case args ^. #tomlConfigPath of
     -- 1. explicit toml config path given: read
-    Just tomlPath -> readConfig tomlPath
+    TomlPath tomlPath -> readConfig tomlPath
     -- no toml config path given...
-    Nothing -> do
+    TomlDefault -> do
       xdgConfig <- Dir.getXdgDirectory XdgConfig "safe-rm"
       let defPath = xdgConfig </> "config.toml"
       exists <- Dir.doesFileExist defPath
@@ -166,6 +166,8 @@ getConfiguration = do
           readConfig defPath
         else -- 3. no config exists: return default (empty)
           pure mempty
+    -- 4. toml explicitly disabled
+    TomlNone -> pure mempty
 
   -- merge share CLI and toml values
   let mergedConfig = mergeConfigs args tomlConfig
