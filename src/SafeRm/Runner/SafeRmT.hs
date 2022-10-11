@@ -9,8 +9,8 @@ module SafeRm.Runner.SafeRmT
 where
 
 import SafeRm.Effects.Terminal (Terminal)
-import SafeRm.Env (Env (..))
 import SafeRm.Prelude
+import SafeRm.Runner.Env (Env)
 
 -- | `SafeRmT` is the main application type that runs shell commands.
 --

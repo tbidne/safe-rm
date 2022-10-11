@@ -17,8 +17,7 @@ where
 
 -- TODO:
 --
--- 1. Roll into safe-rm lib, no reason to be standalone
--- 2. Better API
+-- 1. Better API
 
 import Data.ByteString qualified as BS
 import Data.Text qualified as T
@@ -36,16 +35,20 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
-import SafeRm.Env
-  ( Env (MkEnv, logContexts, logEnv, logNamespace, trashHome),
-    HasTrashHome,
-  )
+import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Runner.Args (TomlConfigPath (TomlDefault, TomlNone, TomlPath), getArgs)
+import SafeRm.Runner.Args
+  ( TomlConfigPath
+      ( TomlDefault,
+        TomlNone,
+        TomlPath
+      ),
+    getArgs,
+  )
 import SafeRm.Runner.Command
   ( Command
       ( Delete,
@@ -55,6 +58,9 @@ import SafeRm.Runner.Command
         Metadata,
         Restore
       ),
+  )
+import SafeRm.Runner.Env
+  ( Env (MkEnv, logContexts, logEnv, logNamespace, trashHome),
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
 import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)

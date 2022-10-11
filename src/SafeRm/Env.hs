@@ -1,14 +1,10 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-
--- | Provides types and classes for running SafeRm with an environment.
+-- | Provides classes for running SafeRm with an environment.
 --
 -- @since 0.1
 module SafeRm.Env
   ( HasTrashHome (..),
     getTrashPaths,
     getTrashIndex,
-    Env (..),
   )
 where
 
@@ -47,22 +43,3 @@ getTrashPaths x = (getTrashHome x, getTrashIndex x)
 -- @since 0.1
 getTrashIndex :: HasTrashHome a => a -> PathI TrashIndex
 getTrashIndex = liftPathI (</> ".index.csv") . getTrashHome
-
--- | Concrete environment type that can be used for running SafeRm
--- functions.
---
--- @since 0.1
-data Env = MkEnv
-  { trashHome :: !(PathI TrashHome),
-    logEnv :: !LogEnv,
-    logContexts :: !LogContexts,
-    logNamespace :: !Namespace
-  }
-
-makeFieldLabelsNoPrefix ''Env
-
--- NOTE: manual because if we derive it anyclass then, because of TH
--- restrictions, the default signature actually can't see the instance.
--- It uses the 'Generic' optics implementation instead, if it exists.
-instance HasTrashHome Env where
-  getTrashHome = view #trashHome

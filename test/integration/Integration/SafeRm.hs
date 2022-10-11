@@ -18,16 +18,16 @@ import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
-import SafeRm.Env
+import SafeRm.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (SomeExceptions),
+  )
+import SafeRm.Runner.Env
   ( Env (MkEnv),
     logContexts,
     logEnv,
     logNamespace,
     trashHome,
-  )
-import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (SomeExceptions),
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
 
