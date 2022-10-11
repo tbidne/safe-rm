@@ -7,8 +7,6 @@ module Config.Args
 where
 
 import Config.Prelude
-import SafeRm.Data.Paths (PathI (MkPathI))
-import SafeRm.Env (Env (trashHome))
 import SafeRm.Runner (getConfiguration)
 import SafeRm.Runner.Command
   ( _Delete,
@@ -37,10 +35,9 @@ tests =
 
 delete :: TestTree
 delete = testCase "Parses delete" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _Delete
   where
     argList = ["d", "foo", "bar"]
@@ -48,10 +45,9 @@ delete = testCase "Parses delete" $ do
 
 permDelete :: TestTree
 permDelete = testCase "Parses perm delete" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _DeletePerm
   where
     argList = ["x", "foo", "bar"]
@@ -59,10 +55,9 @@ permDelete = testCase "Parses perm delete" $ do
 
 permDeleteForce :: TestTree
 permDeleteForce = testCase "Parses perm delete with force" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _DeletePerm
   where
     argList = ["x", "-f", "foo", "bar"]
@@ -70,30 +65,27 @@ permDeleteForce = testCase "Parses perm delete with force" $ do
 
 emptyTrash :: TestTree
 emptyTrash = testCase "Parses empty" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   Just False @=? cmd ^? _Empty
   where
     argList = ["e"]
 
 emptyTrashForce :: TestTree
 emptyTrashForce = testCase "Parses empty with force" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   Just True @=? cmd ^? _Empty
   where
     argList = ["e", "-f"]
 
 restore :: TestTree
 restore = testCase "Parses restore" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   expectedPaths @=? cmd ^? _Restore
   where
     argList = ["r", "foo", "bar"]
@@ -101,20 +93,18 @@ restore = testCase "Parses restore" $ do
 
 list :: TestTree
 list = testCase "Parses list" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   Just () @=? cmd ^? _List
   where
     argList = ["l"]
 
 metadata :: TestTree
 metadata = testCase "Parses metadata" $ do
-  defTrash <- getDefaultTrash
-  (env, cmd) <- SysEnv.withArgs argList getConfiguration
+  (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
+  Nothing @=? cfg ^. #trashHome
   Just () @=? cmd ^? _Metadata
   where
     argList = ["m"]

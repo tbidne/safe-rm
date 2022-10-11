@@ -126,7 +126,7 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
   let testDir = tmpDir </> "d3"
       trashDir = testDir </> ".trash"
       file = testDir </> "bad file"
-      argList = ["d", file, "-t", trashDir]
+      argList = ["d", file, "-t", trashDir, "--console-log", "none"]
 
   -- setup
   clearDirectory testDir
@@ -195,7 +195,7 @@ deletesSome args = testCase "Deletes some, errors on others" $ do
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
       filesTryDelete = (testDir </>) <$> ["f1", "f2", "f3", "f4", "f5"]
-      argList = ("d" : filesTryDelete) <> ["-t", trashDir]
+      argList = ("d" : filesTryDelete) <> ["-t", trashDir, "--console-log", "none"]
 
   -- setup
   clearDirectory testDir

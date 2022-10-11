@@ -1,153 +1,81 @@
-{-# LANGUAGE TemplateHaskell #-}
-
--- | Provides the 'Logger' typeclass.
+-- | Provides logging utilities.
 --
 -- @since 0.1
 module SafeRm.Effects.Logger
-  ( -- * Types
-
-    -- ** Class
-    Logger (..),
-
-    -- ** Data
-    LogContext (..),
-    LogLevel (..),
+  ( -- * Reading
     readLogLevel,
+    logLevelStrings,
 
-    -- * Functions
-
-    -- ** TH
-    logErrorTH,
-    logWarnTH,
-    logInfoTH,
-    logDebugTH,
-    logShowTH,
-    logExceptionTH,
-
-    -- ** Non-TH
-    logErrorM,
-    logWarnM,
-    logInfoM,
-    logDebugM,
-    logShowM,
-    logExceptionM,
-
-    -- ** Low level
-    logM,
-    logTH,
+    -- * Formatting
+    consoleFormatter,
+    fileFormatter,
   )
 where
 
 import Data.Text qualified as T
-import Language.Haskell.TH.Syntax (Exp, Loc (Loc), Q, qLocation)
-import Language.Haskell.TH.Syntax qualified as THS
-import SafeRm.Effects.Logger.Types
+import Data.Text.Lazy.Builder (Builder)
+import Data.Text.Lazy.Builder qualified as TLB
+import Katip (Item, Verbosity)
+import Katip qualified as K
+import Katip.Core qualified as KCore
+import Katip.Format.Time qualified as KTime
+import Katip.Scribes.Handle qualified as KHandle
+import Language.Haskell.TH (Loc (loc_filename, loc_start))
 import SafeRm.Prelude
 
--- | Logs 'Error' with no location.
---
--- @since 0.1
-logErrorM :: (Logger m, MonadIO m) => Text -> m ()
-logErrorM = logM Error
+readLogLevel :: MonadFail m => Text -> m (Maybe Severity)
+readLogLevel "none" = pure Nothing
+readLogLevel "error" = pure $ Just ErrorS
+readLogLevel "warn" = pure $ Just WarningS
+readLogLevel "info" = pure $ Just InfoS
+readLogLevel "debug" = pure $ Just DebugS
+readLogLevel other =
+  fail $
+    mconcat
+      [ "Expected log-level ",
+        logLevelStrings,
+        ", received: ",
+        T.unpack other
+      ]
 
--- | Logs 'Error' with location.
---
--- @since 0.1
-logErrorTH :: Q Exp
-logErrorTH = logTH Error
+logLevelStrings :: String
+logLevelStrings = "[none|error|warn|info|debug]"
 
--- | Logs 'Warn' without location.
---
--- @since 0.1
-logWarnM :: (Logger m, MonadIO m) => Text -> m ()
-logWarnM = logM Warn
+consoleFormatter :: Bool -> Verbosity -> Item a -> Builder
+consoleFormatter _withColor _verb i =
+  mconcat
+    [ brackets (TLB.fromText (renderSeverity' (view #_itemSeverity i))),
+      " ",
+      view (#_itemMessage % #unLogStr) i
+    ]
+  where
+    renderSeverity' severity =
+      KHandle.colorBySeverity True severity (K.renderSeverity severity)
+    brackets m = TLB.fromText "[" <> m <> TLB.fromText "]"
 
--- | Logs 'Warn' with location.
---
--- @since 0.1
-logWarnTH :: Q Exp
-logWarnTH = logTH Warn
+fileFormatter :: Bool -> Verbosity -> Item a -> Builder
+fileFormatter _withColor _verb i =
+  mconcat
+    [ brackets nowStr,
+      brackets (mconcat (TLB.fromText <$> KCore.intercalateNs (view #_itemNamespace i))),
+      brackets (TLB.fromText (renderSeverity' (view #_itemSeverity i))),
+      maybe mempty (brackets . partialLoc) (view #_itemLoc i),
+      " ",
+      view (#_itemMessage % #unLogStr) i
+    ]
+  where
+    nowStr = TLB.fromText (KTime.formatAsLogTime (view #_itemTime i))
+    renderSeverity' severity =
+      KHandle.colorBySeverity False severity (K.renderSeverity severity)
+    brackets m = TLB.fromText "[" <> m <> TLB.fromText "]"
 
--- | Logs 'Info' without location.
---
--- @since 0.1
-logInfoM :: (Logger m, MonadIO m) => Text -> m ()
-logInfoM = logM Info
-
--- | Logs 'Info' with location.
---
--- @since 0.1
-logInfoTH :: Q Exp
-logInfoTH = logTH Info
-
---- | Logs 'Debug' without location.
---
--- @since 0.1
-logDebugM :: (Logger m, MonadIO m) => Text -> m ()
-logDebugM = logM Debug
-
--- | Logs 'Debug' with location.
---
--- @since 0.1
-logDebugTH :: Q Exp
-logDebugTH = logTH Debug
-
--- | Logs 'Show' without location.
---
--- @since 0.1
-logShowM :: (Logger m, MonadIO m, Show a) => LogLevel -> a -> m ()
-logShowM lvl = logM lvl . showt
-
--- | Logs 'Show' with location.
---
--- @since 0.1
-logShowTH :: LogLevel -> Q Exp
-logShowTH lvl = [|log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl) . showt|]
-
--- | Logs 'Exception' without location.
---
--- @since 0.1
-logExceptionM :: (Exception e, Logger m, MonadIO m) => LogLevel -> e -> m ()
-logExceptionM lvl = logM lvl . T.pack . displayException
-
--- | Logs 'Exception' with location.
---
--- @since 0.1
-logExceptionTH :: LogLevel -> Q Exp
-logExceptionTH lvl =
-  [|
-    log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl)
-      . T.pack
-      . displayException
-    |]
-
--- | Logs without location.
---
--- @since 0.1
-logM :: (Logger m, MonadIO m) => LogLevel -> Text -> m ()
-logM = log' Nothing
-
--- | Logs with location.
---
--- @since 0.1
-logTH :: LogLevel -> Q Exp
--- NOTE: can't use typed TH because it does not handle constraints correctly.
-logTH lvl = [|log' (Just $(qLocation >>= liftLoc)) $(THS.lift lvl)|]
-
-log' :: (Logger m, MonadIO m) => Maybe Loc -> LogLevel -> Text -> m ()
-log' mloc lvl txt = do
-  ctx <- getContext
-  let namespace = ctx ^. #namespace
-  for_ (ctx ^. #scribes) $ \(MkScribe logFn scribeLvl) -> do
-    when (lvl <= scribeLvl) $ liftIO $ logFn namespace mloc lvl txt
-
-liftLoc :: Loc -> Q Exp
-liftLoc (Loc a b c (d1, d2) (e1, e2)) =
-  [|
-    Loc
-      $(THS.lift a)
-      $(THS.lift b)
-      $(THS.lift c)
-      ($(THS.lift d1), $(THS.lift d2))
-      ($(THS.lift e1), $(THS.lift e2))
-    |]
+partialLoc :: Loc -> Builder
+partialLoc loc =
+  mconcat
+    [ TLB.fromString $ view #loc_filename loc,
+      TLB.singleton ':' <> mkLine loc,
+      TLB.singleton ':' <> mkChar loc
+    ]
+  where
+    mkLine = TLB.fromString . show . view (#loc_start % _1)
+    mkChar = TLB.fromString . show . view (#loc_start % _2)

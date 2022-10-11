@@ -32,6 +32,7 @@ import Control.Monad as X
     void,
     when,
     (<=<),
+    (=<<),
     (>=>),
   )
 import Control.Monad.Fail as X (MonadFail (fail))
@@ -69,8 +70,6 @@ import Data.Ord as X
   )
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
-import Data.Sequence as X (Seq, (<|), (|>))
-import Data.Sequence qualified as Seq
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
@@ -87,6 +86,21 @@ import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (even, fromIntegral)
 import GHC.Stack as X (HasCallStack)
+import Katip as X
+  ( Katip (getLogEnv, localLogEnv),
+    KatipContext
+      ( getKatipContext,
+        getKatipNamespace,
+        localKatipContext,
+        localKatipNamespace
+      ),
+    LogContexts,
+    LogEnv,
+    Namespace,
+    Scribe (Scribe),
+    Severity (DebugS, ErrorS, InfoS, WarningS),
+    katipAddNamespace,
+  )
 import Optics.Core as X
   ( Iso',
     Lens',
@@ -101,6 +115,7 @@ import Optics.Core as X
     _1,
     _2,
   )
+import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import Prettyprinter as X
   ( Pretty (pretty),
     layoutCompact,
@@ -150,10 +165,6 @@ instance Empty (HashSet a) where
 instance Empty (HashMap k v) where
   (∅) = Map.empty
 
--- | @since 0.1
-instance Empty (Seq a) where
-  (∅) = Seq.empty
-
 -- | Types with a \'union\'.
 --
 -- @since 0.1
@@ -175,10 +186,6 @@ instance Hashable a => Union (HashSet a) where
 instance Hashable k => Union (HashMap k v) where
   (∪) = Map.union
 
--- | @since 0.1
-instance Union (Seq a) where
-  (∪) = (<>)
-
 -- | Types with a \'difference\'.
 --
 -- @since 0.1
@@ -192,20 +199,6 @@ instance Hashable a => Difference (HashSet a) where
 -- | @since 0.1
 instance Hashable k => Difference (HashMap k v) where
   (∖) = Map.difference
-
--- | O(n^2).
---
--- @since 0.1
-instance Eq a => Difference (Seq a) where
-  -- NOTE: we could improve to O(n) or O(lg n) if we added a
-  -- Hashable or Ord constraint, respectively.
-  l ∖ r = foldr f (∅) l
-    where
-      f x acc
-        | x ∈ r = acc |> x
-        | otherwise = acc
-
-infixl 6 ∖
 
 -- | Symmetric difference.
 --
@@ -234,10 +227,6 @@ instance Hashable k => Member (HashMap k v) where
   type MKey (HashMap k v) = k
   (∈) = Map.member
 
-instance Eq a => Member (Seq a) where
-  type MKey (Seq a) = a
-  (∈) x = Seq.null . Seq.filter (== x)
-
 -- | Negation of '(∈)'.
 --
 -- @since 0.1
@@ -264,7 +253,3 @@ instance CMap HashSet where
 instance CMap (HashMap k) where
   type CMapC (HashMap k) _ = ()
   φ = Map.map
-
-instance CMap Seq where
-  type CMapC Seq _ = ()
-  φ = fmap

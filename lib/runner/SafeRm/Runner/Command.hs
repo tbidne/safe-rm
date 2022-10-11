@@ -14,7 +14,6 @@ module SafeRm.Runner.Command
   )
 where
 
-import Optics.TH (makePrisms)
 import SafeRm.Data.Paths (PathI, PathIndex (OriginalPath, TrashName))
 import SafeRm.Prelude
 

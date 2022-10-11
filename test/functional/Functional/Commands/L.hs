@@ -53,7 +53,7 @@ readIndexError args = testCase "Read Index Error" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "l2"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["l", "-t", trashDir, "--console-log", "none"]
 
   -- setup
   clearDirectory testDir
@@ -79,7 +79,7 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "l3"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["l", "-t", trashDir, "--console-log", "none"]
       badFileLine =
         mconcat
           [ "file,foo,",
@@ -121,7 +121,7 @@ indexDuplicatesError args = testCase "Index Duplicates Error" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "l4"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["l", "-t", trashDir, "--console-log", "none"]
       dupFile = trashDir </> "foo"
       dupFileLine =
         mconcat
@@ -165,7 +165,7 @@ indexSizeMismatchError args = testCase "Index Size Mismatch Error" $ do
   tmpDir <- view #tmpDir <$> args
   let testDir = tmpDir </> "l5"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["l", "-t", trashDir, "--console-log", "none"]
       file = trashDir </> "foo"
       fileLine =
         mconcat

@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides types and classes for running SafeRm with an environment.
 --
 -- @since 0.1
@@ -12,10 +15,9 @@ where
 import Optics.Core (A_Getter, Is, LabelOptic')
 import SafeRm.Data.Paths
   ( PathI,
-    PathIndex (TrashHome, TrashIndex, TrashLog),
+    PathIndex (TrashHome, TrashIndex),
     liftPathI,
   )
-import SafeRm.Effects.Logger.Types (LogContext)
 import SafeRm.Prelude
 
 -- | Class for retrieving the trash home.
@@ -52,8 +54,9 @@ getTrashIndex = liftPathI (</> ".index.csv") . getTrashHome
 -- @since 0.1
 data Env = MkEnv
   { trashHome :: !(PathI TrashHome),
-    logContext :: !LogContext,
-    fileLogPath :: !(PathI TrashLog)
+    logEnv :: !LogEnv,
+    logContexts :: !LogContexts,
+    logNamespace :: !Namespace
   }
   deriving stock
     ( -- | @since 0.1
@@ -63,3 +66,5 @@ data Env = MkEnv
     ( -- | @since 0.1
       HasTrashHome
     )
+
+makeFieldLabelsNoPrefix ''Env

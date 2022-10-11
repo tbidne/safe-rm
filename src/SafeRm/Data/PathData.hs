@@ -40,7 +40,8 @@ import Data.Csv
   )
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
-import GHC.Exts (IsList (Item))
+import GHC.Exts (IsList)
+import GHC.Exts qualified as Exts
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -137,7 +138,7 @@ instance Pretty PathData where
 -- | Header names.
 --
 -- @since 0.1
-headerNames :: (IsList a, IsString (Item a)) => a
+headerNames :: (IsList a, IsString (Exts.Item a)) => a
 headerNames = ["Type", "Name", "Original", "Created"]
 
 -- | For a given filepath, attempts to capture the following data:

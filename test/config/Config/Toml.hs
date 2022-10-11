@@ -9,15 +9,6 @@ module Config.Toml
 where
 
 import Config.Prelude
-import Data.HashMap.Strict qualified as Map
-import Data.List qualified as L
-import SafeRm.Data.Paths (PathI (MkPathI), (<//>))
-import SafeRm.Effects.Logger.Types
-  ( LogContext (namespace, scribes),
-    LogLevel (Debug, Error, Info),
-    Scribe (logLevel),
-  )
-import SafeRm.Env (Env (fileLogPath, logContext, trashHome))
 import SafeRm.Runner (getConfiguration)
 import System.Environment qualified as SysEnv
 
@@ -33,56 +24,44 @@ tests =
 
 parsesExample :: TestTree
 parsesExample = testCase "Parses Example" $ do
-  (env, _) <- SysEnv.withArgs argList getConfiguration
+  (cfg, _) <- SysEnv.withArgs argList getConfiguration
 
-  "./tmp" @=? env ^. #trashHome
-  "./tmp/.log" @=? env ^. #fileLogPath
-  ["runner"] @=? env ^. (#logContext % #namespace)
-  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
+  Just "./tmp" @=? cfg ^. #trashHome
+  Just (Just InfoS) @=? cfg ^. #consoleLog
+  Just (Just DebugS) @=? cfg ^. #fileLog
   where
     argList = ["-c", "examples/config.toml", "d", "foo"]
-    scribes = [("console", Info), ("file", Debug)]
 
 argsOverridesToml :: TestTree
 argsOverridesToml = testCase "Args overrides Toml" $ do
-  (env, _) <- SysEnv.withArgs argList getConfiguration
+  (cfg, _) <- SysEnv.withArgs argList getConfiguration
 
-  "not-tmp" @=? env ^. #trashHome
-  "not-tmp/.log" @=? env ^. #fileLogPath
-  ["runner"] @=? env ^. (#logContext % #namespace)
-  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
+  Just "not-tmp" @=? cfg ^. #trashHome
+  Just (Just ErrorS) @=? cfg ^. #consoleLog
+  Just (Just InfoS) @=? cfg ^. #fileLog
   where
     argList =
       [ "-c",
         "examples/config.toml",
         "-t",
         "not-tmp",
-        "--console-log-level",
+        "--console-log",
         "error",
-        "--file-log-level",
+        "--file-log",
         "info",
         "d",
         "foo"
       ]
-    scribes = [("console", Error), ("file", Info)]
 
 defaultConfig :: TestTree
 defaultConfig = testCase "Default config" $ do
-  defTrash <- getDefaultTrash
-  (env, _) <- SysEnv.withArgs argList getConfiguration
+  (cfg, _) <- SysEnv.withArgs argList getConfiguration
 
-  MkPathI defTrash @=? env ^. #trashHome
-  MkPathI defTrash <//> ".log" @=? env ^. #fileLogPath
-  ["runner"] @=? env ^. (#logContext % #namespace)
-  scribes @=? scribeInfo (env ^. (#logContext % #scribes))
+  Nothing @=? cfg ^. #trashHome
+  Nothing @=? cfg ^. #consoleLog
+  Nothing @=? cfg ^. #fileLog
   where
     argList =
       [ "d",
         "foo"
       ]
-    scribes = [("console", Error)]
-
-scribeInfo :: HashMap Text Scribe -> [(Text, LogLevel)]
-scribeInfo = L.sortOn (view _1) . Map.foldMapWithKey f
-  where
-    f name scribe = [(name, scribe ^. #logLevel)]

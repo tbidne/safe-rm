@@ -14,6 +14,7 @@ import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Integration.MaxRuns (MaxRuns (MkMaxRuns))
 import Integration.Prelude
+import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.Index (Index (unIndex))
 import SafeRm.Data.Metadata (Metadata (numEntries, numFiles))
@@ -22,15 +23,11 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     _MkPathI,
   )
-import SafeRm.Effects.Logger
-  ( LogContext (MkLogContext),
-    namespace,
-    scribes,
-  )
 import SafeRm.Env
   ( Env (MkEnv),
-    fileLogPath,
-    logContext,
+    logContexts,
+    logEnv,
+    logNamespace,
     trashHome,
   )
 import SafeRm.Exceptions
@@ -68,7 +65,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
         let αTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             αTrash = φ (trashDir </>) α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow αTest
 
@@ -106,7 +103,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
 
             αTest = toTestDir α
             trashDir = testDir </> ".trash"
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow αTest
 
@@ -161,7 +158,7 @@ deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         let trashDir = testDir </> ".trash"
             αTest = φ (testDir </>) α
             αTrash = φ (trashDir </>) α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow αTest
 
@@ -206,7 +203,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
             toDelete = toTestDir (α ∪ γ)
             trashDir = testDir </> ".trash"
             trashSet = toTrashDir (α ∪ γ)
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow testDir
         annotateShow toDelete
@@ -269,7 +266,7 @@ restore mtestDir = askOption $ \(MkMaxRuns limit) ->
         let αTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             αTrash = φ (trashDir </>) α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow αTest
 
@@ -315,7 +312,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
             toDelete = toTestDir (α ∪ γ)
             trashDir = testDir </> ".trash"
             trashSet = toTrashDir α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow testDir
         annotateShow toDelete
@@ -378,7 +375,7 @@ emptyTrash mtestDir = askOption $ \(MkMaxRuns limit) ->
         let aTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             aTrash = φ (trashDir </>) α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow testDir
         annotateShow aTest
@@ -419,7 +416,7 @@ metadata mtestDir = askOption $ \(MkMaxRuns limit) ->
         let aTest = φ (testDir </>) α
             trashDir = testDir </> ".trash"
             aTrash = φ (trashDir </>) α
-            env = mkEnv trashDir
+        env <- liftIO $ mkEnv trashDir
 
         annotateShow testDir
         annotateShow aTest
@@ -497,14 +494,13 @@ toOrigPath acc pd = Set.insert (pd ^. #originalPath % _MkPathI) acc
 --  { trashHome
 --  }
 
-mkEnv :: FilePath -> Env
-mkEnv fp =
-  MkEnv
-    { trashHome = MkPathI fp,
-      logContext =
-        MkLogContext
-          { namespace = (∅),
-            scribes = (∅)
-          },
-      fileLogPath = ""
-    }
+mkEnv :: FilePath -> IO Env
+mkEnv fp = do
+  env <- K.initLogEnv mempty "integration"
+  pure $
+    MkEnv
+      { trashHome = MkPathI fp,
+        logEnv = env,
+        logContexts = mempty,
+        logNamespace = mempty
+      }

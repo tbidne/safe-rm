@@ -1,3 +1,6 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Provides TOML configuration.
 --
 -- @since 0.1
@@ -8,9 +11,9 @@ module SafeRm.Runner.Toml
 where
 
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import SafeRm.Effects.Logger (LogLevel, readLogLevel)
+import SafeRm.Effects.Logger (readLogLevel)
 import SafeRm.Prelude
-import SafeRm.Runner.Args (Args (consoleLogLevel, fileLogLevel, trashHome))
+import SafeRm.Runner.Args (Args (consoleLog, fileLog, trashHome))
 import TOML
   ( DecodeTOML (..),
     getFieldOptWith,
@@ -21,8 +24,8 @@ import TOML
 -- @since 0.1
 data TomlConfig = MkTomlConfig
   { trashHome :: !(Maybe (PathI TrashHome)),
-    consoleLogLevel :: !(Maybe LogLevel),
-    fileLogLevel :: !(Maybe LogLevel)
+    consoleLog :: !(Maybe (Maybe Severity)),
+    fileLog :: !(Maybe (Maybe Severity))
   }
   deriving stock
     ( -- | @since 0.1
@@ -53,7 +56,7 @@ instance DecodeTOML TomlConfig where
       decodeTrashHome =
         fmap MkPathI <$> getFieldOptWith tomlDecoder "trash-home"
       decodeLogLevel s =
-        getFieldOptWith (tomlDecoder >>= readLogLevel) (s <> "-log-level")
+        getFieldOptWith (tomlDecoder >>= readLogLevel) (s <> "-log")
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.
@@ -66,6 +69,8 @@ argsToTomlConfig :: Args -> TomlConfig
 argsToTomlConfig args =
   MkTomlConfig
     { trashHome = args ^. #trashHome,
-      fileLogLevel = args ^. #fileLogLevel,
-      consoleLogLevel = args ^. #consoleLogLevel
+      fileLog = args ^. #fileLog,
+      consoleLog = args ^. #consoleLog
     }
+
+makeFieldLabelsNoPrefix ''TomlConfig

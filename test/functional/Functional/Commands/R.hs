@@ -202,7 +202,7 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList = ["r", "bad file", "-t", trashDir]
+  let restoreArgList = ["r", "bad file", "-t", trashDir, "--console-log", "none"]
 
   -- assert exception
   result <-
@@ -256,7 +256,7 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList = ["r", "f1", "-t", trashDir]
+  let restoreArgList = ["r", "f1", "-t", trashDir, "--console-log", "none"]
 
   -- assert exception
   result <-
@@ -314,12 +314,12 @@ restoresSome args = testCase "Restores some, errors on others" $ do
   assertFilesDoNotExist realFiles
   assertDirectoriesExist [trashDir]
 
-  -- PERMANENT DELETE
-  let permDelArgList =
-        ("r" : filesTryRestore) <> ["-t", trashDir]
+  -- RESTORE
+  let restoreArgList =
+        ("r" : filesTryRestore) <> ["-t", trashDir, "--console-log", "none"]
 
   result <-
-    (runSafeRm permDelArgList $> Nothing)
+    (runSafeRm restoreArgList $> Nothing)
       `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
   case result of
     Nothing -> assertFailure "Expected exception"

@@ -15,10 +15,14 @@ module SafeRm.Runner
 where
 
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding qualified as TEnc
+import Katip
+  ( ColorStrategy (ColorIfTerminal, ColorLog),
+    Verbosity (V0, V2),
+  )
+import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -26,22 +30,9 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Effects.Logger qualified as Logger
-import SafeRm.Effects.Logger.Format
-import SafeRm.Effects.Logger.Format qualified as Format
-import SafeRm.Effects.Logger.Types
-  ( LogContext (MkLogContext, namespace, scribes),
-    LogLevel (Error),
-    Logger,
-    Scribe (MkScribe, logLevel, logger),
-  )
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Env
-  ( Env
-      ( MkEnv,
-        fileLogPath,
-        logContext,
-        trashHome
-      ),
+  ( Env (MkEnv, logContexts, logEnv, logNamespace, trashHome),
     HasTrashHome,
   )
 import SafeRm.Exceptions
@@ -61,15 +52,9 @@ import SafeRm.Runner.Command
       ),
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
-import SafeRm.Runner.Toml
-  ( TomlConfig
-      ( consoleLogLevel,
-        fileLogLevel,
-        trashHome
-      ),
-    mergeConfigs,
-  )
+import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)
 import System.Exit (ExitCode (ExitSuccess))
+import System.IO qualified as IO
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
@@ -81,13 +66,18 @@ runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
 runSafeRm = do
   -- Combine args and toml config to get final versions of shared config
   -- values. Right now, only the trash home is shared.
-  (env, cmd) <- getConfiguration
 
-  usingSafeRmT env $ do
-    runCmd cmd
-      `catch` doNothingOnSuccess
-      `catchAny` handleEx
+  bracket getEnv closeScribes $ \(env, cmd) -> do
+    usingSafeRmT env $ do
+      runCmd cmd
+        `catch` doNothingOnSuccess
+        `catchAny` handleEx
   where
+    closeScribes =
+      liftIO
+        . K.closeScribes
+        . view (_1 % #logEnv)
+
     runCmd = \case
       Delete paths -> SafeRm.delete (listToSet paths)
       DeletePerm force paths ->
@@ -102,21 +92,35 @@ runSafeRm = do
 
     handleEx ex = do
       -- REVIEW: is this good enough?
-      -- Logger.localContext consoleLoggingOff $
-      $(Logger.logExceptionTH Error) ex
+      $(K.logTM) ErrorS (K.ls $ displayException ex)
       throwIO ex
-
--- consoleLoggingOff :: LogContext -> LogContext
--- consoleLoggingOff =
---  over' #scribes (Map.filterWithKey (\k _ -> k /= "console"))
 
 -- | Retrieves the configuration and runs the param function.
 --
 -- @since 0.1
 withEnv :: MonadIO m => ((Env, Command) -> m a) -> m a
-withEnv = (>>=) getConfiguration
+withEnv = (>>=) getEnv
 
--- | Parses CLI 'Args' and optional 'TomlConfig' to produce the full
+-- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
+-- by SafeRm.
+--
+-- @since 0.1
+getEnv :: MonadIO m => m (Env, Command)
+getEnv = do
+  (mergedConfig, command) <- getConfiguration
+  trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
+
+  logEnv <- liftIO $ mkLogEnv mergedConfig (trashHome <//> ".log")
+  let env =
+        MkEnv
+          { trashHome,
+            logEnv,
+            logContexts = mempty,
+            logNamespace = "runner"
+          }
+  pure (env, command)
+
+-- | Parses CLI 'Args' and optional 'TomlConfig' to produce the user
 -- configuration. For values shared between the CLI and Toml file, the CLI
 -- takes priority.
 --
@@ -124,7 +128,7 @@ withEnv = (>>=) getConfiguration
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: MonadIO m => m (Env, Command)
+getConfiguration :: MonadIO m => m (TomlConfig, Command)
 getConfiguration = do
   -- get CLI args
   args <- liftIO getArgs
@@ -146,21 +150,7 @@ getConfiguration = do
 
   -- merge share CLI and toml values
   let mergedConfig = mergeConfigs args tomlConfig
-  trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
-
-  let fileLogPath = trashHome <//> ".log"
-      logContext =
-        MkLogContext
-          { namespace = ["runner"],
-            scribes = mkScribes mergedConfig fileLogPath
-          }
-      env =
-        MkEnv
-          { trashHome,
-            logContext,
-            fileLogPath
-          }
-  pure (env, args ^. #command)
+  pure (mergedConfig, args ^. #command)
   where
     readConfig fp = do
       contents <-
@@ -172,55 +162,54 @@ getConfiguration = do
         Right cfg -> pure cfg
         Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
 
-mkScribes :: TomlConfig -> PathI TrashLog -> HashMap Text Scribe
-mkScribes mergedConfig (MkPathI trashLog) = Map.fromList scribes
-  where
-    scribes =
-      ("console", consoleScribe) : mfileScribe
-    -- Default to no file scribe. Only provide one if the user asks for it.
-    mfileScribe = maybe [] lvlToScribe (mergedConfig ^. #fileLogLevel)
-    lvlToScribe = (: []) . ("file",) . mkFileScribe
+mkLogEnv :: TomlConfig -> PathI TrashLog -> IO LogEnv
+mkLogEnv mergedConfig (MkPathI trashLog) = do
+  initLogEnv <- K.initLogEnv "safe-rm" environment
 
-    -- Log to file. Full decoration.
-    mkFileScribe fileLevel =
-      MkScribe
-        { logger = \ns mloc lvl msg -> do
-            let fmt =
-                  MkLogFormat
-                    { logLoc = LogLocPartial <$> mloc,
-                      namespace = Just ns,
-                      withTimestamp = True,
-                      newline = True
-                    }
-            exists <- Dir.doesFileExist trashLog
-            formatted <- Format.formatLog fmt lvl msg
-            -- TODO: just create the file in our setup so we are not doing this
-            -- check every time.
-            if exists
-              then BS.appendFile trashLog (TEnc.encodeUtf8 formatted)
-              else BS.writeFile trashLog (TEnc.encodeUtf8 formatted),
-          logLevel = fileLevel
-        }
-    -- Log to console. Limited decoration.
-    consoleScribe =
-      MkScribe
-        { logger = \_ _ lvl msg -> do
-            let fmt =
-                  MkLogFormat
-                    { logLoc = Nothing,
-                      namespace = Nothing,
-                      withTimestamp = False,
-                      newline = False
-                    }
-            Format.formatLog fmt lvl msg >>= putTextLn,
-          logLevel = fromMaybe Error (mergedConfig ^. #consoleLogLevel)
-        }
+  consoleEnv <- case mergedConfig ^. #consoleLog of
+    Just Nothing -> pure initLogEnv
+    other -> do
+      let consoleSeverity = fromMaybe ErrorS (join other)
+      consoleScribe <-
+        K.mkHandleScribeWithFormatter
+          Logger.consoleFormatter
+          ColorIfTerminal
+          IO.stdout
+          (K.permitItem consoleSeverity)
+          V0
+
+      K.registerScribe
+        "console"
+        consoleScribe
+        K.defaultScribeSettings
+        initLogEnv
+
+  case mergedConfig ^. #fileLog of
+    Nothing -> pure consoleEnv
+    other -> do
+      let fileSeverity = fromMaybe ErrorS (join other)
+      fileScribe <- mkFileScribe trashLog (K.permitItem fileSeverity) V2
+      K.registerScribe "file" fileScribe K.defaultScribeSettings consoleEnv
+  where
+    environment = "production"
+
+-- NOTE: this is copied from katip but with our custom formatter
+mkFileScribe :: FilePath -> K.PermitFunc -> Verbosity -> IO Scribe
+mkFileScribe f permitF verb = do
+  h <- IO.openFile f IO.AppendMode
+  Scribe logger finalizer permit <-
+    K.mkHandleScribeWithFormatter
+      Logger.fileFormatter
+      (ColorLog False)
+      h
+      permitF
+      verb
+  pure (Scribe logger (finalizer `finally` IO.hClose h) permit)
 
 printIndex ::
   ( HasTrashHome env,
-    Logger m,
+    KatipContext m,
     MonadReader env m,
-    MonadIO m,
     Terminal m
   ) =>
   m ()
@@ -228,9 +217,8 @@ printIndex = SafeRm.getIndex >>= prettyDel
 
 printMetadata ::
   ( HasTrashHome env,
-    Logger m,
+    KatipContext m,
     MonadReader env m,
-    MonadIO m,
     Terminal m
   ) =>
   m ()

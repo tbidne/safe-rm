@@ -2,7 +2,7 @@
 trash-home = "./tmp"
 
 # Stdout log level
-console-log-level = "info"
+console-log = "info"
 
 # File log level
-file-log-level = "debug"
+file-log = "debug"

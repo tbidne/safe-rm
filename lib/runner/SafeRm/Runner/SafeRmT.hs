@@ -5,21 +5,12 @@ module SafeRm.Runner.SafeRmT
   ( SafeRmT,
     runSafeRmT,
     usingSafeRmT,
-    -- putLogFile,
   )
 where
 
-import SafeRm.Effects.Logger
-  ( LogContext (namespace),
-    Logger (addNamespace, getContext),
-  )
-import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal)
-import SafeRm.Env (Env (logContext))
+import SafeRm.Env (Env (..))
 import SafeRm.Prelude
-
--- import System.Console.Pretty (Color)
--- import System.Console.Pretty qualified as P
 
 -- | `SafeRmT` is the main application type that runs shell commands.
 --
@@ -45,14 +36,17 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
     via (ReaderT env m)
 
 -- | @since 0.1
-instance Monad m => Logger (SafeRmT Env m) where
-  getContext = asks (view #logContext)
+instance MonadIO m => Katip (SafeRmT Env m) where
+  getLogEnv = asks (view #logEnv)
 
-  localContext = local . over' #logContext
+  localLogEnv f = local (over' #logEnv f)
 
-  addNamespace t = local (over' (#logContext % #namespace) appendNS)
-    where
-      appendNS = (|> t)
+-- | @since 0.1
+instance MonadIO m => KatipContext (SafeRmT Env m) where
+  getKatipContext = asks (view #logContexts)
+  localKatipContext f = local (over' #logContexts f)
+  getKatipNamespace = asks (view #logNamespace)
+  localKatipNamespace f = local (over' #logNamespace f)
 
 -- | Runs a 'SafeRmT' with the given @env@.
 --
