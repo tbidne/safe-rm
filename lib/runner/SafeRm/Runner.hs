@@ -17,6 +17,7 @@ where
 import Data.ByteString qualified as BS
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Katip
   ( ColorStrategy (ColorIfTerminal, ColorLog),
@@ -59,6 +60,12 @@ import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
 
+-- NOTE: This type exists purely to track exceptions which we have already
+-- caught and logged, for the purposes of avoiding duplicate logging.
+newtype LoggedException = MkLoggedException SomeException
+  deriving stock (Show)
+  deriving anyclass (Exception)
+
 -- | Reads CLI args, optional Toml config, and runs SafeRm.
 --
 -- @since 0.1
@@ -71,9 +78,10 @@ runSafeRm =
         usingSafeRmT env $
           runCmd cmd `catchAny` handleSafeRmEx
     )
-    -- NOTE: the doNothing has to be _outside_ the bracket to successfully
-    -- catch the ExitSuccess
+    -- NOTE: the doNothingOnSuccess has to be _outside_ the bracket to
+    -- successfully catch the ExitSuccess.
     `catch` doNothingOnSuccess
+    `catchAny` handleEx
   where
     closeScribes =
       liftIO
@@ -93,9 +101,18 @@ runSafeRm =
     doNothingOnSuccess ex = throwIO ex
 
     handleSafeRmEx ex = do
-      -- REVIEW: is this good enough?
       $(K.logTM) ErrorS (K.ls $ displayException ex)
-      throwIO ex
+      throwIO $ MkLoggedException ex
+
+    -- NOTE: We have a second "handle any" _outside_ of the setup. We need
+    -- this in case anything goes wrong w/ the setup itself.
+    handleEx ex = liftIO $ do
+      case fromException (toException ex) of
+        -- Already logged in handleSafeRmEx, do not log twice.
+        Just (MkLoggedException _) -> exitFailure
+        Nothing -> do
+          putTextLn $ T.pack $ displayException ex
+          exitFailure
 
 -- | Retrieves the configuration and runs the param function.
 --
