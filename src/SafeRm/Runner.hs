@@ -7,17 +7,12 @@
 module SafeRm.Runner
   ( -- * Main functions
     runSafeRm,
-    withEnv,
+    runCmd,
 
     -- * Helpers
-    runCmd,
     getConfiguration,
   )
 where
-
--- TODO:
---
--- 1. Better API
 
 import Data.ByteString qualified as BS
 import Data.Text qualified as T
@@ -70,7 +65,9 @@ import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
 
--- | Reads CLI args, optional Toml config, and runs SafeRm.
+-- | Entry point for running SafeRm. Does everything: reads CLI args,
+-- optional Toml config, and creates the environment before running
+-- SafeRm.
 --
 -- @since 0.1
 runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
@@ -101,6 +98,9 @@ runSafeRm =
       putTextLn $ T.pack $ displayException ex
       exitFailure
 
+-- | Runs SafeRm in the given environment. This is useful in conjunction with
+-- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
+-- custom env.
 runCmd ::
   ( HasTrashHome env,
     KatipContext m,
@@ -123,12 +123,6 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
     logEx ex = do
       $(K.logTM) ErrorS (K.ls $ displayException ex)
       throwIO ex
-
--- | Retrieves the configuration and runs the param function.
---
--- @since 0.1
-withEnv :: MonadIO m => ((Env, Command) -> m a) -> m a
-withEnv = (>>=) getEnv
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
 -- by SafeRm.
