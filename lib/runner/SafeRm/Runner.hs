@@ -63,15 +63,17 @@ import UnliftIO.Directory qualified as Dir
 --
 -- @since 0.1
 runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
-runSafeRm = do
-  -- Combine args and toml config to get final versions of shared config
-  -- values. Right now, only the trash home is shared.
-
-  bracket getEnv closeScribes $ \(env, cmd) -> do
-    usingSafeRmT env $ do
-      runCmd cmd
-        `catch` doNothingOnSuccess
-        `catchAny` handleEx
+runSafeRm =
+  bracket
+    getEnv
+    closeScribes
+    ( \(env, cmd) ->
+        usingSafeRmT env $
+          runCmd cmd `catchAny` handleSafeRmEx
+    )
+    -- NOTE: the doNothing has to be _outside_ the bracket to successfully
+    -- catch the ExitSuccess
+    `catch` doNothingOnSuccess
   where
     closeScribes =
       liftIO
@@ -90,7 +92,7 @@ runSafeRm = do
     doNothingOnSuccess ExitSuccess = pure ()
     doNothingOnSuccess ex = throwIO ex
 
-    handleEx ex = do
+    handleSafeRmEx ex = do
       -- REVIEW: is this good enough?
       $(K.logTM) ErrorS (K.ls $ displayException ex)
       throwIO ex
@@ -196,6 +198,7 @@ mkLogEnv mergedConfig (MkPathI trashLog) = do
 -- NOTE: this is copied from katip but with our custom formatter
 mkFileScribe :: FilePath -> K.PermitFunc -> Verbosity -> IO Scribe
 mkFileScribe f permitF verb = do
+  -- FIXME: if the trash directory does not exist yet then this will fail!
   h <- IO.openFile f IO.AppendMode
   Scribe logger finalizer permit <-
     K.mkHandleScribeWithFormatter
