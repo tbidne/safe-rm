@@ -10,18 +10,22 @@ module SafeRm.Runner
     withEnv,
 
     -- * Helpers
+    runCmd,
     getConfiguration,
   )
 where
 
+-- TODO:
+--
+-- 1. Roll into safe-rm lib, no reason to be standalone
+-- 2. Better API
+
 import Data.ByteString qualified as BS
-import Data.HashSet qualified as Set
-import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Katip
-  ( ColorStrategy (ColorIfTerminal, ColorLog),
-    Verbosity (V0, V2),
+  ( ColorStrategy (ColorLog),
+    Verbosity (V2),
   )
 import Katip qualified as K
 import SafeRm qualified
@@ -41,7 +45,7 @@ import SafeRm.Exceptions
     ExceptionIndex (TomlDecode),
   )
 import SafeRm.Prelude
-import SafeRm.Runner.Args (getArgs, TomlConfigPath (TomlPath, TomlDefault, TomlNone))
+import SafeRm.Runner.Args (TomlConfigPath (TomlDefault, TomlNone, TomlPath), getArgs)
 import SafeRm.Runner.Command
   ( Command
       ( Delete,
@@ -60,12 +64,6 @@ import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
 
--- NOTE: This type exists purely to track exceptions which we have already
--- caught and logged, for the purposes of avoiding duplicate logging.
-newtype LoggedException = MkLoggedException SomeException
-  deriving stock (Show)
-  deriving anyclass (Exception)
-
 -- | Reads CLI args, optional Toml config, and runs SafeRm.
 --
 -- @since 0.1
@@ -75,8 +73,7 @@ runSafeRm =
     getEnv
     closeScribes
     ( \(env, cmd) ->
-        usingSafeRmT env $
-          runCmd cmd `catchAny` handleSafeRmEx
+        usingSafeRmT env (runCmd cmd)
     )
     -- NOTE: the doNothingOnSuccess has to be _outside_ the bracket to
     -- successfully catch the ExitSuccess.
@@ -88,31 +85,38 @@ runSafeRm =
         . K.closeScribes
         . view (_1 % #logEnv)
 
-    runCmd = \case
-      Delete paths -> SafeRm.delete (listToSet paths)
-      DeletePerm force paths ->
-        SafeRm.deletePermanently force (listToSet paths)
-      Empty force -> SafeRm.emptyTrash force
-      Restore paths -> SafeRm.restore (listToSet paths)
-      List -> printIndex *> printMetadata
-      Metadata -> printMetadata
-
     doNothingOnSuccess ExitSuccess = pure ()
     doNothingOnSuccess ex = throwIO ex
 
-    handleSafeRmEx ex = do
-      $(K.logTM) ErrorS (K.ls $ displayException ex)
-      throwIO $ MkLoggedException ex
-
-    -- NOTE: We have a second "handle any" _outside_ of the setup. We need
-    -- this in case anything goes wrong w/ the setup itself.
+    -- NOTE: Finally, print any exceptions to the console before exiting with
+    -- failure. We need this _outside_ of the setup in case the setup itself
+    -- fails.
     handleEx ex = liftIO $ do
-      case fromException (toException ex) of
-        -- Already logged in handleSafeRmEx, do not log twice.
-        Just (MkLoggedException _) -> exitFailure
-        Nothing -> do
-          putTextLn $ T.pack $ displayException ex
-          exitFailure
+      putTextLn $ T.pack $ displayException ex
+      exitFailure
+
+runCmd ::
+  ( HasTrashHome env,
+    KatipContext m,
+    MonadReader env m,
+    MonadUnliftIO m,
+    Terminal m
+  ) =>
+  Command ->
+  m ()
+runCmd cmd = runCmd' cmd `catchAny` logEx
+  where
+    runCmd' = \case
+      Delete paths -> SafeRm.delete paths
+      DeletePerm force paths -> SafeRm.deletePermanently force paths
+      Empty force -> SafeRm.emptyTrash force
+      Restore paths -> SafeRm.restore paths
+      List -> printIndex *> printMetadata
+      Metadata -> printMetadata
+
+    logEx ex = do
+      $(K.logTM) ErrorS (K.ls $ displayException ex)
+      throwIO ex
 
 -- | Retrieves the configuration and runs the param function.
 --
@@ -187,30 +191,12 @@ mkLogEnv :: TomlConfig -> PathI TrashLog -> IO LogEnv
 mkLogEnv mergedConfig (MkPathI trashLog) = do
   initLogEnv <- K.initLogEnv "safe-rm" environment
 
-  consoleEnv <- case mergedConfig ^. #consoleLog of
-    Just Nothing -> pure initLogEnv
-    other -> do
-      let consoleSeverity = fromMaybe ErrorS (join other)
-      consoleScribe <-
-        K.mkHandleScribeWithFormatter
-          Logger.consoleFormatter
-          ColorIfTerminal
-          IO.stdout
-          (K.permitItem consoleSeverity)
-          V0
-
-      K.registerScribe
-        "console"
-        consoleScribe
-        K.defaultScribeSettings
-        initLogEnv
-
   case mergedConfig ^. #fileLog of
-    Nothing -> pure consoleEnv
+    Nothing -> pure initLogEnv
     other -> do
       let fileSeverity = fromMaybe ErrorS (join other)
       fileScribe <- mkFileScribe trashLog (K.permitItem fileSeverity) V2
-      K.registerScribe "file" fileScribe K.defaultScribeSettings consoleEnv
+      K.registerScribe "file" fileScribe K.defaultScribeSettings initLogEnv
   where
     environment = "production"
 
@@ -252,9 +238,6 @@ prettyDel =
     . renderStrict
     . layoutCompact
     . pretty
-
-listToSet :: Hashable a => NonEmpty a -> HashSet a
-listToSet = Set.fromList . NE.toList
 
 -- | If the argument is given, returns it. Otherwise searches for the default
 -- trash location.

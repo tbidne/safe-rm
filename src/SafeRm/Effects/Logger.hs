@@ -15,16 +15,13 @@ where
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as TLB
-import Katip (Environment, Item, Verbosity)
+import Katip (Item, Verbosity)
 import Katip qualified as K
-import Katip.Core (Verbosity (V0))
 import Katip.Core qualified as KCore
 import Katip.Format.Time qualified as KTime
-import Katip.Scribes.Handle (ColorStrategy (ColorIfTerminal))
 import Katip.Scribes.Handle qualified as KHandle
 import Language.Haskell.TH (Loc (loc_filename, loc_start))
 import SafeRm.Prelude
-import System.IO qualified as IO
 
 readLogLevel :: MonadFail m => Text -> m (Maybe Severity)
 readLogLevel "none" = pure Nothing

@@ -24,13 +24,13 @@ data Command
   = -- | Deletes a path.
     --
     -- @since 0.1
-    Delete !(NonEmpty (PathI OriginalPath))
+    Delete !(HashSet (PathI OriginalPath))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
     DeletePerm
       !Bool
-      !(NonEmpty (PathI TrashName))
+      !(HashSet (PathI TrashName))
   | -- | Empties the trash.
     --
     -- @since 0.1
@@ -38,7 +38,7 @@ data Command
   | -- | Restores a path.
     --
     -- @since 0.1
-    Restore (NonEmpty (PathI TrashName))
+    Restore (HashSet (PathI TrashName))
   | -- | List all trash contents.
     --
     -- @since 0.1

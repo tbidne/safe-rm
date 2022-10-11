@@ -7,6 +7,9 @@ module Config.Args
 where
 
 import Config.Prelude
+import Data.HashSet qualified as Set
+import Data.List qualified as L
+import SafeRm.Data.Paths (PathI)
 import SafeRm.Runner (getConfiguration)
 import SafeRm.Runner.Command
   ( _Delete,
@@ -38,30 +41,30 @@ delete = testCase "Parses delete" $ do
   (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
   Nothing @=? cfg ^. #trashHome
-  expectedPaths @=? cmd ^? _Delete
+  expectedPaths @=? setToList <$> cmd ^? _Delete
   where
     argList = ["d", "foo", "bar", "-c", "none"]
-    expectedPaths = Just $ "foo" :| ["bar"]
+    expectedPaths = Just ["bar", "foo"]
 
 permDelete :: TestTree
 permDelete = testCase "Parses perm delete" $ do
   (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
   Nothing @=? cfg ^. #trashHome
-  expectedPaths @=? cmd ^? _DeletePerm
+  expectedPaths @=? fmap setToList <$> cmd ^? _DeletePerm
   where
     argList = ["x", "foo", "bar", "-c", "none"]
-    expectedPaths = Just (False, "foo" :| ["bar"])
+    expectedPaths = Just (False, ["bar", "foo"])
 
 permDeleteForce :: TestTree
 permDeleteForce = testCase "Parses perm delete with force" $ do
   (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
   Nothing @=? cfg ^. #trashHome
-  expectedPaths @=? cmd ^? _DeletePerm
+  expectedPaths @=? fmap setToList <$> cmd ^? _DeletePerm
   where
     argList = ["x", "-f", "foo", "bar", "-c", "none"]
-    expectedPaths = Just (True, "foo" :| ["bar"])
+    expectedPaths = Just (True, ["bar", "foo"])
 
 emptyTrash :: TestTree
 emptyTrash = testCase "Parses empty" $ do
@@ -86,10 +89,10 @@ restore = testCase "Parses restore" $ do
   (cfg, cmd) <- SysEnv.withArgs argList getConfiguration
 
   Nothing @=? cfg ^. #trashHome
-  expectedPaths @=? cmd ^? _Restore
+  expectedPaths @=? setToList <$> cmd ^? _Restore
   where
     argList = ["r", "foo", "bar", "-c", "none"]
-    expectedPaths = Just $ "foo" :| ["bar"]
+    expectedPaths = Just ["bar", "foo"]
 
 list :: TestTree
 list = testCase "Parses list" $ do
@@ -108,3 +111,9 @@ metadata = testCase "Parses metadata" $ do
   Just () @=? cmd ^? _Metadata
   where
     argList = ["m", "-c", "none"]
+
+setToList :: HashSet (PathI i) -> [FilePath]
+setToList =
+  L.sort
+    . fmap (view #unPathI)
+    . Set.toList

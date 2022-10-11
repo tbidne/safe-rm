@@ -44,6 +44,7 @@ import Control.Monad.Reader as X
     local,
     runReaderT,
   )
+import Data.Bifunctor as X (Bifunctor (bimap))
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)
@@ -51,7 +52,7 @@ import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))
 import Data.Foldable as X (Foldable (foldMap', foldl', foldr, length), for_, null)
 import Data.Function as X (const, flip, id, ($), (.))
-import Data.Functor as X (Functor (fmap), ($>), (<$>))
+import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.HashMap.Strict as X (HashMap)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet as X (HashSet)
@@ -144,6 +145,9 @@ import UnliftIO.Exception as X
     finally,
     handleAny,
     throwIO,
+    throwString,
+    try,
+    tryAny,
   )
 import UnliftIO.IORef as X (IORef, modifyIORef', newIORef, readIORef)
 

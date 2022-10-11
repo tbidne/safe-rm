@@ -1,8 +1,14 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 -- | Prelude for functional test suite.
 --
 -- @since 0.1
 module Functional.Prelude
   ( module X,
+
+    -- * Types
+    FuncEnv (..),
 
     -- * Running SafeRm
     runSafeRm,
@@ -22,11 +28,19 @@ where
 
 import Data.List qualified as L
 import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Builder qualified as TLB
+import Katip (Verbosity (V0))
+import Katip qualified as K
+import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
+import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X hiding (IO)
 import SafeRm.Runner qualified as Runner
+import SafeRm.Runner.Toml (TomlConfig)
 import System.IO as X (IO)
 import Test.Tasty as X (TestTree, testGroup)
 import Test.Tasty.HUnit as X
@@ -50,47 +64,73 @@ import UnliftIO.Environment qualified as SysEnv
 -- 2. Use golden tests for the logs. This will currently fail due to
 --    timestamps, so abstract that to its own typeclass.
 
+data FuncEnv = MkFuncEnv
+  { trashHome :: !(PathI TrashHome),
+    logEnv :: !LogEnv,
+    logContexts :: !LogContexts,
+    logNamespace :: !Namespace,
+    terminalRef :: !(IORef Text),
+    logsRef :: !(IORef Text)
+  }
+
+makeFieldLabelsNoPrefix ''FuncEnv
+
+deriving anyclass instance HasTrashHome FuncEnv
+
 -- | @since 0.1
-newtype FunctionalIO a = MkFunctionalIO (ReaderT (IORef Text) IO a)
+newtype FunctionalIO a = MkFunctionalIO (ReaderT FuncEnv IO a)
   deriving
     ( Applicative,
       Functor,
       Monad,
       MonadIO,
-      MonadReader (IORef Text),
+      MonadReader FuncEnv,
       MonadUnliftIO
     )
-    via (ReaderT (IORef Text) IO)
+    via (ReaderT FuncEnv IO)
+
+instance Katip FunctionalIO where
+  getLogEnv = asks (view #logEnv)
+  localLogEnv f = local (over' #logEnv f)
+
+instance KatipContext FunctionalIO where
+  getKatipContext = asks (view #logContexts)
+  localKatipContext f = local (over' #logContexts f)
+  getKatipNamespace = asks (view #logNamespace)
+  localKatipNamespace f = local (over' #logNamespace f)
 
 -- | @since 0.1
 instance Terminal FunctionalIO where
-  putStr s = ask >>= \ref -> modifyIORef' ref (<> T.pack s)
+  putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
 
 -- | @since 0.1
-runFunctionalIO :: FunctionalIO a -> IORef Text -> IO a
+runFunctionalIO :: FunctionalIO a -> FuncEnv -> IO a
 runFunctionalIO (MkFunctionalIO rdr) = runReaderT rdr
 
 -- | Runs safe-rm.
 --
 -- @since 0.1
 runSafeRm :: [String] -> IO ()
-runSafeRm argList = do
-  output <- newIORef ""
-  runFunctionalIO funcIO output
-  where
-    funcIO = SysEnv.withArgs argList Runner.runSafeRm
+runSafeRm = void . captureSafeRm
 
--- | Runs safe-rm and captures output.
+-- | Runs safe-rm and captures terminal output.
 --
 -- @since 0.1
 captureSafeRm :: [String] -> IO [Text]
 captureSafeRm argList = do
-  output <- newIORef ""
-  runFunctionalIO funcIO output
-  T.lines <$> readIORef output
+  terminalRef <- newIORef ""
+  logsRef <- newIORef ""
+
+  (toml, cmd) <- getConfig
+  env <- mkFuncEnv toml logsRef terminalRef
+
+  runFunctionalIO (Runner.runCmd cmd) env
+
+  T.lines <$> readIORef terminalRef
   where
-    funcIO = SysEnv.withArgs argList Runner.runSafeRm
+    argList' = "-c" : "none" : argList
+    getConfig = SysEnv.withArgs argList' Runner.getConfiguration
 
 -- | Asserts that files exist.
 --
@@ -160,3 +200,39 @@ assertExceptionMatches s exs = do
       assertMatches s (L.sort hs)
   where
     exTxt = T.lines . T.pack $ displayException exs
+
+mkFuncEnv :: HasCallStack => TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
+mkFuncEnv toml logsRef terminalRef = do
+  initLogEnv <- K.initLogEnv "functional" "test"
+  let scribe =
+        Scribe
+          { liPush = \item -> do
+              let builder = Logger.consoleFormatter False V0 item
+                  txt = TL.toStrict $ TLB.toLazyText builder
+
+              modifyIORef' logsRef (<> txt),
+            scribeFinalizer = pure (),
+            -- TODO: capture everything and test
+            scribePermitItem = const (pure True)
+          }
+
+  logEnv <-
+    K.registerScribe
+      "logger"
+      scribe
+      K.defaultScribeSettings
+      initLogEnv
+
+  pure $
+    MkFuncEnv
+      { trashHome = trashHome,
+        logEnv,
+        logContexts = mempty,
+        logNamespace = "functional",
+        terminalRef,
+        logsRef
+      }
+  where
+    trashHome = case toml ^. #trashHome of
+      Nothing -> error "Setup error, no trash home on config"
+      Just th -> th
