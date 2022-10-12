@@ -38,10 +38,9 @@ import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 import SafeRm.FileUtils as X
-import SafeRm.Prelude as X hiding (IO)
+import SafeRm.Prelude as X
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Toml (TomlConfig)
-import System.IO as X (IO)
 import Test.Tasty as X (TestTree, testGroup)
 import Test.Tasty.HUnit as X
   ( assertBool,
@@ -52,6 +51,7 @@ import Test.Tasty.HUnit as X
   )
 import UnliftIO.Directory qualified as Dir
 import UnliftIO.Environment qualified as SysEnv
+import System.Exit (die)
 
 -- NOTE: The weird "hiding IO ... import IO" lines are so we don't trigger
 -- -Wunused-packages wrt base (interferes with ghcid)
@@ -201,9 +201,10 @@ assertExceptionMatches s exs = do
   where
     exTxt = T.lines . T.pack $ displayException exs
 
-mkFuncEnv :: HasCallStack => TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
+mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
 mkFuncEnv toml logsRef terminalRef = do
   initLogEnv <- K.initLogEnv "functional" "test"
+  trashHome <- getTrashHome
   let scribe =
         Scribe
           { liPush = \item -> do
@@ -233,6 +234,6 @@ mkFuncEnv toml logsRef terminalRef = do
         logsRef
       }
   where
-    trashHome = case toml ^. #trashHome of
-      Nothing -> error "Setup error, no trash home on config"
-      Just th -> th
+    getTrashHome = case toml ^. #trashHome of
+      Nothing -> die "Setup error, no trash home on config"
+      Just th -> pure th
