@@ -10,7 +10,6 @@ import Functional.Commands.M qualified as M
 import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (MkTestArgs, tmpDir))
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
@@ -22,27 +21,28 @@ import UnliftIO.Directory qualified as Dir
 main :: IO ()
 main =
   Tasty.defaultMain $
-    Tasty.withResource setup teardown $ \args ->
+    Tasty.withResource setup teardown $ \_ ->
       testGroup
         "Functional Tests"
-        [ D.tests args,
-          X.tests args,
-          E.tests args,
-          R.tests args,
-          L.tests args,
-          M.tests args
+        [ D.tests,
+          X.tests,
+          E.tests,
+          R.tests,
+          L.tests,
+          M.tests
         ]
 
-setup :: IO TestArgs
+setup :: IO ()
 setup = do
-  tmpDir <- (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory
+  tmpDir <- getTestDir
 
   createDirectoryIfMissing True tmpDir
-  pure $ MkTestArgs tmpDir
+  pure ()
 
-teardown :: TestArgs -> IO ()
-teardown args = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
+teardown :: () -> IO ()
+teardown _ = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
-    cleanup = Dir.removePathForcibly (args ^. #tmpDir)
+    cleanup = getTestDir >>= Dir.removePathForcibly
     doNothing =
-      putStrLn $ "*** Not cleaning up tmp dir: " <> args ^. #tmpDir
+      getTestDir >>= \d ->
+        putStrLn $ "*** Not cleaning up tmp dir: " <> d

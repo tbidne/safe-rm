@@ -7,20 +7,19 @@ module Functional.Commands.E
 where
 
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "Empty (e)"
-    [ emptyTrash args,
-      emptyTrashTwice args
+    [ emptyTrash,
+      emptyTrashTwice
     ]
 
-emptyTrash :: IO TestArgs -> TestTree
-emptyTrash args = testCase "Empties trash" $ do
-  tmpDir <- view #tmpDir <$> args
+emptyTrash :: TestTree
+emptyTrash = testCase "Empties trash" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "e1"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -105,9 +104,9 @@ emptyTrash args = testCase "Empties trash" $ do
         Prefix "Size:"
       ]
 
-emptyTrashTwice :: IO TestArgs -> TestTree
-emptyTrashTwice args = testCase "Calling empty twice does not error" $ do
-  tmpDir <- view #tmpDir <$> args
+emptyTrashTwice :: TestTree
+emptyTrashTwice = testCase "Calling empty twice does not error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "e1"
       trashDir = testDir </> ".trash"
 

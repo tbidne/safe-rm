@@ -9,7 +9,6 @@ where
 import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions
   ( ExceptionI,
     ExceptionIndex
@@ -23,20 +22,20 @@ import SafeRm.Exceptions
 -- import Data.ByteString qualified as BS
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "List (l)"
-    [ emptySucceeds args,
-      readIndexError args,
-      indexEntryNonExtantError args,
-      indexDuplicatesError args,
-      indexSizeMismatchError args
+    [ emptySucceeds,
+      readIndexError,
+      indexEntryNonExtantError,
+      indexDuplicatesError,
+      indexSizeMismatchError
     ]
 
-emptySucceeds :: IO TestArgs -> TestTree
-emptySucceeds args = testCase "List on empty directory succeeds" $ do
-  tmpDir <- view #tmpDir <$> args
+emptySucceeds :: TestTree
+emptySucceeds = testCase "List on empty directory succeeds" $ do
+  tmpDir <- getTestDir
   let argList = ["l", "-t", tmpDir </> "l1/.trash"]
 
   result <- captureSafeRm argList
@@ -48,9 +47,9 @@ emptySucceeds args = testCase "List on empty directory succeeds" $ do
         Exact "Size:         0.00B"
       ]
 
-readIndexError :: IO TestArgs -> TestTree
-readIndexError args = testCase "Read Index Error" $ do
-  tmpDir <- view #tmpDir <$> args
+readIndexError :: TestTree
+readIndexError = testCase "Read Index Error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "l2"
       trashDir = testDir </> ".trash"
       argList = ["l", "-t", trashDir, "--console-log", "none"]
@@ -74,9 +73,9 @@ readIndexError args = testCase "Read Index Error" $ do
           "parse error (not enough input) at \"\""
       ]
 
-indexEntryNonExtantError :: IO TestArgs -> TestTree
-indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
-  tmpDir <- view #tmpDir <$> args
+indexEntryNonExtantError :: TestTree
+indexEntryNonExtantError = testCase "Index Entry Non-Extant Error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "l3"
       trashDir = testDir </> ".trash"
       argList = ["l", "-t", trashDir, "--console-log", "none"]
@@ -116,9 +115,9 @@ indexEntryNonExtantError args = testCase "Index Entry Non-Extant Error" $ do
           )
       ]
 
-indexDuplicatesError :: IO TestArgs -> TestTree
-indexDuplicatesError args = testCase "Index Duplicates Error" $ do
-  tmpDir <- view #tmpDir <$> args
+indexDuplicatesError :: TestTree
+indexDuplicatesError = testCase "Index Duplicates Error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "l4"
       trashDir = testDir </> ".trash"
       argList = ["l", "-t", trashDir, "--console-log", "none"]
@@ -160,9 +159,9 @@ indexDuplicatesError args = testCase "Index Duplicates Error" $ do
           "/safe-rm/functional/l4/.trash/.index.csv' for the following path: foo"
       ]
 
-indexSizeMismatchError :: IO TestArgs -> TestTree
-indexSizeMismatchError args = testCase "Index Size Mismatch Error" $ do
-  tmpDir <- view #tmpDir <$> args
+indexSizeMismatchError :: TestTree
+indexSizeMismatchError = testCase "Index Size Mismatch Error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "l5"
       trashDir = testDir </> ".trash"
       argList = ["l", "-t", trashDir, "--console-log", "none"]

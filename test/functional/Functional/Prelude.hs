@@ -23,6 +23,9 @@ module Functional.Prelude
     -- * Text assertion
     assertMatches,
     assertExceptionMatches,
+
+    -- * Misc
+    getTestDir,
   )
 where
 
@@ -41,6 +44,7 @@ import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Toml (TomlConfig)
+import System.Exit (die)
 import Test.Tasty as X (TestTree, testGroup)
 import Test.Tasty.HUnit as X
   ( assertBool,
@@ -51,7 +55,6 @@ import Test.Tasty.HUnit as X
   )
 import UnliftIO.Directory qualified as Dir
 import UnliftIO.Environment qualified as SysEnv
-import System.Exit (die)
 
 -- NOTE: The weird "hiding IO ... import IO" lines are so we don't trigger
 -- -Wunused-packages wrt base (interferes with ghcid)
@@ -237,3 +240,9 @@ mkFuncEnv toml logsRef terminalRef = do
     getTrashHome = case toml ^. #trashHome of
       Nothing -> die "Setup error, no trash home on config"
       Just th -> pure th
+
+replaceDir :: FilePath -> Text -> Text
+replaceDir fp = T.replace (T.pack fp) "<dir>"
+
+getTestDir :: IO FilePath
+getTestDir = (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory

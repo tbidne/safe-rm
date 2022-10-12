@@ -170,7 +170,6 @@ test-suite functional
     Functional.Commands.R
     Functional.Commands.X
     Functional.Prelude
-    Functional.TestArgs
 
   build-depends:
     , base

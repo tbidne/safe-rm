@@ -8,24 +8,23 @@ where
 
 import Data.Text qualified as T
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "Delete (d)"
-    [ deletesOne args,
-      deletesMany args,
-      deleteUnknownError args,
-      deleteDuplicateFile args,
-      deletesSome args
+    [ deletesOne,
+      deletesMany,
+      deleteUnknownError,
+      deleteDuplicateFile,
+      deletesSome
     ]
 
-deletesOne :: IO TestArgs -> TestTree
-deletesOne args = testCase "Deletes a single file" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesOne :: TestTree
+deletesOne = testCase "Deletes a single file" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "d1"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -57,9 +56,9 @@ deletesOne args = testCase "Deletes a single file" $ do
         Prefix "Size:"
       ]
 
-deletesMany :: IO TestArgs -> TestTree
-deletesMany args = testCase "Deletes several paths" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesMany :: TestTree
+deletesMany = testCase "Deletes several paths" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "d2"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -120,9 +119,9 @@ deletesMany args = testCase "Deletes several paths" $ do
         Prefix "Size:"
       ]
 
-deleteUnknownError :: IO TestArgs -> TestTree
-deleteUnknownError args = testCase "Delete unknown prints error" $ do
-  tmpDir <- view #tmpDir <$> args
+deleteUnknownError :: TestTree
+deleteUnknownError = testCase "Delete unknown prints error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "d3"
       trashDir = testDir </> ".trash"
       file = testDir </> "bad file"
@@ -144,9 +143,9 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
         Outfix "- Path not found:" "/safe-rm/functional/d3/bad file"
       ]
 
-deleteDuplicateFile :: IO TestArgs -> TestTree
-deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
-  tmpDir <- view #tmpDir <$> args
+deleteDuplicateFile :: TestTree
+deleteDuplicateFile = testCase "Deletes duplicate file" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "d4"
       trashDir = testDir </> ".trash"
       file = testDir </> "f1"
@@ -188,9 +187,9 @@ deleteDuplicateFile args = testCase "Deletes duplicate file" $ do
         Prefix "Size:"
       ]
 
-deletesSome :: IO TestArgs -> TestTree
-deletesSome args = testCase "Deletes some, errors on others" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesSome :: TestTree
+deletesSome = testCase "Deletes some, errors on others" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "d5"
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]

@@ -8,23 +8,22 @@ where
 
 import Data.Text qualified as T
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "Permanent Delete (x)"
-    [ deletesOne args,
-      deletesMany args,
-      deleteUnknownError args,
-      deletesSome args
+    [ deletesOne,
+      deletesMany,
+      deleteUnknownError,
+      deletesSome
     ]
 
-deletesOne :: IO TestArgs -> TestTree
-deletesOne args = testCase "Permanently deletes a single file" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesOne :: TestTree
+deletesOne = testCase "Permanently deletes a single file" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "x1"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -77,9 +76,9 @@ deletesOne args = testCase "Permanently deletes a single file" $ do
         Prefix "Size:"
       ]
 
-deletesMany :: IO TestArgs -> TestTree
-deletesMany args = testCase "Permanently deletes several paths" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesMany :: TestTree
+deletesMany = testCase "Permanently deletes several paths" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "x2"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -171,9 +170,9 @@ deletesMany args = testCase "Permanently deletes several paths" $ do
         Prefix "Size:"
       ]
 
-deleteUnknownError :: IO TestArgs -> TestTree
-deleteUnknownError args = testCase "Delete unknown prints error" $ do
-  tmpDir <- view #tmpDir <$> args
+deleteUnknownError :: TestTree
+deleteUnknownError = testCase "Delete unknown prints error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "x3"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -231,9 +230,9 @@ deleteUnknownError args = testCase "Delete unknown prints error" $ do
         Exact "- Path not found: bad file"
       ]
 
-deletesSome :: IO TestArgs -> TestTree
-deletesSome args = testCase "Deletes some, errors on others" $ do
-  tmpDir <- view #tmpDir <$> args
+deletesSome :: TestTree
+deletesSome = testCase "Deletes some, errors on others" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "x4"
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]

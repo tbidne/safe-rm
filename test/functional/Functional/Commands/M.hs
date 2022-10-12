@@ -7,19 +7,18 @@ module Functional.Commands.M
 where
 
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "Metadata (m)"
-    [ metadata args
+    [ metadata
     ]
 
-metadata :: IO TestArgs -> TestTree
-metadata args = testCase "Prints metadata" $ do
-  tmpDir <- view #tmpDir <$> args
+metadata :: TestTree
+metadata = testCase "Prints metadata" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "m1"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]

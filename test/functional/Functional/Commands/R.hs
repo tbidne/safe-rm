@@ -8,27 +8,26 @@ where
 
 import Data.Text qualified as T
 import Functional.Prelude
-import Functional.TestArgs (TestArgs (tmpDir))
 import SafeRm.Exceptions
   ( ExceptionI,
     ExceptionIndex (SomeExceptions),
   )
 
 -- | @since 0.1
-tests :: IO TestArgs -> TestTree
-tests args =
+tests :: TestTree
+tests =
   testGroup
     "Restore (r)"
-    [ restoreOne args,
-      restoreMany args,
-      restoreUnknownError args,
-      restoreCollisionError args,
-      restoresSome args
+    [ restoreOne,
+      restoreMany,
+      restoreUnknownError,
+      restoreCollisionError,
+      restoresSome
     ]
 
-restoreOne :: IO TestArgs -> TestTree
-restoreOne args = testCase "Restores a single file" $ do
-  tmpDir <- view #tmpDir <$> args
+restoreOne :: TestTree
+restoreOne = testCase "Restores a single file" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "r1"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -81,9 +80,9 @@ restoreOne args = testCase "Restores a single file" $ do
         Prefix "Size:"
       ]
 
-restoreMany :: IO TestArgs -> TestTree
-restoreMany args = testCase "Restores several paths" $ do
-  tmpDir <- view #tmpDir <$> args
+restoreMany :: TestTree
+restoreMany = testCase "Restores several paths" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "r2"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -172,9 +171,9 @@ restoreMany args = testCase "Restores several paths" $ do
         Prefix "Size:"
       ]
 
-restoreUnknownError :: IO TestArgs -> TestTree
-restoreUnknownError args = testCase "Restore unknown prints error" $ do
-  tmpDir <- view #tmpDir <$> args
+restoreUnknownError :: TestTree
+restoreUnknownError = testCase "Restore unknown prints error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "r3"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -230,9 +229,9 @@ restoreUnknownError args = testCase "Restore unknown prints error" $ do
         Exact "- Path not found: bad file"
       ]
 
-restoreCollisionError :: IO TestArgs -> TestTree
-restoreCollisionError args = testCase "Restore collision prints error" $ do
-  tmpDir <- view #tmpDir <$> args
+restoreCollisionError :: TestTree
+restoreCollisionError = testCase "Restore collision prints error" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "r4"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -288,9 +287,9 @@ restoreCollisionError args = testCase "Restore collision prints error" $ do
           "/safe-rm/functional/r4/f1"
       ]
 
-restoresSome :: IO TestArgs -> TestTree
-restoresSome args = testCase "Restores some, errors on others" $ do
-  tmpDir <- view #tmpDir <$> args
+restoresSome :: TestTree
+restoresSome = testCase "Restores some, errors on others" $ do
+  tmpDir <- getTestDir
   let testDir = tmpDir </> "r5"
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
