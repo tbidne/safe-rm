@@ -10,10 +10,9 @@ where
 import Benchmarks.Prelude
 import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
-import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import SafeRm.Env (Env (MkEnv, logContexts, logEnv, logNamespace, trashHome))
+import SafeRm.Runner.Env (Env (MkEnv, logEnv, trashHome), LogEnv (MkLogEnv))
 import SafeRm.Runner.SafeRmT
 
 -- | Index reading benchmarks.
@@ -76,11 +75,8 @@ readIndex desc =
 
 mkEnv :: PathI TrashHome -> IO Env
 mkEnv trashHome = do
-  env <- K.initLogEnv mempty "bench"
   pure $
     MkEnv
       { trashHome = trashHome,
-        logEnv = env,
-        logContexts = mempty,
-        logNamespace = mempty
+        logEnv = MkLogEnv Nothing (∅)
       }

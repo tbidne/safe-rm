@@ -199,7 +199,6 @@ benchmark benchmarks
     , base
     , bytestring
     , env-guard
-    , katip
     , safe-rm
     , tasty-bench  ^>=0.3
     , unliftio
