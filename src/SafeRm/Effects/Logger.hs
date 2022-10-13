@@ -30,7 +30,8 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 import Language.Haskell.TH (Loc (loc_filename, loc_start))
-import SafeRm.Data.Timestamp qualified as TS
+import SafeRm.Effects.Timing (Timing (getSystemTime))
+import SafeRm.Effects.Timing qualified as Timing
 import SafeRm.Prelude
 import System.Log.FastLogger qualified as FL
 
@@ -113,7 +114,7 @@ logLevelStrings = "[none|error|warn|info|debug]"
 --
 -- @since 0.1
 formatLog ::
-  (LoggerContext m, MonadIO m) =>
+  (LoggerContext m, Timing m) =>
   ToLogStr msg =>
   Bool ->
   Loc ->
@@ -121,8 +122,7 @@ formatLog ::
   msg ->
   m LogStr
 formatLog withNewline loc lvl msg = do
-  -- TODO: abstract this
-  timestampTxt <- toLogStr . TS.toString <$> liftIO TS.getCurrentLocalTime
+  timestampTxt <- toLogStr . Timing.toString <$> getSystemTime
   namespace <- getNamespace
   let locTxt = toLogStr $ partialLoc loc
       namespaceTxt = toLogStr $ displayNamespace namespace

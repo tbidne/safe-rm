@@ -1,17 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Timestamp functionality.
+-- | Provides the 'Timing' class.
 --
 -- @since 0.1
-module SafeRm.Data.Timestamp
-  ( Timestamp (..),
-    getCurrentLocalTime,
+module SafeRm.Effects.Timing
+  ( Timing (..),
+    Timestamp (..),
     toString,
     toText,
   )
 where
 
+import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString.Char8 qualified as Char8
 import Data.Csv (FromField (parseField), ToField (toField))
 import Data.Text qualified as T
@@ -76,12 +77,22 @@ instance FromField Timestamp where
 instance ToField Timestamp where
   toField = str2Bs . toString
 
--- | Retrieves the local time.
+-- | Class for retrieving the current system time.
 --
 -- @since 0.1
-getCurrentLocalTime :: MonadIO m => m Timestamp
-getCurrentLocalTime =
-  MkTimestamp . Local.zonedTimeToLocalTime <$> liftIO Local.getZonedTime
+class Monad m => Timing m where
+  -- | @since 0.1
+  getSystemTime :: m Timestamp
+
+-- | @since 0.1
+instance Timing IO where
+  getSystemTime =
+    MkTimestamp . Local.zonedTimeToLocalTime
+      <$> liftIO Local.getZonedTime
+
+-- | @since 0.1
+instance Timing m => Timing (ReaderT e m) where
+  getSystemTime = lift getSystemTime
 
 -- | Formats the time.
 --

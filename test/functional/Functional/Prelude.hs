@@ -13,6 +13,8 @@ module Functional.Prelude
     -- * Running SafeRm
     runSafeRm,
     captureSafeRm,
+    captureSafeRmLogs,
+    captureSafeRmExceptionLogs,
 
     -- * Assertions
     assertFilesExist,
@@ -31,6 +33,8 @@ where
 
 import Data.List qualified as L
 import Data.Text qualified as T
+import Data.Time (LocalTime (LocalTime))
+import Data.Time.LocalTime (midday)
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Effects.Logger
   ( LoggerContext (getNamespace, localNamespace),
@@ -38,6 +42,7 @@ import SafeRm.Effects.Logger
   )
 import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
+import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 import SafeRm.FileUtils as X
@@ -56,17 +61,6 @@ import Test.Tasty.HUnit as X
 import UnliftIO.Directory qualified as Dir
 import UnliftIO.Environment qualified as SysEnv
 
--- NOTE: The weird "hiding IO ... import IO" lines are so we don't trigger
--- -Wunused-packages wrt base (interferes with ghcid)
-
--- NOTE: If we ever want to test logging, two options:
---
--- 1. Do not use Runner's runSafeRm. Instead, use its withEnv function with our
---    FunctionalIO, and ensure the latter implements Logger.
---
--- 2. Use golden tests for the logs. This will currently fail due to
---    timestamps, so abstract that to its own typeclass.
-
 data FuncEnv = MkFuncEnv
   { trashHome :: !(PathI TrashHome),
     terminalRef :: !(IORef Text),
@@ -79,7 +73,7 @@ makeFieldLabelsNoPrefix ''FuncEnv
 deriving anyclass instance HasTrashHome FuncEnv
 
 -- | @since 0.1
-newtype FunctionalIO a = MkFunctionalIO (ReaderT FuncEnv IO a)
+newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
   deriving
     ( Applicative,
       Functor,
@@ -91,24 +85,29 @@ newtype FunctionalIO a = MkFunctionalIO (ReaderT FuncEnv IO a)
     via (ReaderT FuncEnv IO)
 
 -- | @since 0.1
-instance Terminal FunctionalIO where
+instance Terminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
 
-instance MonadLogger FunctionalIO where
+instance Timing FuncIO where
+  getSystemTime = pure $ MkTimestamp localTime
+    where
+      localTime = LocalTime (toEnum 59_000) midday
+
+instance MonadLogger FuncIO where
   monadLoggerLog loc _src lvl msg = do
     formatted <- Logger.formatLog True loc lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
-    modifyIORef' logsRef (<> txt) -- TODO: newline?
+    modifyIORef' logsRef (<> txt)
 
-instance LoggerContext FunctionalIO where
+instance LoggerContext FuncIO where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 
 -- | @since 0.1
-runFunctionalIO :: FunctionalIO a -> FuncEnv -> IO a
-runFunctionalIO (MkFunctionalIO rdr) = runReaderT rdr
+runFuncIO :: FuncIO a -> FuncEnv -> IO a
+runFuncIO (MkFuncIO rdr) = runReaderT rdr
 
 -- | Runs safe-rm.
 --
@@ -120,16 +119,56 @@ runSafeRm = void . captureSafeRm
 --
 -- @since 0.1
 captureSafeRm :: [String] -> IO [Text]
-captureSafeRm argList = do
+captureSafeRm = fmap (view _1) . captureSafeRmLogs
+
+-- | Runs safe-rm and captures (terminal output, logs).
+--
+-- @since 0.1
+captureSafeRmLogs :: [String] -> IO ([Text], [Text])
+captureSafeRmLogs argList = do
   terminalRef <- newIORef ""
   logsRef <- newIORef ""
 
   (toml, cmd) <- getConfig
   env <- mkFuncEnv toml logsRef terminalRef
 
-  runFunctionalIO (Runner.runCmd cmd) env
+  runFuncIO (Runner.runCmd cmd) env
 
-  T.lines <$> readIORef terminalRef
+  testDir <- getTestDir
+  terminal <- readIORef terminalRef
+  logs <- replaceDir testDir <$> readIORef logsRef
+
+  pure (T.lines terminal, T.lines logs)
+  where
+    argList' = "-c" : "none" : argList
+    getConfig = SysEnv.withArgs argList' Runner.getConfiguration
+
+-- | Runs safe-rm and captures a thrown exception and logs.
+--
+-- @since 0.1
+captureSafeRmExceptionLogs :: Exception e => [String] -> IO (e, [Text])
+captureSafeRmExceptionLogs argList = do
+  terminalRef <- newIORef ""
+  logsRef <- newIORef ""
+
+  (toml, cmd) <- getConfig
+  env <- mkFuncEnv toml logsRef terminalRef
+
+  result <-
+    runFuncIO
+      ( (Runner.runCmd cmd $> Nothing)
+          `catch` \e -> pure (Just e)
+      )
+      env
+
+  case result of
+    Nothing ->
+      throwString
+        "captureSafeRmExceptionLogs: Expected exception, received none"
+    Just ex -> do
+      testDir <- getTestDir
+      logs <- replaceDir testDir <$> readIORef logsRef
+      pure (ex, T.lines logs)
   where
     argList' = "-c" : "none" : argList
     getConfig = SysEnv.withArgs argList' Runner.getConfiguration
@@ -206,7 +245,6 @@ assertExceptionMatches s exs = do
 mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
 mkFuncEnv toml logsRef terminalRef = do
   trashHome <- getTrashHome
-
   pure $
     MkFuncEnv
       { trashHome = trashHome,
@@ -219,8 +257,8 @@ mkFuncEnv toml logsRef terminalRef = do
       Nothing -> die "Setup error, no trash home on config"
       Just th -> pure th
 
--- replaceDir :: FilePath -> Text -> Text
--- replaceDir fp = T.replace (T.pack fp) "<dir>"
+replaceDir :: FilePath -> Text -> Text
+replaceDir fp = T.replace (T.pack fp) "<dir>"
 
 getTestDir :: IO FilePath
 getTestDir = (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory

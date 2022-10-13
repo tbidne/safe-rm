@@ -33,9 +33,9 @@ import SafeRm.Data.Paths
     PathIndex (OriginalPath, TrashName),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Data.Timestamp qualified as Timestamp
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
+import SafeRm.Effects.Timing (Timing (getSystemTime))
 import SafeRm.Env
   ( HasTrashHome (getTrashHome),
     getTrashIndex,
@@ -60,7 +60,8 @@ delete ::
   ( HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
-    MonadUnliftIO m
+    MonadUnliftIO m,
+    Timing m
   ) =>
   HashSet (PathI OriginalPath) ->
   m ()
@@ -72,7 +73,7 @@ delete paths = addNamespace "delete" $ do
 
   deletedPathsRef <- newIORef (∅)
   exceptionsRef <- newIORef Nothing
-  currTime <- Timestamp.getCurrentLocalTime
+  currTime <- getSystemTime
 
   -- move path to trash, saving any exceptions
   addNamespace "deleting" $ for_ paths $ \fp ->
@@ -208,10 +209,10 @@ getMetadata ::
   ) =>
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
-  trashHome <- asks getTrashHome
+  paths@(trashHome, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
-    True -> Metadata.getMetadata
+    True -> Metadata.toMetadata paths
     False -> do
       $(logDebug) "Trash home does not exist."
       pure mempty
@@ -274,7 +275,7 @@ emptyTrash ::
   ) =>
   Bool ->
   m ()
-emptyTrash force = addNamespace "getMetadata" $ do
+emptyTrash force = addNamespace "emptyTrash" $ do
   trashHome@(MkPathI th) <- asks getTrashHome
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   exists <- Dir.doesDirectoryExist th
@@ -307,11 +308,9 @@ showMapOrigPaths = showMapElems #originalPath
 
 showMapElems :: Lens' PathData (PathI i) -> HashMap (PathI TrashName) PathData -> Text
 showMapElems toPathI =
-  foldl' foldStrs ""
+  T.intercalate ", "
     . fmap (T.pack . view (toPathI % #unPathI))
     . Map.elems
-  where
-    foldStrs acc s = ("- " <> s <> "\n") <> acc
 
 noBuffering :: MonadIO m => m ()
 noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout

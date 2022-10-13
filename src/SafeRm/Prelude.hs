@@ -59,7 +59,12 @@ import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)
 import Data.Either as X (Either (Left, Right))
 import Data.Eq as X (Eq ((/=), (==)))
-import Data.Foldable as X (Foldable (foldMap', foldl', foldr, length), for_, null)
+import Data.Foldable as X
+  ( Foldable (foldMap', foldl', foldr, length),
+    for_,
+    null,
+    sequenceA_,
+  )
 import Data.Function as X (const, flip, id, ($), (.))
 import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.HashMap.Strict as X (HashMap)
@@ -89,7 +94,7 @@ import Data.Traversable as X (traverse)
 import Data.Tuple as X (curry, uncurry)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16)
-import GHC.Enum as X (Bounded (maxBound, minBound))
+import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
 import GHC.Generics as X (Generic)
@@ -101,9 +106,11 @@ import GHC.Stack as X (HasCallStack)
 import Optics.Core as X
   ( AffineTraversal',
     Iso',
+    Lens,
     Lens',
     Prism',
     iso,
+    lens,
     over',
     preview,
     review,
@@ -142,6 +149,7 @@ import UnliftIO.Exception as X
     SomeAsyncException (SomeAsyncException),
     SomeException,
     bracket,
+    bracket_,
     catch,
     catchAny,
     finally,

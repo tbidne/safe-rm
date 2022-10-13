@@ -6,7 +6,6 @@ module Functional.Commands.X
   )
 where
 
-import Data.Text qualified as T
 import Functional.Prelude
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
@@ -50,7 +49,8 @@ deletesOne = testCase "Permanently deletes a single file" $ do
   -- PERMANENT DELETE
 
   let permDelArgList = ["x", "f1", "-f", "-t", trashDir]
-  runSafeRm permDelArgList
+  (_, logs) <- captureSafeRmLogs permDelArgList
+  assertMatches expectedLogs logs
 
   -- list output assertions
   permDelResult <- captureSafeRm ["l", "-t", trashDir]
@@ -74,6 +74,13 @@ deletesOne = testCase "Permanently deletes a single file" $ do
       [ Exact "Entries:      0",
         Exact "Total Files:  0",
         Prefix "Size:"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x1/.trash",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x1/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: f1"
       ]
 
 deletesMany :: TestTree
@@ -114,7 +121,8 @@ deletesMany = testCase "Permanently deletes several paths" $ do
   let permDelArgList =
         -- leave f2 alone
         ["x", "f1", "f3", "dir1", "dir2", "-f", "-t", trashDir]
-  runSafeRm permDelArgList
+  (_, logs) <- captureSafeRmLogs permDelArgList
+  assertMatches expectedLogs logs
 
   -- list output assertions
   permDelResult <- captureSafeRm ["l", "-t", trashDir]
@@ -169,6 +177,20 @@ deletesMany = testCase "Permanently deletes several paths" $ do
         Exact "Total Files:  1",
         Prefix "Size:"
       ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x2/.trash",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x2/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: dir2, dir1, f3, f1"
+      ]
 
 deleteUnknownError :: TestTree
 deleteUnknownError = testCase "Delete unknown prints error" $ do
@@ -203,17 +225,12 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
   -- PERMANENT DELETE
   let permDelArgList =
         ["x", "bad file", "-f", "-t", trashDir]
+  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) permDelArgList
 
   -- assert exception
-  result <-
-    (runSafeRm permDelArgList $> Nothing)
-      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
-  case result of
-    Nothing -> assertFailure "Expected exception"
-    Just ex ->
-      assertMatches
-        expectedPermDel
-        (T.lines . T.pack $ displayException ex)
+  assertExceptionMatches expectedPermDel ex
+  assertMatches expectedLogs logs
+
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -226,8 +243,14 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
         Prefix "Size:"
       ]
     expectedPermDel =
-      [ Exact "Encountered exception(s)",
-        Exact "- Path not found: bad file"
+      [ Exact "- Path not found: bad file"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x3/.trash",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x3/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x3/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted:",
+        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"bad file\" :| [])"
       ]
 
 deletesSome :: TestTree
@@ -259,13 +282,11 @@ deletesSome = testCase "Deletes some, errors on others" $ do
   -- PERMANENT DELETE
   let permDelArgList =
         ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
+  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) permDelArgList
 
-  result <-
-    (runSafeRm permDelArgList $> Nothing)
-      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
-  case result of
-    Nothing -> assertFailure "Expected exception"
-    Just ex -> assertExceptionMatches expectedExceptions ex
+  -- assert exception
+  assertExceptionMatches expectedExceptions ex
+  assertMatches expectedLogs logs
 
   -- list output assertions
   resultList <- captureSafeRm ["l", "-t", trashDir]
@@ -301,4 +322,16 @@ deletesSome = testCase "Deletes some, errors on others" $ do
       [ Exact "Entries:      0",
         Exact "Total Files:  0",
         Prefix "Size:"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x4/.trash",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x4/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: f5, f2, f1",
+        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f4\" :| [MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f3\"])"
       ]

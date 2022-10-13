@@ -23,6 +23,7 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
+import SafeRm.Effects.Timing (Timing)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -71,7 +72,7 @@ import UnliftIO.Directory qualified as Dir
 -- SafeRm.
 --
 -- @since 0.1
-runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
+runSafeRm :: (MonadUnliftIO m, Terminal m, Timing m) => m ()
 runSafeRm =
   bracket
     getEnv
@@ -106,7 +107,8 @@ runCmd ::
     LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
-    Terminal m
+    Terminal m,
+    Timing m
   ) =>
   Command ->
   m ()
@@ -121,7 +123,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (displayExceptiont ex)
+      $(logError) (showt ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used

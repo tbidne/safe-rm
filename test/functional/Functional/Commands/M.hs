@@ -52,10 +52,11 @@ metadata = testCase "Prints metadata" $ do
   -- METADATA
 
   let metaArgList = ["m", "-t", trashDir]
-  metadataResult <- captureSafeRm metaArgList
+  (metadataResult, logs) <- captureSafeRmLogs metaArgList
 
   -- list output assertions
   assertMatches expectedMetadata metadataResult
+  assertMatches expectedLogs logs
 
   -- assert nothing changed
   assertFilesExist
@@ -99,4 +100,17 @@ metadata = testCase "Prints metadata" $ do
       [ Exact "Entries:      5",
         Exact "Total Files:  4",
         Prefix "Size:"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.getMetadata][Debug][src/SafeRm.hs:213:4] Trash home: <dir>/m1/.trash",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/m1/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/m1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/m1/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/m1/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/m1/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/m1/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:96:4] Index size: 5",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:98:4] Num entries: 5",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:104:4] Num all files: 4",
+        Exact "[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:105:4] Total size: MkSomeSize SB (MkBytes 426.0)"
       ]

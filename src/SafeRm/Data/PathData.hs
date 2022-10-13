@@ -51,7 +51,7 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Data.Timestamp (Timestamp)
+import SafeRm.Effects.Timing (Timestamp)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, RenameDuplicate, RestoreCollision),

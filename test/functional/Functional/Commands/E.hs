@@ -53,7 +53,8 @@ emptyTrash = testCase "Empties trash" $ do
   -- EMPTY
 
   let emptyArgList = ["e", "-f", "-t", trashDir]
-  runSafeRm emptyArgList
+  (_, logs) <- captureSafeRmLogs emptyArgList
+  assertMatches expectedLogs logs
 
   -- list output assertions
   result <- captureSafeRm ["l", "-t", trashDir]
@@ -103,12 +104,27 @@ emptyTrash = testCase "Empties trash" $ do
         Exact "Total Files:  0",
         Prefix "Size:"
       ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e1/.trash"
+      ]
 
 emptyTrashTwice :: TestTree
 emptyTrashTwice = testCase "Calling empty twice does not error" $ do
   tmpDir <- getTestDir
-  let testDir = tmpDir </> "e1"
+  let testDir = tmpDir </> "e2"
       trashDir = testDir </> ".trash"
 
-  runSafeRm ["e", "-f", "-t", trashDir]
-  runSafeRm ["e", "-f", "-t", trashDir]
+  (_, logs1) <- captureSafeRmLogs ["e", "-f", "-t", trashDir]
+  assertMatches expectedLogs1 logs1
+
+  (_, logs2) <- captureSafeRmLogs ["e", "-f", "-t", trashDir]
+  assertMatches expectedLogs2 logs2
+  where
+    expectedLogs1 =
+      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e2/.trash",
+        Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:284:8] Trash home does not exist."
+      ]
+    expectedLogs2 =
+      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e2/.trash",
+        Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:284:8] Trash home does not exist."
+      ]

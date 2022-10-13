@@ -6,7 +6,7 @@
 -- @since 0.1
 module SafeRm.Data.Metadata
   ( Metadata (..),
-    getMetadata,
+    toMetadata,
   )
 where
 
@@ -14,12 +14,10 @@ import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
-import Data.Text qualified as T
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import SafeRm.Data.Index qualified as Index
-import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
-import SafeRm.Env (HasTrashHome, getTrashPaths)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
@@ -86,16 +84,13 @@ instance Pretty Metadata where
 -- | Returns metadata for the trash directory.
 --
 -- @since 0.1
-getMetadata ::
-  ( HasTrashHome env,
-    LoggerContext m,
-    MonadIO m,
-    MonadReader env m
+toMetadata ::
+  ( LoggerContext m,
+    MonadIO m
   ) =>
+  (PathI TrashHome, PathI TrashIndex) ->
   m Metadata
-getMetadata = addNamespace "getMetadata" $ do
-  (trashHome@(MkPathI th), trashIndex) <- asks getTrashPaths
-  $(logDebug) ("Trash home: " <> T.pack th)
+toMetadata (trashHome@(MkPathI th), trashIndex) = addNamespace "toMetadata" $ do
   index <- view #unIndex <$> Index.readIndex trashIndex
   let numIndex = Map.size index
   $(logDebug) ("Index size: " <> showt numIndex)

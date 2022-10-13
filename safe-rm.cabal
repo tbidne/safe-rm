@@ -45,9 +45,9 @@ library
     SafeRm.Data.PathData
     SafeRm.Data.Paths
     SafeRm.Data.PathType
-    SafeRm.Data.Timestamp
     SafeRm.Effects.Logger
     SafeRm.Effects.Terminal
+    SafeRm.Effects.Timing
     SafeRm.Env
     SafeRm.Exceptions
     SafeRm.Prelude
@@ -181,6 +181,7 @@ test-suite functional
     , tasty
     , tasty-hunit
     , text
+    , time
     , unliftio
 
   hs-source-dirs:   test/functional

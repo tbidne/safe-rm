@@ -6,7 +6,6 @@ module Functional.Commands.R
   )
 where
 
-import Data.Text qualified as T
 import Functional.Prelude
 import SafeRm.Exceptions
   ( ExceptionI,
@@ -54,7 +53,8 @@ restoreOne = testCase "Restores a single file" $ do
   -- RESTORE
 
   let restoreArgList = ["r", "f1", "-t", trashDir]
-  runSafeRm restoreArgList
+  (_, logs) <- captureSafeRmLogs restoreArgList
+  assertMatches expectedLogs logs
 
   -- list output assertions
   restoreResult <- captureSafeRm ["l", "-t", trashDir]
@@ -78,6 +78,13 @@ restoreOne = testCase "Restores a single file" $ do
       [ Exact "Entries:      0",
         Exact "Total Files:  0",
         Prefix "Size:"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:236:4] Trash home: <dir>/r1/.trash",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r1/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:259:4] Restored: <dir>/r1/f1"
       ]
 
 restoreMany :: TestTree
@@ -119,7 +126,8 @@ restoreMany = testCase "Restores several paths" $ do
   let restoreArgList =
         -- do not restore f2
         ["r", "f1", "f3", "dir1", "dir2", "-t", trashDir]
-  runSafeRm restoreArgList
+  (_, logs) <- captureSafeRmLogs restoreArgList
+  assertMatches expectedLogs logs
 
   -- list output assertions
   restoreResult <- captureSafeRm ["l", "-t", trashDir]
@@ -170,6 +178,20 @@ restoreMany = testCase "Restores several paths" $ do
         Exact "Total Files:  1",
         Prefix "Size:"
       ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:236:4] Trash home: <dir>/r2/.trash",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r2/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/r2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:259:4] Restored: <dir>/r2/dir2, <dir>/r2/dir1, <dir>/r2/f3, <dir>/r2/f1"
+      ]
 
 restoreUnknownError :: TestTree
 restoreUnknownError = testCase "Restore unknown prints error" $ do
@@ -202,17 +224,12 @@ restoreUnknownError = testCase "Restore unknown prints error" $ do
 
   -- RESTORE
   let restoreArgList = ["r", "bad file", "-t", trashDir]
+  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) restoreArgList
 
   -- assert exception
-  result <-
-    (runSafeRm restoreArgList $> Nothing)
-      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
-  case result of
-    Nothing -> assertFailure "Expected exception"
-    Just ex ->
-      assertMatches
-        expectedRestore
-        (T.lines . T.pack $ displayException ex)
+  assertExceptionMatches expectedRestore ex
+  assertMatches expectedLogs logs
+
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -225,8 +242,14 @@ restoreUnknownError = testCase "Restore unknown prints error" $ do
         Prefix "Size:"
       ]
     expectedRestore =
-      [ Exact "Encountered exception(s)",
-        Exact "- Path not found: bad file"
+      [ Exact "- Path not found: bad file"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:236:4] Trash home: <dir>/r3/.trash",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r3/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r3/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:259:4] Restored:",
+        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"bad file\" :| [])"
       ]
 
 restoreCollisionError :: TestTree
@@ -256,17 +279,12 @@ restoreCollisionError = testCase "Restore collision prints error" $ do
 
   -- RESTORE
   let restoreArgList = ["r", "f1", "-t", trashDir]
+  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) restoreArgList
 
   -- assert exception
-  result <-
-    (runSafeRm restoreArgList $> Nothing)
-      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
-  case result of
-    Nothing -> assertFailure "Expected exception"
-    Just ex ->
-      assertMatches
-        expectedRestore
-        (T.lines . T.pack $ displayException ex)
+  assertExceptionMatches expectedRestore ex
+  assertMatches expectedLogs logs
+
   assertFilesExist [trashDir </> "f1", f1, trashDir </> ".index.csv"]
   where
     expectedDel =
@@ -279,12 +297,20 @@ restoreCollisionError = testCase "Restore collision prints error" $ do
         Prefix "Size:"
       ]
     expectedRestore =
-      [ Exact "Encountered exception(s)",
-        Outfix
+      [ Outfix
           ( "- Cannot restore the trash file 'f1' as one exists at the "
               <> "original location:"
           )
           "/safe-rm/functional/r4/f1"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:236:4] Trash home: <dir>/r4/.trash",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r4/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Warn][src/SafeRm.hs:252:10] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1",
+        Exact "[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:259:4] Restored:",
+        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'RestoreCollision) (MkPathI {unPathI = \"f1\"},MkPathI {unPathI = \"<dir>/r4/f1\"}) :| [])"
       ]
 
 restoresSome :: TestTree
@@ -316,13 +342,11 @@ restoresSome = testCase "Restores some, errors on others" $ do
   -- RESTORE
   let restoreArgList =
         ("r" : filesTryRestore) <> ["-t", trashDir]
+  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) restoreArgList
 
-  result <-
-    (runSafeRm restoreArgList $> Nothing)
-      `catch` \(e :: ExceptionI SomeExceptions) -> pure (Just e)
-  case result of
-    Nothing -> assertFailure "Expected exception"
-    Just ex -> assertExceptionMatches expectedExceptions ex
+  -- assert exception
+  assertExceptionMatches expectedExceptions ex
+  assertMatches expectedLogs logs
 
   -- list output assertions
   resultList <- captureSafeRm ["l", "-t", trashDir]
@@ -360,4 +384,16 @@ restoresSome = testCase "Restores some, errors on others" $ do
       [ Exact "Entries:      0",
         Exact "Total Files:  0",
         Prefix "Size:"
+      ]
+    expectedLogs =
+      [ Exact "[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:236:4] Trash home: <dir>/r5/.trash",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r5/.trash/.index.csv",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:247:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/r5/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
+        Exact "[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:259:4] Restored: <dir>/r5/f5, <dir>/r5/f2, <dir>/r5/f1",
+        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f4\" :| [MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f3\"])"
       ]
