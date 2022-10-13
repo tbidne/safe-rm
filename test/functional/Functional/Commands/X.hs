@@ -202,7 +202,7 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
 
   -- PERMANENT DELETE
   let permDelArgList =
-        ["x", "bad file", "-f", "-t", trashDir, "--console-log", "none"]
+        ["x", "bad file", "-f", "-t", trashDir]
 
   -- assert exception
   result <-
@@ -258,7 +258,7 @@ deletesSome = testCase "Deletes some, errors on others" $ do
 
   -- PERMANENT DELETE
   let permDelArgList =
-        ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir, "--console-log", "none"]
+        ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
 
   result <-
     (runSafeRm permDelArgList $> Nothing)

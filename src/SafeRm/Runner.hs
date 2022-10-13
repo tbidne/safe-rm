@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | This modules provides an executable for running safe-rm.
@@ -17,18 +16,12 @@ where
 import Data.ByteString qualified as BS
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
-import Katip
-  ( ColorStrategy (ColorLog),
-    Verbosity (V2),
-  )
-import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
-    PathIndex (TrashHome, TrashLog),
-    (<//>),
+    PathIndex (TrashHome),
   )
-import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
@@ -55,7 +48,15 @@ import SafeRm.Runner.Command
       ),
   )
 import SafeRm.Runner.Env
-  ( Env (MkEnv, logContexts, logEnv, logNamespace, trashHome),
+  ( Env (MkEnv, trashHome),
+    LogEnv (MkLogEnv),
+    LogFile (MkLogFile),
+    finalizer,
+    handle,
+    logEnv,
+    logFile,
+    logLevel,
+    logNamespace,
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
 import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)
@@ -74,7 +75,7 @@ runSafeRm :: (MonadUnliftIO m, Terminal m) => m ()
 runSafeRm =
   bracket
     getEnv
-    closeScribes
+    closeLogging
     ( \(env, cmd) ->
         usingSafeRmT env (runCmd cmd)
     )
@@ -83,10 +84,9 @@ runSafeRm =
     `catch` doNothingOnSuccess
     `catchAny` handleEx
   where
-    closeScribes =
-      liftIO
-        . K.closeScribes
-        . view (_1 % #logEnv)
+    closeLogging (e, _) = do
+      let mFinalizer = e ^? #logEnv % #logFile %? #finalizer
+      liftIO $ fromMaybe (pure ()) mFinalizer
 
     doNothingOnSuccess ExitSuccess = pure ()
     doNothingOnSuccess ex = throwIO ex
@@ -103,7 +103,7 @@ runSafeRm =
 -- custom env.
 runCmd ::
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
     Terminal m
@@ -121,7 +121,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(K.logTM) ErrorS (K.ls $ displayException ex)
+      $(logError) (displayExceptiont ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
@@ -133,13 +133,27 @@ getEnv = do
   (mergedConfig, command) <- getConfiguration
   trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
 
-  logEnv <- liftIO $ mkLogEnv mergedConfig (trashHome <//> ".log")
+  logFile <- case join (mergedConfig ^. #logLevel) of
+    Nothing -> pure Nothing
+    Just lvl -> do
+      let logPath = trashHome ^. #unPathI </> ".log"
+      -- FIXME: if the trash directory does not exist yet then this will fail!
+      h <- liftIO $ IO.openFile logPath IO.AppendMode
+      pure $
+        Just $
+          MkLogFile
+            { handle = h,
+              logLevel = lvl,
+              finalizer = IO.hFlush h `finally` IO.hClose h
+            }
   let env =
         MkEnv
           { trashHome,
-            logEnv,
-            logContexts = mempty,
-            logNamespace = "runner"
+            logEnv =
+              MkLogEnv
+                { logFile,
+                  logNamespace = "runner"
+                }
           }
   pure (env, command)
 
@@ -187,36 +201,10 @@ getConfiguration = do
         Right cfg -> pure cfg
         Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
 
-mkLogEnv :: TomlConfig -> PathI TrashLog -> IO LogEnv
-mkLogEnv mergedConfig (MkPathI trashLog) = do
-  initLogEnv <- K.initLogEnv "safe-rm" environment
-
-  case mergedConfig ^. #fileLog of
-    Nothing -> pure initLogEnv
-    other -> do
-      let fileSeverity = fromMaybe ErrorS (join other)
-      fileScribe <- mkFileScribe trashLog (K.permitItem fileSeverity) V2
-      K.registerScribe "file" fileScribe K.defaultScribeSettings initLogEnv
-  where
-    environment = "production"
-
--- NOTE: this is copied from katip but with our custom formatter
-mkFileScribe :: FilePath -> K.PermitFunc -> Verbosity -> IO Scribe
-mkFileScribe f permitF verb = do
-  -- FIXME: if the trash directory does not exist yet then this will fail!
-  h <- IO.openFile f IO.AppendMode
-  Scribe logger finalizer permit <-
-    K.mkHandleScribeWithFormatter
-      Logger.fileFormatter
-      (ColorLog False)
-      h
-      permitF
-      verb
-  pure (Scribe logger (finalizer `finally` IO.hClose h) permit)
-
 printIndex ::
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
+    MonadIO m,
     MonadReader env m,
     Terminal m
   ) =>
@@ -225,7 +213,8 @@ printIndex = SafeRm.getIndex >>= prettyDel
 
 printMetadata ::
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
+    MonadIO m,
     MonadReader env m,
     Terminal m
   ) =>

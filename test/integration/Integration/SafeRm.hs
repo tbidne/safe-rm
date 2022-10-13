@@ -14,7 +14,6 @@ import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Integration.MaxRuns (MaxRuns (MkMaxRuns))
 import Integration.Prelude
-import Katip qualified as K
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
@@ -24,9 +23,8 @@ import SafeRm.Exceptions
   )
 import SafeRm.Runner.Env
   ( Env (MkEnv),
-    logContexts,
+    LogEnv (MkLogEnv),
     logEnv,
-    logNamespace,
     trashHome,
   )
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
@@ -485,17 +483,10 @@ genChar = Gen.filterT (not . badChars) Gen.unicode
 toOrigPath :: HashSet FilePath -> PathData -> HashSet FilePath
 toOrigPath acc pd = Set.insert (pd ^. #originalPath % #unPathI) acc
 
--- data Env = MkEnv
---  { trashHome
---  }
-
 mkEnv :: FilePath -> IO Env
 mkEnv fp = do
-  env <- K.initLogEnv mempty "integration"
   pure $
     MkEnv
       { trashHome = MkPathI fp,
-        logEnv = env,
-        logContexts = mempty,
-        logNamespace = mempty
+        logEnv = MkLogEnv Nothing (∅)
       }

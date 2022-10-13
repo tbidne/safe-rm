@@ -6,6 +6,7 @@ module SafeRm.Prelude
 
     -- * Text
     showt,
+    displayExceptiont,
 
     -- * Container Operators
     Empty (..),
@@ -37,6 +38,14 @@ import Control.Monad as X
   )
 import Control.Monad.Fail as X (MonadFail (fail))
 import Control.Monad.IO.Class as X (MonadIO (liftIO))
+import Control.Monad.Logger as X
+  ( LogLevel (LevelDebug, LevelError, LevelInfo, LevelWarn),
+    MonadLogger (monadLoggerLog),
+    logDebug,
+    logError,
+    logInfo,
+    logWarn,
+  )
 import Control.Monad.Reader as X
   ( MonadReader (ask),
     ReaderT,
@@ -71,6 +80,8 @@ import Data.Ord as X
   )
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
+import Data.Sequence as X (Seq, (<|), (|>))
+import Data.Sequence qualified as Seq
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
@@ -87,34 +98,24 @@ import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (even, fromIntegral)
 import GHC.Stack as X (HasCallStack)
-import Katip as X
-  ( Katip (getLogEnv, localLogEnv),
-    KatipContext
-      ( getKatipContext,
-        getKatipNamespace,
-        localKatipContext,
-        localKatipNamespace
-      ),
-    LogContexts,
-    LogEnv,
-    Namespace,
-    Scribe (Scribe),
-    Severity (DebugS, ErrorS, InfoS, WarningS),
-    katipAddNamespace,
-  )
 import Optics.Core as X
-  ( Iso',
+  ( AffineTraversal',
+    Iso',
     Lens',
+    Prism',
     iso,
     over',
+    preview,
     review,
     set',
     view,
     (%),
+    (%?),
     (^.),
     (^?),
     _1,
     _2,
+    _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import Prettyprinter as X
@@ -130,6 +131,7 @@ import System.FilePath as X ((</>))
 import System.IO as X
   ( BufferMode (NoBuffering),
     FilePath,
+    Handle,
     IO,
   )
 import Text.Show as X (Show (show))
@@ -154,6 +156,9 @@ import UnliftIO.IORef as X (IORef, modifyIORef', newIORef, readIORef)
 showt :: Show a => a -> Text
 showt = T.pack . show
 
+displayExceptiont :: Exception e => e -> Text
+displayExceptiont = T.pack . displayException
+
 -- | Types that have a notion of empty.
 --
 -- @since 0.1
@@ -168,6 +173,10 @@ instance Empty (HashSet a) where
 -- | @since 0.1
 instance Empty (HashMap k v) where
   (∅) = Map.empty
+
+-- | @since 0.1
+instance Empty (Seq a) where
+  (∅) = Seq.empty
 
 -- | Types with a \'union\'.
 --

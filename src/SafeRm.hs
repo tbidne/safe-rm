@@ -22,7 +22,6 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
-import Katip qualified as K
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Metadata (Metadata)
@@ -35,6 +34,7 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp qualified as Timestamp
+import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Env
   ( HasTrashHome (getTrashHome),
@@ -58,15 +58,15 @@ import UnliftIO.Directory qualified as Dir
 delete ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m
   ) =>
   HashSet (PathI OriginalPath) ->
   m ()
-delete paths = katipAddNamespace "delete" $ do
+delete paths = addNamespace "delete" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  logTrashHome trashHome
+  $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
 
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
@@ -75,15 +75,15 @@ delete paths = katipAddNamespace "delete" $ do
   currTime <- Timestamp.getCurrentLocalTime
 
   -- move path to trash, saving any exceptions
-  katipAddNamespace "deleting" $ for_ paths $ \fp ->
+  addNamespace "deleting" $ for_ paths $ \fp ->
     ( do
         pd <- PathData.toPathData currTime trashHome fp
-        $(K.logTM) DebugS (K.showLS pd)
+        $(logDebug) (showt pd)
         PathData.mvOriginalToTrash trashHome pd
         modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(K.logTM) WarningS (K.ls $ displayException ex)
+        $(logWarn) (displayExceptiont ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -97,7 +97,7 @@ delete paths = katipAddNamespace "delete" $ do
     then Index.appendIndex indexPath (MkIndex deletedPaths)
     else Index.writeIndex indexPath (MkIndex deletedPaths)
 
-  $(K.logTM) InfoS (K.ls $ "Deleted: " <> showMapOrigPaths deletedPaths)
+  $(logInfo) ("Deleted: " <> showMapOrigPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust exceptions $
@@ -113,7 +113,7 @@ delete paths = katipAddNamespace "delete" $ do
 deletePermanently ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
     Terminal m
@@ -121,9 +121,9 @@ deletePermanently ::
   Bool ->
   HashSet (PathI TrashName) ->
   m ()
-deletePermanently force paths = katipAddNamespace "deletePermanently" $ do
+deletePermanently force paths = addNamespace "deletePermanently" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  $(K.logTM) DebugS (K.ls $ "TrashHome: " <> trashHome ^. #unPathI)
+  $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
 
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
@@ -133,16 +133,16 @@ deletePermanently force paths = katipAddNamespace "deletePermanently" $ do
 
   let deleteFn pd =
         ( do
-            $(K.logTM) DebugS (K.showLS pd)
+            $(logDebug) (showt pd)
             PathData.deletePathData trashHome pd
             modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            $(K.logTM) WarningS (K.ls $ displayException ex)
+            $(logWarn) (displayExceptiont ex)
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
-  katipAddNamespace "deleting" $
+  addNamespace "deleting" $
     if force
       then for_ toDelete deleteFn
       else do
@@ -169,7 +169,7 @@ deletePermanently force paths = katipAddNamespace "deletePermanently" $ do
   deletedPaths <- readIORef deletedPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ deletedPaths)
 
-  $(K.logTM) InfoS (K.ls $ "Deleted: " <> showMapTrashPaths deletedPaths)
+  $(logInfo) ("Deleted: " <> showMapTrashPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -182,17 +182,18 @@ deletePermanently force paths = katipAddNamespace "deletePermanently" $ do
 getIndex ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
+    MonadIO m,
     MonadReader env m
   ) =>
   m Index
-getIndex = katipAddNamespace "getIndex" $ do
+getIndex = addNamespace "getIndex" $ do
   indexPath <- asks getTrashIndex
-  $(K.logTM) DebugS (K.ls $ "Index path: " <> indexPath ^. #unPathI)
+  $(logDebug) ("Index path: " <> T.pack (indexPath ^. #unPathI))
   Paths.applyPathI Dir.doesFileExist indexPath >>= \case
     True -> Index.readIndex indexPath
     False -> do
-      $(K.logTM) DebugS "Index does not exist."
+      $(logDebug) "Index does not exist."
       pure mempty
 
 -- | Retrieves metadata for the trash directory.
@@ -201,17 +202,18 @@ getIndex = katipAddNamespace "getIndex" $ do
 getMetadata ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
+    MonadIO m,
     MonadReader env m
   ) =>
   m Metadata
-getMetadata = katipAddNamespace "getMetadata" $ do
+getMetadata = addNamespace "getMetadata" $ do
   trashHome <- asks getTrashHome
-  logTrashHome trashHome
+  $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
     True -> Metadata.getMetadata
     False -> do
-      $(K.logTM) DebugS "Trash home does not exist."
+      $(logDebug) "Trash home does not exist."
       pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
@@ -222,15 +224,15 @@ getMetadata = katipAddNamespace "getMetadata" $ do
 restore ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m
   ) =>
   HashSet (PathI TrashName) ->
   m ()
-restore paths = katipAddNamespace "restore" $ do
+restore paths = addNamespace "restore" $ do
   (trashHome, indexPath) <- asks getTrashPaths
-  logTrashHome trashHome
+  $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
@@ -239,21 +241,21 @@ restore paths = katipAddNamespace "restore" $ do
   exceptionsRef <- newIORef Nothing
 
   -- move trash paths back to original location
-  katipAddNamespace "restoring" $ for_ toRestore $ \pd ->
+  addNamespace "restoring" $ for_ toRestore $ \pd ->
     ( do
-        $(K.logTM) DebugS (K.showLS pd)
+        $(logDebug) (showt pd)
         PathData.mvTrashToOriginal trashHome pd
         modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(K.logTM) WarningS (K.ls $ displayException ex)
+        $(logWarn) (displayExceptiont ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
   restoredPaths <- readIORef restoredPathsRef
   Index.writeIndex indexPath (MkIndex $ indexMap ∖ restoredPaths)
 
-  $(K.logTM) InfoS (K.ls $ "Restored: " <> showMapOrigPaths restoredPaths)
+  $(logInfo) ("Restored: " <> showMapOrigPaths restoredPaths)
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
@@ -265,19 +267,20 @@ restore paths = katipAddNamespace "restore" $ do
 emptyTrash ::
   forall env m.
   ( HasTrashHome env,
-    KatipContext m,
+    LoggerContext m,
+    MonadIO m,
     MonadReader env m,
     Terminal m
   ) =>
   Bool ->
   m ()
-emptyTrash force = katipAddNamespace "getMetadata" $ do
+emptyTrash force = addNamespace "getMetadata" $ do
   trashHome@(MkPathI th) <- asks getTrashHome
-  logTrashHome trashHome
+  $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   exists <- Dir.doesDirectoryExist th
   if not exists
     then do
-      $(K.logTM) DebugS "Trash home does not exist."
+      $(logDebug) "Trash home does not exist."
       putStrLn $ th <> " is empty."
     else
       if force
@@ -288,11 +291,11 @@ emptyTrash force = katipAddNamespace "getMetadata" $ do
           c <- Ch.toLower <$> liftIO IO.getChar
           if
               | c == 'y' -> do
-                  $(K.logTM) DebugS "Deleting contents."
+                  $(logDebug) "Deleting contents."
                   Dir.removeDirectoryRecursive th
                   putStrLn ""
               | c == 'n' -> do
-                  $(K.logTM) DebugS "Not deleting contents."
+                  $(logDebug) "Not deleting contents."
                   putStrLn ""
               | otherwise -> putStrLn ("\nUnrecognized: " <> [c])
 
@@ -314,7 +317,3 @@ noBuffering :: MonadIO m => m ()
 noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout
   where
     buffOff h = IO.hSetBuffering h NoBuffering
-
-logTrashHome :: KatipContext m => PathI i -> m ()
-logTrashHome trashHome =
-  $(K.logTM) DebugS (K.ls $ "Trash home: " <> trashHome ^. #unPathI)

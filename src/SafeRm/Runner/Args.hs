@@ -91,14 +91,10 @@ data Args = MkArgs
     --
     -- @since 0.1
     trashHome :: !(Maybe (PathI TrashHome)),
-    -- | The stdout logging level.
-    --
-    -- @since 0.1
-    consoleLog :: !(Maybe (Maybe Severity)),
     -- | The file logging level.
     --
     -- @since 0.1
-    fileLog :: !(Maybe (Maybe Severity)),
+    logLevel :: !(Maybe (Maybe LogLevel)),
     -- | Command to run.
     --
     -- @since 0.1
@@ -149,8 +145,7 @@ argsParser =
   MkArgs
     <$> configParser
     <*> trashParser
-    <*> consoleLogLevelParser
-    <*> fileLogLevelParser
+    <*> logLevelParser
     <*> commandParser
     <**> OA.helper
     <**> version
@@ -269,17 +264,17 @@ trashParser =
           "e.g. ~/.trash"
         ]
 
-fileLogLevelParser :: Parser (Maybe (Maybe Severity))
-fileLogLevelParser =
+logLevelParser :: Parser (Maybe (Maybe LogLevel))
+logLevelParser =
   A.optional $
     OA.option (OA.str >>= Logger.readLogLevel) $
       mconcat
-        [ OA.long "file-log",
+        [ OA.long "log-level",
           OA.metavar Logger.logLevelStrings,
           OA.help "The file level in which to log. Defaults to none."
         ]
 
-consoleLogLevelParser :: Parser (Maybe (Maybe Severity))
+consoleLogLevelParser :: Parser (Maybe (Maybe LogLevel))
 consoleLogLevelParser =
   A.optional $
     OA.option (OA.str >>= Logger.readLogLevel) $

@@ -201,7 +201,7 @@ restoreUnknownError = testCase "Restore unknown prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList = ["r", "bad file", "-t", trashDir, "--console-log", "none"]
+  let restoreArgList = ["r", "bad file", "-t", trashDir]
 
   -- assert exception
   result <-
@@ -255,7 +255,7 @@ restoreCollisionError = testCase "Restore collision prints error" $ do
   assertDirectoriesExist [trashDir]
 
   -- RESTORE
-  let restoreArgList = ["r", "f1", "-t", trashDir, "--console-log", "none"]
+  let restoreArgList = ["r", "f1", "-t", trashDir]
 
   -- assert exception
   result <-
@@ -315,7 +315,7 @@ restoresSome = testCase "Restores some, errors on others" $ do
 
   -- RESTORE
   let restoreArgList =
-        ("r" : filesTryRestore) <> ["-t", trashDir, "--console-log", "none"]
+        ("r" : filesTryRestore) <> ["-t", trashDir]
 
   result <-
     (runSafeRm restoreArgList $> Nothing)

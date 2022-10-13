@@ -98,7 +98,7 @@ haddock:
 
 .PHONY: haddockc
 haddockc:
-	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- . -m SafeRm.Prelude 85 -m SafeRm.Runner.Command 20
+	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- . -m SafeRm.Prelude 85 -m SafeRm.Runner.Command 20 -m SafeRm.Runner.Args 50
 
 # generate dist and docs suitable for hackage
 .PHONY: hackage

@@ -31,11 +31,11 @@ where
 
 import Data.List qualified as L
 import Data.Text qualified as T
-import Data.Text.Lazy qualified as TL
-import Data.Text.Lazy.Builder qualified as TLB
-import Katip (Verbosity (V0))
-import Katip qualified as K
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Effects.Logger
+  ( LoggerContext (getNamespace, localNamespace),
+    Namespace,
+  )
 import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
 import SafeRm.Env (HasTrashHome)
@@ -69,11 +69,9 @@ import UnliftIO.Environment qualified as SysEnv
 
 data FuncEnv = MkFuncEnv
   { trashHome :: !(PathI TrashHome),
-    logEnv :: !LogEnv,
-    logContexts :: !LogContexts,
-    logNamespace :: !Namespace,
     terminalRef :: !(IORef Text),
-    logsRef :: !(IORef Text)
+    logsRef :: !(IORef Text),
+    logNamespace :: !Namespace
   }
 
 makeFieldLabelsNoPrefix ''FuncEnv
@@ -92,20 +90,21 @@ newtype FunctionalIO a = MkFunctionalIO (ReaderT FuncEnv IO a)
     )
     via (ReaderT FuncEnv IO)
 
-instance Katip FunctionalIO where
-  getLogEnv = asks (view #logEnv)
-  localLogEnv f = local (over' #logEnv f)
-
-instance KatipContext FunctionalIO where
-  getKatipContext = asks (view #logContexts)
-  localKatipContext f = local (over' #logContexts f)
-  getKatipNamespace = asks (view #logNamespace)
-  localKatipNamespace f = local (over' #logNamespace f)
-
 -- | @since 0.1
 instance Terminal FunctionalIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
+
+instance MonadLogger FunctionalIO where
+  monadLoggerLog loc _src lvl msg = do
+    formatted <- Logger.formatLog True loc lvl msg
+    let txt = Logger.logStrToText formatted
+    logsRef <- asks (view #logsRef)
+    modifyIORef' logsRef (<> txt) -- TODO: newline?
+
+instance LoggerContext FunctionalIO where
+  getNamespace = asks (view #logNamespace)
+  localNamespace f = local (over' #logNamespace f)
 
 -- | @since 0.1
 runFunctionalIO :: FunctionalIO a -> FuncEnv -> IO a
@@ -206,43 +205,22 @@ assertExceptionMatches s exs = do
 
 mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
 mkFuncEnv toml logsRef terminalRef = do
-  initLogEnv <- K.initLogEnv "functional" "test"
   trashHome <- getTrashHome
-  let scribe =
-        Scribe
-          { liPush = \item -> do
-              let builder = Logger.consoleFormatter False V0 item
-                  txt = TL.toStrict $ TLB.toLazyText builder
-
-              modifyIORef' logsRef (<> txt),
-            scribeFinalizer = pure (),
-            -- TODO: capture everything and test
-            scribePermitItem = const (pure True)
-          }
-
-  logEnv <-
-    K.registerScribe
-      "logger"
-      scribe
-      K.defaultScribeSettings
-      initLogEnv
 
   pure $
     MkFuncEnv
       { trashHome = trashHome,
-        logEnv,
-        logContexts = mempty,
-        logNamespace = "functional",
         terminalRef,
-        logsRef
+        logsRef,
+        logNamespace = "functional"
       }
   where
     getTrashHome = case toml ^. #trashHome of
       Nothing -> die "Setup error, no trash home on config"
       Just th -> pure th
 
-replaceDir :: FilePath -> Text -> Text
-replaceDir fp = T.replace (T.pack fp) "<dir>"
+-- replaceDir :: FilePath -> Text -> Text
+-- replaceDir fp = T.replace (T.pack fp) "<dir>"
 
 getTestDir :: IO FilePath
 getTestDir = (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory

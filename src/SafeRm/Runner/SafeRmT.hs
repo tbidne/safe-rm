@@ -8,6 +8,9 @@ module SafeRm.Runner.SafeRmT
   )
 where
 
+import Data.ByteString qualified as BS
+import SafeRm.Effects.Logger (LoggerContext)
+import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal)
 import SafeRm.Prelude
 import SafeRm.Runner.Env (Env)
@@ -35,18 +38,19 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
     )
     via (ReaderT env m)
 
--- | @since 0.1
-instance MonadIO m => Katip (SafeRmT Env m) where
-  getLogEnv = asks (view #logEnv)
+instance MonadIO m => MonadLogger (SafeRmT Env m) where
+  monadLoggerLog loc _src lvl msg = do
+    mhandle <- asks (preview (#logEnv % #logFile %? #handle))
+    case mhandle of
+      Nothing -> pure ()
+      Just h -> do
+        formatted <- Logger.formatLog True loc lvl msg
+        let bs = Logger.logStrToBs formatted
+        liftIO $ BS.hPut h bs
 
-  localLogEnv f = local (over' #logEnv f)
-
--- | @since 0.1
-instance MonadIO m => KatipContext (SafeRmT Env m) where
-  getKatipContext = asks (view #logContexts)
-  localKatipContext f = local (over' #logContexts f)
-  getKatipNamespace = asks (view #logNamespace)
-  localKatipNamespace f = local (over' #logNamespace f)
+instance MonadIO m => LoggerContext (SafeRmT Env m) where
+  getNamespace = asks (view (#logEnv % #logNamespace))
+  localNamespace = local . over' (#logEnv % #logNamespace)
 
 -- | Runs a 'SafeRmT' with the given @env@.
 --

@@ -24,8 +24,7 @@ import TOML
 -- @since 0.1
 data TomlConfig = MkTomlConfig
   { trashHome :: !(Maybe (PathI TrashHome)),
-    consoleLog :: !(Maybe (Maybe Severity)),
-    fileLog :: !(Maybe (Maybe Severity))
+    logLevel :: !(Maybe (Maybe LogLevel))
   }
   deriving stock
     ( -- | @since 0.1
@@ -40,25 +39,24 @@ makeFieldLabelsNoPrefix ''TomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
-  MkTomlConfig a b c <> MkTomlConfig a' b' c' =
-    MkTomlConfig (a <|> a') (b <|> b') (c <|> c')
+  MkTomlConfig a b <> MkTomlConfig a' b' =
+    MkTomlConfig (a <|> a') (b <|> b')
 
 -- | @since 0.1
 instance Monoid TomlConfig where
-  mempty = MkTomlConfig Nothing Nothing Nothing
+  mempty = MkTomlConfig Nothing Nothing
 
 -- | @since 0.5
 instance DecodeTOML TomlConfig where
   tomlDecoder =
     MkTomlConfig
       <$> decodeTrashHome
-      <*> decodeLogLevel "console"
-      <*> decodeLogLevel "file"
+      <*> decodeLogLevel
     where
       decodeTrashHome =
         fmap MkPathI <$> getFieldOptWith tomlDecoder "trash-home"
-      decodeLogLevel s =
-        getFieldOptWith (tomlDecoder >>= readLogLevel) (s <> "-log")
+      decodeLogLevel =
+        getFieldOptWith (tomlDecoder >>= readLogLevel) "log-level"
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.
@@ -71,6 +69,5 @@ argsToTomlConfig :: Args -> TomlConfig
 argsToTomlConfig args =
   MkTomlConfig
     { trashHome = args ^. #trashHome,
-      fileLog = args ^. #fileLog,
-      consoleLog = args ^. #consoleLog
+      logLevel = args ^. #logLevel
     }
