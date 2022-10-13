@@ -57,7 +57,6 @@ setup testDir = do
       where
         trashDir = dir </> ".trash/"
         indexPath = trashDir </> ".index.csv"
-        -- mkEntry "<tmp>/<dir>/" "<file>"
         mkEntry d' f =
           mconcat
             [ "file,",
