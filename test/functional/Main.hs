@@ -21,28 +21,26 @@ import UnliftIO.Directory qualified as Dir
 main :: IO ()
 main =
   Tasty.defaultMain $
-    Tasty.withResource setup teardown $ \_ ->
+    Tasty.withResource setup teardown $ \args ->
       testGroup
         "Functional Tests"
-        [ D.tests,
-          X.tests,
-          E.tests,
-          R.tests,
-          L.tests,
-          M.tests
+        [ D.tests args,
+          X.tests args,
+          E.tests args,
+          R.tests args,
+          L.tests args,
+          M.tests args
         ]
 
-setup :: IO ()
+setup :: IO FilePath
 setup = do
-  tmpDir <- getTestDir
-
+  tmpDir <- (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory
   createDirectoryIfMissing True tmpDir
-  pure ()
+  pure tmpDir
 
-teardown :: () -> IO ()
-teardown _ = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
+teardown :: FilePath -> IO ()
+teardown fp = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
-    cleanup = getTestDir >>= Dir.removePathForcibly
+    cleanup = Dir.removePathForcibly fp
     doNothing =
-      getTestDir >>= \d ->
-        putStrLn $ "*** Not cleaning up tmp dir: " <> d
+      putStrLn $ "*** Not cleaning up tmp dir: " <> fp

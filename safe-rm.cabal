@@ -33,6 +33,7 @@ common common-exts
     MultiWayIf
     OverloadedLabels
     OverloadedStrings
+    PatternSynonyms
     TypeFamilies
     NoFieldSelectors
 
@@ -45,6 +46,8 @@ library
     SafeRm.Data.PathData
     SafeRm.Data.Paths
     SafeRm.Data.PathType
+    SafeRm.Data.UniqueSeq
+    SafeRm.Effects.FileSystemReader
     SafeRm.Effects.Logger
     SafeRm.Effects.Terminal
     SafeRm.Effects.Timing
@@ -127,10 +130,9 @@ test-suite config
   build-depends:
     , base
     , safe-rm
-    , tasty                 >=1.1.0.3 && <1.5
-    , tasty-hunit           >=0.9     && <0.11
+    , tasty        >=1.1.0.3 && <1.5
+    , tasty-hunit  >=0.9     && <0.11
     , unliftio
-    , unordered-containers
 
   hs-source-dirs:   test/config
   default-language: GHC2021
@@ -173,12 +175,14 @@ test-suite functional
     Functional.Prelude
 
   build-depends:
+    , algebra-simple
     , base
     , bytestring
-    , env-guard    ^>=0.2
+    , env-guard       ^>=0.2
     , file-utils
     , safe-rm
     , tasty
+    , tasty-golden    ^>=2.3.1.1
     , tasty-hunit
     , text
     , time

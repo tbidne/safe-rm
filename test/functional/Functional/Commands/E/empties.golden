@@ -1,0 +1,40 @@
+TERMINAL LIST 1
+Type:      Directory
+Name:      dir1
+Original:  <dir>/e1/dir1
+Created:   2020-05-31 12:00:00 
+
+Type:      Directory
+Name:      dir2
+Original:  <dir>/e1/dir2
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      f1
+Original:  <dir>/e1/f1
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      f2
+Original:  <dir>/e1/f2
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      f3
+Original:  <dir>/e1/f3
+Created:   2020-05-31 12:00:00 
+Entries:      5
+Total Files:  4
+Size:         25.00B 
+
+
+LOGS EMPTY
+[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:283:4] Trash home: <dir>/e1/.trash
+
+
+TERMINAL LIST 2
+Entries:      0
+Total Files:  0
+Size:         0.00B 
+
+

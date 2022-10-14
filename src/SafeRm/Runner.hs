@@ -21,6 +21,7 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome),
   )
+import SafeRm.Effects.FileSystemReader (FileSystemReader)
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Effects.Timing (Timing)
@@ -72,7 +73,13 @@ import UnliftIO.Directory qualified as Dir
 -- SafeRm.
 --
 -- @since 0.1
-runSafeRm :: (MonadUnliftIO m, Terminal m, Timing m) => m ()
+runSafeRm ::
+  ( FileSystemReader m,
+    MonadUnliftIO m,
+    Terminal m,
+    Timing m
+  ) =>
+  m ()
 runSafeRm =
   bracket
     getEnv
@@ -103,7 +110,8 @@ runSafeRm =
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
 -- custom env.
 runCmd ::
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
@@ -214,7 +222,8 @@ printIndex ::
 printIndex = SafeRm.getIndex >>= prettyDel
 
 printMetadata ::
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadIO m,
     MonadReader env m,

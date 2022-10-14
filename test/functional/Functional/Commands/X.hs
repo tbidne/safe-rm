@@ -10,19 +10,19 @@ import Functional.Prelude
 import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
 -- | @since 0.1
-tests :: TestTree
-tests =
+tests :: IO FilePath -> TestTree
+tests args =
   testGroup
     "Permanent Delete (x)"
-    [ deletesOne,
-      deletesMany,
-      deleteUnknownError,
-      deletesSome
+    [ deletesOne args,
+      deletesMany args,
+      deleteUnknownError args,
+      deletesSome args
     ]
 
-deletesOne :: TestTree
-deletesOne = testCase "Permanently deletes a single file" $ do
-  tmpDir <- getTestDir
+deletesOne :: IO FilePath -> TestTree
+deletesOne args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "x1"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -35,11 +35,10 @@ deletesOne = testCase "Permanently deletes a single file" $ do
   assertFilesExist [f1]
 
   -- delete to trash first
-  runSafeRm delArgList
+  runSafeRm tmpDir delArgList
 
   -- list output assertions
-  delResult <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedDel delResult
+  delResult <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
@@ -49,43 +48,23 @@ deletesOne = testCase "Permanently deletes a single file" $ do
   -- PERMANENT DELETE
 
   let permDelArgList = ["x", "f1", "-f", "-t", trashDir]
-  (_, logs) <- captureSafeRmLogs permDelArgList
-  assertMatches expectedLogs logs
+  (_, logs) <- captureSafeRmLogs tmpDir "PERM DELETE" permDelArgList
 
   -- list output assertions
-  permDelResult <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedPermDel permDelResult
+  permDelResult <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist [trashDir </> ".index.csv"]
   assertFilesDoNotExist [f1, trashDir </> "f1"]
   assertDirectoriesExist [trashDir]
+  pure $ capturedToBs [delResult, logs, permDelResult]
   where
-    expectedDel =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/x1/f1",
-        Prefix "Created:",
-        Exact "Entries:      1",
-        Exact "Total Files:  1",
-        Prefix "Size:"
-      ]
-    expectedPermDel =
-      [ Exact "Entries:      0",
-        Exact "Total Files:  0",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x1/.trash",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x1/.trash/.index.csv",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: f1"
-      ]
+    desc = "Permanently deletes a single file"
+    gpath = goldenPath </> "single.golden"
 
-deletesMany :: TestTree
-deletesMany = testCase "Permanently deletes several paths" $ do
-  tmpDir <- getTestDir
+deletesMany :: IO FilePath -> TestTree
+deletesMany args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "x2"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -101,11 +80,10 @@ deletesMany = testCase "Permanently deletes several paths" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runSafeRm delArgList
+  runSafeRm tmpDir delArgList
 
   -- list output assertions
-  resultDel <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedDel resultDel
+  delResult <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist
@@ -121,12 +99,10 @@ deletesMany = testCase "Permanently deletes several paths" $ do
   let permDelArgList =
         -- leave f2 alone
         ["x", "f1", "f3", "dir1", "dir2", "-f", "-t", trashDir]
-  (_, logs) <- captureSafeRmLogs permDelArgList
-  assertMatches expectedLogs logs
+  (_, logs) <- captureSafeRmLogs tmpDir "PERM DELETE" permDelArgList
 
   -- list output assertions
-  permDelResult <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedPermDel permDelResult
+  permDelResult <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesDoNotExist
@@ -138,63 +114,14 @@ deletesMany = testCase "Permanently deletes several paths" $ do
     ((testDir </>) <$> ["dir1", "dir2/dir3"] <> dirsToDelete)
   assertFilesExist [trashDir </> "f2", trashDir </> ".index.csv"]
   assertDirectoriesExist [trashDir]
+  pure $ capturedToBs [delResult, logs, permDelResult]
   where
-    expectedDel =
-      [ Exact "Type:      Directory",
-        Exact "Name:      dir1",
-        Outfix "Original:" "/safe-rm/functional/x2/dir1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      Directory",
-        Exact "Name:      dir2",
-        Outfix "Original:" "/safe-rm/functional/x2/dir2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/x2/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/x2/f2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f3",
-        Outfix "Original:" "/safe-rm/functional/x2/f3",
-        Prefix "Created:",
-        Exact "Entries:      5",
-        Exact "Total Files:  4",
-        Prefix "Size:"
-      ]
-    expectedPermDel =
-      [ Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/x2/f2",
-        Prefix "Created:",
-        Exact "Entries:      1",
-        Exact "Total Files:  1",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x2/.trash",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x2/.trash/.index.csv",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: dir2, dir1, f3, f1"
-      ]
+    desc = "Permanently deletes several paths"
+    gpath = goldenPath </> "many.golden"
 
-deleteUnknownError :: TestTree
-deleteUnknownError = testCase "Delete unknown prints error" $ do
-  tmpDir <- getTestDir
+deleteUnknownError :: IO FilePath -> TestTree
+deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "x3"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -211,11 +138,10 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
   assertFilesExist [f1]
 
   -- delete to trash first
-  runSafeRm delArgList
+  runSafeRm tmpDir delArgList
 
   -- list output assertions
-  delResult <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedDel delResult
+  delResult <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
@@ -225,37 +151,23 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
   -- PERMANENT DELETE
   let permDelArgList =
         ["x", "bad file", "-f", "-t", trashDir]
-  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) permDelArgList
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @(ExceptionI SomeExceptions)
+      tmpDir
+      "PERM DELETE"
+      permDelArgList
 
   -- assert exception
-  assertExceptionMatches expectedPermDel ex
-  assertMatches expectedLogs logs
-
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
+  pure $ capturedToBs [delResult, ex, logs]
   where
-    expectedDel =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/x3/f1",
-        Prefix "Created:",
-        Exact "Entries:      1",
-        Exact "Total Files:  1",
-        Prefix "Size:"
-      ]
-    expectedPermDel =
-      [ Exact "- Path not found: bad file"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x3/.trash",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x3/.trash/.index.csv",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x3/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted:",
-        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"bad file\" :| [])"
-      ]
+    desc = "Delete unknown prints error"
+    gpath = goldenPath </> "unknown.golden"
 
-deletesSome :: TestTree
-deletesSome = testCase "Deletes some, errors on others" $ do
-  tmpDir <- getTestDir
+deletesSome :: IO FilePath -> TestTree
+deletesSome args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "x4"
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
@@ -268,11 +180,10 @@ deletesSome = testCase "Deletes some, errors on others" $ do
   assertFilesExist realFiles
 
   -- delete to trash first
-  runSafeRm delArgList
+  runSafeRm tmpDir delArgList
 
   -- list output assertions
-  delResult <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedDel delResult
+  delResult <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist ((trashDir </>) <$> ["f1", "f2", "f5"])
@@ -282,56 +193,22 @@ deletesSome = testCase "Deletes some, errors on others" $ do
   -- PERMANENT DELETE
   let permDelArgList =
         ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
-  (ex, logs) <- captureSafeRmExceptionLogs @(ExceptionI SomeExceptions) permDelArgList
-
-  -- assert exception
-  assertExceptionMatches expectedExceptions ex
-  assertMatches expectedLogs logs
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @(ExceptionI SomeExceptions)
+      tmpDir
+      "PERM DELETE"
+      permDelArgList
 
   -- list output assertions
-  resultList <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expected resultList
+  resultList <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesDoNotExist ((trashDir </>) <$> filesTryPermDelete)
+  pure $ capturedToBs [delResult, ex, logs, resultList]
   where
-    expectedDel =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/x4/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/x4/f2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f5",
-        Outfix "Original:" "/safe-rm/functional/x4/f5",
-        Prefix "Created:",
-        Exact "Entries:      3",
-        Exact "Total Files:  3",
-        Prefix "Size:"
-      ]
-    expectedExceptions =
-      [ Exact "- Path not found: f3",
-        Exact "- Path not found: f4"
-      ]
-    expected =
-      [ Exact "Entries:      0",
-        Exact "Total Files:  0",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:127:4] Trash home: <dir>/x4/.trash",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x4/.trash/.index.csv",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:137:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/x4/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:173:4] Deleted: f5, f2, f1",
-        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f4\" :| [MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"f3\"])"
-      ]
+    desc = "Deletes some, errors on others"
+    gpath = goldenPath </> "some.golden"
+
+goldenPath :: FilePath
+goldenPath = "test/functional/Functional/Commands/X"

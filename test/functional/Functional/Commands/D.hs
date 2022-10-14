@@ -6,24 +6,24 @@ module Functional.Commands.D
   )
 where
 
-import Data.Text qualified as T
 import Functional.Prelude
+import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 
 -- | @since 0.1
-tests :: TestTree
-tests =
+tests :: IO FilePath -> TestTree
+tests args =
   testGroup
     "Delete (d)"
-    [ deletesOne,
-      deletesMany,
-      deleteUnknownError,
-      deleteDuplicateFile,
-      deletesSome
+    [ deletesOne args,
+      deletesMany args,
+      deleteUnknownError args,
+      deleteDuplicateFile args,
+      deletesSome args
     ]
 
-deletesOne :: TestTree
-deletesOne = testCase "Deletes a single file" $ do
-  tmpDir <- getTestDir
+deletesOne :: IO FilePath -> TestTree
+deletesOne args = goldenVsStringDiff "Deletes a single file" diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "d1"
       trashDir = testDir </> ".trash"
       f1 = testDir </> "f1"
@@ -34,36 +34,22 @@ deletesOne = testCase "Deletes a single file" $ do
   createFiles [f1]
   assertFilesExist [f1]
 
-  (_, logs) <- captureSafeRmLogs argList
-  assertMatches expectedLogs logs
+  (_, logs) <- captureSafeRmLogs tmpDir "DELETE" argList
 
   -- list output assertions
-  result <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expected result
+  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
   assertFilesDoNotExist [f1]
   assertDirectoriesExist [trashDir]
+  pure $ capturedToBs [logs, result]
   where
-    expected =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/d1/f1",
-        Prefix "Created:",
-        Exact "Entries:      1",
-        Exact "Total Files:  1",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d1/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/d1/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted: <dir>/d1/f1"
-      ]
+    gpath = goldenPath </> "single.golden"
 
-deletesMany :: TestTree
-deletesMany = testCase "Deletes several paths" $ do
-  tmpDir <- getTestDir
+deletesMany :: IO FilePath -> TestTree
+deletesMany args = goldenVsStringDiff "Deletes many paths" diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "d2"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -79,12 +65,10 @@ deletesMany = testCase "Deletes several paths" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  (_, logs) <- captureSafeRmLogs argList
-  assertMatches expectedLogs logs
+  (_, logs) <- captureSafeRmLogs tmpDir "DELETE" argList
 
   -- list output assertions
-  result <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expected result
+  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist
@@ -94,49 +78,13 @@ deletesMany = testCase "Deletes several paths" $ do
   assertFilesDoNotExist filesToDelete
   assertDirectoriesDoNotExist dirsToDelete
   assertDirectoriesExist ((trashDir </>) <$> ["", "dir1", "dir2", "dir2/dir3"])
+  pure $ capturedToBs [logs, result]
   where
-    expected =
-      [ Exact "Type:      Directory",
-        Exact "Name:      dir1",
-        Outfix "Original:" "/safe-rm/functional/d2/dir1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      Directory",
-        Exact "Name:      dir2",
-        Outfix "Original:" "/safe-rm/functional/d2/dir2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/d2/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/d2/f2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f3",
-        Outfix "Original:" "/safe-rm/functional/d2/f3",
-        Prefix "Created:",
-        Exact "Entries:      5",
-        Exact "Total Files:  4",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d2/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f3\"}, originalPath = MkPathI {unPathI = \"<dir>/d2/f3\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/d2/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir2\"}, originalPath = MkPathI {unPathI = \"<dir>/d2/dir2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/d2/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeDirectory, fileName = MkPathI {unPathI = \"dir1\"}, originalPath = MkPathI {unPathI = \"<dir>/d2/dir1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted: <dir>/d2/dir2, <dir>/d2/f2, <dir>/d2/dir1, <dir>/d2/f3, <dir>/d2/f1"
-      ]
+    gpath = goldenPath </> "many.golden"
 
-deleteUnknownError :: TestTree
-deleteUnknownError = testCase "Delete unknown prints error" $ do
-  tmpDir <- getTestDir
+deleteUnknownError :: IO FilePath -> TestTree
+deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "d3"
       trashDir = testDir </> ".trash"
       file = testDir </> "bad file"
@@ -145,26 +93,16 @@ deleteUnknownError = testCase "Delete unknown prints error" $ do
   -- setup
   clearDirectory testDir
 
-  (ex, logs) <- captureSafeRmExceptionLogs @SomeException argList
+  (ex, logs) <- captureSafeRmExceptionLogs @SomeException tmpDir "DELETE" argList
 
-  -- assert exception
-  assertMatches expected (T.lines . T.pack $ displayException ex)
-  assertMatches expectedLogs logs
+  pure $ capturedToBs [ex, logs]
   where
-    expected =
-      [ Exact "Encountered exception(s)",
-        Outfix "- Path not found:" "/safe-rm/functional/d3/bad file"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d3/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Warn][src/SafeRm.hs:87:10] Path not found: <dir>/d3/bad file",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted:",
-        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"<dir>/d3/bad file\" :| [])"
-      ]
+    desc = "Deletes unknown prints error"
+    gpath = goldenPath </> "unknown.golden"
 
-deleteDuplicateFile :: TestTree
-deleteDuplicateFile = testCase "Deletes duplicate file" $ do
-  tmpDir <- getTestDir
+deleteDuplicateFile :: IO FilePath -> TestTree
+deleteDuplicateFile args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "d4"
       trashDir = testDir </> ".trash"
       file = testDir </> "f1"
@@ -176,51 +114,27 @@ deleteDuplicateFile = testCase "Deletes duplicate file" $ do
   -- create and delete twice
   createFiles [file]
   assertFilesExist [file]
-  (_, logs1) <- captureSafeRmLogs argList
-  assertMatches expectedLogs1 logs1
+  (_, logs1) <- captureSafeRmLogs tmpDir "LOGS1" argList
 
   createFiles [file]
   assertFilesExist [file]
-  (_, logs2) <- captureSafeRmLogs argList
-  assertMatches expectedLogs2 logs2
+  (_, logs2) <- captureSafeRmLogs tmpDir "LOGS2" argList
 
-  result <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expected result
+  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist
     [trashDir </> "f1 (1)", trashDir </> "f1", trashDir </> ".index.csv"]
   assertFilesDoNotExist [file]
   assertDirectoriesExist [trashDir]
+  pure $ capturedToBs [logs1, logs2, result]
   where
-    expected =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/d4/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f1 (1)",
-        Outfix "Original:" "/safe-rm/functional/d4/f1",
-        Prefix "Created:",
-        Exact "Entries:      2",
-        Exact "Total Files:  2",
-        Prefix "Size:"
-      ]
-    expectedLogs1 =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d4/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/d4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted: <dir>/d4/f1"
-      ]
-    expectedLogs2 =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d4/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1 (1)\"}, originalPath = MkPathI {unPathI = \"<dir>/d4/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted: <dir>/d4/f1"
-      ]
+    desc = "Deletes duplicate file"
+    gpath = goldenPath </> "duplicate.golden"
 
-deletesSome :: TestTree
-deletesSome = testCase "Deletes some, errors on others" $ do
-  tmpDir <- getTestDir
+deletesSome :: IO FilePath -> TestTree
+deletesSome args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "d5"
       trashDir = testDir </> ".trash"
       realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
@@ -232,14 +146,15 @@ deletesSome = testCase "Deletes some, errors on others" $ do
   createFiles realFiles
   assertFilesExist realFiles
 
-  (ex, logs) <- captureSafeRmExceptionLogs argList
-
-  assertExceptionMatches expectedExceptions ex
-  assertMatches expectedLogs logs
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @(ExceptionI SomeExceptions)
+      tmpDir
+      "DELETE"
+      argList
 
   -- list output assertions
-  resultList <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expected resultList
+  resultList <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist
@@ -247,37 +162,10 @@ deletesSome = testCase "Deletes some, errors on others" $ do
         <$> [".index.csv", "f1", "f2", "f5"]
     )
   assertFilesDoNotExist ((trashDir </>) <$> ["f3", "f4"])
+  pure $ capturedToBs [ex, logs, resultList]
   where
-    expectedExceptions =
-      [ Outfix "- Path not found:" "/safe-rm/functional/d5/f3",
-        Outfix "- Path not found:" "/safe-rm/functional/d5/f4"
-      ]
-    expected =
-      [ Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/d5/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/d5/f2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f5",
-        Outfix "Original:" "/safe-rm/functional/d5/f5",
-        Prefix "Created:",
-        Exact "Entries:      3",
-        Exact "Total Files:  3",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:70:4] Trash home: <dir>/d5/.trash",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f2\"}, originalPath = MkPathI {unPathI = \"<dir>/d5/f2\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f5\"}, originalPath = MkPathI {unPathI = \"<dir>/d5/f5\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Warn][src/SafeRm.hs:87:10] Path not found: <dir>/d5/f3",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Warn][src/SafeRm.hs:87:10] Path not found: <dir>/d5/f4",
-        Exact "[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:82:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = \"f1\"}, originalPath = MkPathI {unPathI = \"<dir>/d5/f1\"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}",
-        Exact "[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:101:4] Deleted: <dir>/d5/f5, <dir>/d5/f2, <dir>/d5/f1",
-        Exact "[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:126:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"<dir>/d5/f4\" :| [MkExceptionI (Proxy ExceptionIndex 'PathNotFound) \"<dir>/d5/f3\"])"
-      ]
+    desc = "Deletes some files with errors"
+    gpath = goldenPath </> "some.golden"
+
+goldenPath :: FilePath
+goldenPath = "test/functional/Functional/Commands/D"

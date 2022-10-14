@@ -25,7 +25,6 @@ import Data.Csv qualified as Csv
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as Map
-import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
@@ -37,6 +36,7 @@ import SafeRm.Data.Paths
     PathIndex (TrashHome, TrashIndex, TrashName),
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -118,21 +118,21 @@ readIndex indexPath = addNamespace "readIndex" $ do
 -- @since 0.1
 searchIndex ::
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
-  HashSet (PathI TrashName) ->
+  UniqueSeq (PathI TrashName) ->
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
-  ([SomeException], HashSet PathData)
+  ([SomeException], UniqueSeq PathData)
 searchIndex keys (MkIndex index) =
-  Set.foldl' foldKeys mempty trashKeys
+  foldr foldKeys mempty trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = φ (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
-      ([SomeException], HashSet PathData) ->
       PathI TrashName ->
-      ([SomeException], HashSet PathData)
-    foldKeys acc@(exs, found) trashKey =
+      ([SomeException], UniqueSeq PathData) ->
+      ([SomeException], UniqueSeq PathData)
+    foldKeys trashKey acc@(exs, found) =
       case Map.lookup trashKey index of
         Nothing ->
           -- NOTE: since this is the only exception type we do not actually
@@ -142,7 +142,7 @@ searchIndex keys (MkIndex index) =
           prependEx
             (MkExceptionI @PathNotFound (view #unPathI trashKey))
             acc
-        Just pd -> (exs, Set.insert pd found)
+        Just pd -> (exs, found ⋗ pd)
     prependEx ex = over' _1 (toException ex :)
 
 -- | Reads a csv index file and applies the fold function to each

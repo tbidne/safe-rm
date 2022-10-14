@@ -15,9 +15,7 @@ module SafeRm.Runner.Args
 where
 
 import Control.Applicative qualified as A
-import Data.HashSet qualified as Set
 import Data.List qualified as L
-import Data.List.NonEmpty qualified as NE
 import Data.Version.Package qualified as PV
 import Development.GitRev qualified as GitRev
 import Options.Applicative
@@ -41,6 +39,7 @@ import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Prelude
 import SafeRm.Runner.Command
@@ -284,12 +283,12 @@ consoleLogLevelParser =
           OA.help "The console level in which to log. Defaults to error."
         ]
 
-pathsParser :: (Hashable a, IsString a) => Parser (HashSet a)
+pathsParser :: (Hashable a, IsString a) => Parser (UniqueSeq a)
 pathsParser =
   -- NOTE: _should_ be safe because OA.some only succeeds for non-zero input.
   -- We do this rather than using NonEmpty's some1 because otherwise the CLI
   -- help metavar is duplicated i.e. "PATHS... [PATHS...]".
-  listToSet . unsafeNE
+  fromFoldable . unsafeNE
     <$> OA.some (OA.argument OA.str (OA.metavar "PATHS..."))
 
 mkCommand :: String -> Parser a -> InfoMod a -> Mod CommandFields a
@@ -298,6 +297,3 @@ mkCommand cmdTxt parser helpTxt = OA.command cmdTxt (OA.info parser helpTxt)
 unsafeNE :: HasCallStack => [a] -> NonEmpty a
 unsafeNE [] = error "Args: Empty list given to unsafeNE"
 unsafeNE (x : xs) = x :| xs
-
-listToSet :: Hashable a => NonEmpty a -> HashSet a
-listToSet = Set.fromList . NE.toList

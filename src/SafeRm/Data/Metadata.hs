@@ -10,13 +10,14 @@ module SafeRm.Data.Metadata
   )
 where
 
-import Data.Bytes (Bytes (MkBytes), Size (B), SomeSize)
+import Data.Bytes (Bytes, SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
+import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -85,7 +86,8 @@ instance Pretty Metadata where
 --
 -- @since 0.1
 toMetadata ::
-  ( LoggerContext m,
+  ( FileSystemReader m,
+    LoggerContext m,
     MonadIO m
   ) =>
   (PathI TrashHome, PathI TrashIndex) ->
@@ -97,9 +99,9 @@ toMetadata (trashHome@(MkPathI th), trashIndex) = addNamespace "toMetadata" $ do
   numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
   $(logDebug) ("Num entries: " <> showt numEntries)
   allFiles <- getAllFiles th
-  allSizes <- toDouble <$> foldl' sumFileSizes (pure 0) allFiles
+  allSizes <- toDouble <$> foldl' sumFileSizes (pure zero) allFiles
   let numFiles = length allFiles - 1
-      normalized = Bytes.normalize (MkBytes @B allSizes)
+      normalized = Bytes.normalize allSizes
 
   $(logDebug) ("Num all files: " <> showt numFiles)
   $(logDebug) ("Total size: " <> showt normalized)
@@ -121,10 +123,10 @@ toMetadata (trashHome@(MkPathI th), trashIndex) = addNamespace "toMetadata" $ do
   where
     sumFileSizes macc f = do
       !acc <- macc
-      sz <- Dir.getFileSize f
-      pure $ acc + sz
-    toDouble :: Integer -> Double
-    toDouble = fromIntegral
+      sz <- getFileSize f
+      pure $ acc .+. sz
+    toDouble :: Bytes s Natural -> Bytes s Double
+    toDouble = fmap fromIntegral
     toNat :: Int -> Natural
     toNat = fromIntegral
 

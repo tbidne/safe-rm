@@ -15,6 +15,7 @@ module SafeRm.Runner.Command
 where
 
 import SafeRm.Data.Paths (PathI, PathIndex (OriginalPath, TrashName))
+import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Prelude
 
 -- | Action to run.
@@ -24,13 +25,13 @@ data Command
   = -- | Deletes a path.
     --
     -- @since 0.1
-    Delete !(HashSet (PathI OriginalPath))
+    Delete !(UniqueSeq (PathI OriginalPath))
   | -- | Permanently deletes a path from the trash.
     --
     -- @since 0.1
     DeletePerm
       !Bool
-      !(HashSet (PathI TrashName))
+      !(UniqueSeq (PathI TrashName))
   | -- | Empties the trash.
     --
     -- @since 0.1
@@ -38,7 +39,7 @@ data Command
   | -- | Restores a path.
     --
     -- @since 0.1
-    Restore (HashSet (PathI TrashName))
+    Restore (UniqueSeq (PathI TrashName))
   | -- | List all trash contents.
     --
     -- @since 0.1

@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -11,6 +12,13 @@ module Functional.Prelude
     FuncEnv (..),
 
     -- * Running SafeRm
+
+    -- ** Capturing output
+    CapturedOutput (..),
+    capturedToBs,
+    diff,
+
+    -- ** Runners
     runSafeRm,
     captureSafeRm,
     captureSafeRmLogs,
@@ -21,21 +29,19 @@ module Functional.Prelude
     assertFilesDoNotExist,
     assertDirectoriesExist,
     assertDirectoriesDoNotExist,
-
-    -- * Text assertion
-    assertMatches,
-    assertExceptionMatches,
-
-    -- * Misc
-    getTestDir,
   )
 where
 
-import Data.List qualified as L
+import Data.ByteString.Builder (Builder)
+import Data.ByteString.Builder qualified as Builder
+import Data.ByteString.Lazy qualified as BSL
 import Data.Text qualified as T
+import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime))
 import Data.Time.LocalTime (midday)
+import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
 import SafeRm.Effects.Logger
   ( LoggerContext (getNamespace, localNamespace),
     Namespace,
@@ -44,13 +50,13 @@ import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
 import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
 import SafeRm.Env (HasTrashHome)
-import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Toml (TomlConfig)
 import System.Exit (die)
 import Test.Tasty as X (TestTree, testGroup)
+import Test.Tasty.Golden as X (goldenVsString, goldenVsStringDiff)
 import Test.Tasty.HUnit as X
   ( assertBool,
     assertEqual,
@@ -61,18 +67,23 @@ import Test.Tasty.HUnit as X
 import UnliftIO.Directory qualified as Dir
 import UnliftIO.Environment qualified as SysEnv
 
+-- | Environment for running functional tests.
 data FuncEnv = MkFuncEnv
-  { trashHome :: !(PathI TrashHome),
+  { -- | Trash home.
+    trashHome :: !(PathI TrashHome),
+    -- | Log namespace.
+    logNamespace :: !Namespace,
+    -- | Saves the terminal output.
     terminalRef :: !(IORef Text),
-    logsRef :: !(IORef Text),
-    logNamespace :: !Namespace
+    -- | Saves the logs output.
+    logsRef :: !(IORef Text)
   }
 
 makeFieldLabelsNoPrefix ''FuncEnv
 
 deriving anyclass instance HasTrashHome FuncEnv
 
--- | @since 0.1
+-- | Type for running functional tests.
 newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
   deriving
     ( Applicative,
@@ -84,7 +95,9 @@ newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
     )
     via (ReaderT FuncEnv IO)
 
--- | @since 0.1
+instance FileSystemReader FuncIO where
+  getFileSize = const (pure $ afromInteger 5)
+
 instance Terminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
@@ -105,27 +118,50 @@ instance LoggerContext FuncIO where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 
--- | @since 0.1
 runFuncIO :: FuncIO a -> FuncEnv -> IO a
 runFuncIO (MkFuncIO rdr) = runReaderT rdr
 
+-- | Represents captured input of some kind. Different constructors are
+-- to make golden tests easier to understand (i.e. included labels)
+data CapturedOutput
+  = Terminal Builder Builder
+  | Logs Builder Builder
+  | Exception Builder Builder
+  deriving stock (Show)
+
+-- | Transforms a list of 'CapturedOutput' into a lazy bytestring to be used
+-- with golden tests.
+capturedToBs :: [CapturedOutput] -> BSL.ByteString
+capturedToBs = Builder.toLazyByteString . foldr go ""
+  where
+    go (Terminal title bs) acc = fmt "TERMINAL " title bs acc
+    go (Logs title bs) acc = fmt "LOGS " title bs acc
+    go (Exception title bs) acc = fmt "EXCEPTION " title bs acc
+    fmt cons title bs acc =
+      mconcat
+        [ cons,
+          title,
+          "\n",
+          bs,
+          "\n\n",
+          acc
+        ]
+
 -- | Runs safe-rm.
---
--- @since 0.1
-runSafeRm :: [String] -> IO ()
-runSafeRm = void . captureSafeRm
+runSafeRm :: FilePath -> [String] -> IO ()
+runSafeRm testDir = void . captureSafeRm testDir ""
 
 -- | Runs safe-rm and captures terminal output.
---
--- @since 0.1
-captureSafeRm :: [String] -> IO [Text]
-captureSafeRm = fmap (view _1) . captureSafeRmLogs
+captureSafeRm :: FilePath -> Builder -> [String] -> IO CapturedOutput
+captureSafeRm testDir title = fmap (view _1) . captureSafeRmLogs testDir title
 
 -- | Runs safe-rm and captures (terminal output, logs).
---
--- @since 0.1
-captureSafeRmLogs :: [String] -> IO ([Text], [Text])
-captureSafeRmLogs argList = do
+captureSafeRmLogs ::
+  FilePath ->
+  Builder ->
+  [String] ->
+  IO (CapturedOutput, CapturedOutput)
+captureSafeRmLogs testDir title argList = do
   terminalRef <- newIORef ""
   logsRef <- newIORef ""
 
@@ -134,20 +170,25 @@ captureSafeRmLogs argList = do
 
   runFuncIO (Runner.runCmd cmd) env
 
-  testDir <- getTestDir
-  terminal <- readIORef terminalRef
+  terminal <- replaceDir testDir <$> readIORef terminalRef
   logs <- replaceDir testDir <$> readIORef logsRef
+  let terminalBs = Builder.byteString $ TEnc.encodeUtf8 terminal
+      logsBs = Builder.byteString $ TEnc.encodeUtf8 logs
 
-  pure (T.lines terminal, T.lines logs)
+  pure (Terminal title terminalBs, Logs title logsBs)
   where
     argList' = "-c" : "none" : argList
     getConfig = SysEnv.withArgs argList' Runner.getConfiguration
 
 -- | Runs safe-rm and captures a thrown exception and logs.
---
--- @since 0.1
-captureSafeRmExceptionLogs :: Exception e => [String] -> IO (e, [Text])
-captureSafeRmExceptionLogs argList = do
+captureSafeRmExceptionLogs ::
+  forall e.
+  Exception e =>
+  FilePath ->
+  Builder ->
+  [String] ->
+  IO (CapturedOutput, CapturedOutput)
+captureSafeRmExceptionLogs testDir title argList = do
   terminalRef <- newIORef ""
   logsRef <- newIORef ""
 
@@ -157,7 +198,7 @@ captureSafeRmExceptionLogs argList = do
   result <-
     runFuncIO
       ( (Runner.runCmd cmd $> Nothing)
-          `catch` \e -> pure (Just e)
+          `catch` \(ex :: e) -> pure (Just ex)
       )
       env
 
@@ -166,16 +207,15 @@ captureSafeRmExceptionLogs argList = do
       throwString
         "captureSafeRmExceptionLogs: Expected exception, received none"
     Just ex -> do
-      testDir <- getTestDir
       logs <- replaceDir testDir <$> readIORef logsRef
-      pure (ex, T.lines logs)
+      let exceptionBs = exToBuilder testDir ex
+          logsBs = txtToBuilder logs
+      pure (Exception title exceptionBs, Logs title logsBs)
   where
     argList' = "-c" : "none" : argList
     getConfig = SysEnv.withArgs argList' Runner.getConfiguration
 
 -- | Asserts that files exist.
---
--- @since 0.1
 assertFilesExist :: [FilePath] -> IO ()
 assertFilesExist paths =
   for_ paths $ \p -> do
@@ -183,8 +223,6 @@ assertFilesExist paths =
     assertBool ("Expected file to exist: " <> p) exists
 
 -- | Asserts that files do not exist.
---
--- @since 0.1
 assertFilesDoNotExist :: [FilePath] -> IO ()
 assertFilesDoNotExist paths =
   for_ paths $ \p -> do
@@ -192,8 +230,6 @@ assertFilesDoNotExist paths =
     assertBool ("Expected file not to exist: " <> p) (not exists)
 
 -- | Asserts that directories exist.
---
--- @since 0.1
 assertDirectoriesExist :: [FilePath] -> IO ()
 assertDirectoriesExist paths =
   for_ paths $ \p -> do
@@ -201,46 +237,11 @@ assertDirectoriesExist paths =
     assertBool ("Expected directory to exist: " <> p) exists
 
 -- | Asserts that directories do not exist.
---
--- @since 0.1
 assertDirectoriesDoNotExist :: [FilePath] -> IO ()
 assertDirectoriesDoNotExist paths =
   for_ paths $ \p -> do
     exists <- Dir.doesDirectoryExist p
     assertBool ("Expected directory not to exist: " <> p) (not exists)
-
--- | Tests text for matches.
---
--- @since 0.1
-assertMatches :: [TextMatch] -> [Text] -> IO ()
-assertMatches expectations results = case matches expectations results of
-  Nothing -> pure ()
-  Just err ->
-    assertFailure $
-      mconcat
-        [ err,
-          "\n\n*** Full expectations ***\n\n",
-          unlineMatches expectations,
-          "\n*** Full results ***\n\n",
-          T.unpack (T.unlines results)
-        ]
-
--- | Tests text for exception matches. We sorted the exceptions textual
--- representation, so the listed exception expectations must match!
---
--- @since 0.1
-assertExceptionMatches :: [TextMatch] -> ExceptionI SomeExceptions -> IO ()
-assertExceptionMatches s exs = do
-  case exTxt of
-    [] -> pure ()
-    (h : hs) -> do
-      -- assert exception header
-      "Encountered exception(s)" @=? h
-      -- now do the rest, sorting the results since the order is
-      -- non-deterministic
-      assertMatches s (L.sort hs)
-  where
-    exTxt = T.lines . T.pack $ displayException exs
 
 mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
 mkFuncEnv toml logsRef terminalRef = do
@@ -260,5 +261,11 @@ mkFuncEnv toml logsRef terminalRef = do
 replaceDir :: FilePath -> Text -> Text
 replaceDir fp = T.replace (T.pack fp) "<dir>"
 
-getTestDir :: IO FilePath
-getTestDir = (</> "safe-rm/functional") <$> Dir.getTemporaryDirectory
+diff :: FilePath -> FilePath -> [FilePath]
+diff ref new = ["diff", "-u", ref, new]
+
+txtToBuilder :: Text -> Builder
+txtToBuilder = Builder.byteString . TEnc.encodeUtf8
+
+exToBuilder :: Exception e => FilePath -> e -> Builder
+exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException

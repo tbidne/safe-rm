@@ -1,0 +1,27 @@
+LOGS LOGS1
+[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:72:4] Trash home: <dir>/d4/.trash
+[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:84:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/d4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:103:4] Deleted: <dir>/d4/f1
+
+
+LOGS LOGS2
+[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs:72:4] Trash home: <dir>/d4/.trash
+[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs:84:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1 (1)"}, originalPath = MkPathI {unPathI = "<dir>/d4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs:103:4] Deleted: <dir>/d4/f1
+
+
+TERMINAL LIST
+Type:      File
+Name:      f1
+Original:  <dir>/d4/f1
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      f1 (1)
+Original:  <dir>/d4/f1
+Created:   2020-05-31 12:00:00 
+Entries:      2
+Total Files:  2
+Size:         15.00B 
+
+

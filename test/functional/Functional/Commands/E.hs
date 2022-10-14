@@ -9,17 +9,17 @@ where
 import Functional.Prelude
 
 -- | @since 0.1
-tests :: TestTree
-tests =
+tests :: IO FilePath -> TestTree
+tests args =
   testGroup
     "Empty (e)"
-    [ emptyTrash,
-      emptyTrashTwice
+    [ emptyTrash args,
+      emptyTrashTwice args
     ]
 
-emptyTrash :: TestTree
-emptyTrash = testCase "Empties trash" $ do
-  tmpDir <- getTestDir
+emptyTrash :: IO FilePath -> TestTree
+emptyTrash args = goldenVsStringDiff "Empties trash" diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "e1"
       trashDir = testDir </> ".trash"
       filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
@@ -35,11 +35,10 @@ emptyTrash = testCase "Empties trash" $ do
   assertFilesExist filesToDelete
   assertDirectoriesExist dirsToDelete
 
-  runSafeRm delArgList
+  runSafeRm tmpDir delArgList
 
   -- list output assertions
-  resultDel <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedDel resultDel
+  resultDel <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesExist
@@ -53,12 +52,10 @@ emptyTrash = testCase "Empties trash" $ do
   -- EMPTY
 
   let emptyArgList = ["e", "-f", "-t", trashDir]
-  (_, logs) <- captureSafeRmLogs emptyArgList
-  assertMatches expectedLogs logs
+  (_, logs) <- captureSafeRmLogs tmpDir "EMPTY" emptyArgList
 
   -- list output assertions
-  result <- captureSafeRm ["l", "-t", trashDir]
-  assertMatches expectedEmpty result
+  result <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
 
   -- file assertions
   assertFilesDoNotExist
@@ -69,62 +66,23 @@ emptyTrash = testCase "Empties trash" $ do
   assertDirectoriesDoNotExist dirsToDelete
   assertDirectoriesDoNotExist
     ((trashDir </>) <$> ["", "dir1", "dir2", "dir2/dir3"])
+  pure $ capturedToBs [resultDel, logs, result]
   where
-    expectedDel =
-      [ Exact "Type:      Directory",
-        Exact "Name:      dir1",
-        Outfix "Original:" "/safe-rm/functional/e1/dir1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      Directory",
-        Exact "Name:      dir2",
-        Outfix "Original:" "/safe-rm/functional/e1/dir2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f1",
-        Outfix "Original:" "/safe-rm/functional/e1/f1",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f2",
-        Outfix "Original:" "/safe-rm/functional/e1/f2",
-        Prefix "Created:",
-        Exact "",
-        Exact "Type:      File",
-        Exact "Name:      f3",
-        Outfix "Original:" "/safe-rm/functional/e1/f3",
-        Prefix "Created:",
-        Exact "Entries:      5",
-        Exact "Total Files:  4",
-        Prefix "Size:"
-      ]
-    expectedEmpty =
-      [ Exact "Entries:      0",
-        Exact "Total Files:  0",
-        Prefix "Size:"
-      ]
-    expectedLogs =
-      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e1/.trash"
-      ]
+    gpath = goldenPath </> "empties.golden"
 
-emptyTrashTwice :: TestTree
-emptyTrashTwice = testCase "Calling empty twice does not error" $ do
-  tmpDir <- getTestDir
+emptyTrashTwice :: IO FilePath -> TestTree
+emptyTrashTwice args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
   let testDir = tmpDir </> "e2"
       trashDir = testDir </> ".trash"
 
-  (_, logs1) <- captureSafeRmLogs ["e", "-f", "-t", trashDir]
-  assertMatches expectedLogs1 logs1
+  (_, logs1) <- captureSafeRmLogs tmpDir "EMPTY 1" ["e", "-f", "-t", trashDir]
 
-  (_, logs2) <- captureSafeRmLogs ["e", "-f", "-t", trashDir]
-  assertMatches expectedLogs2 logs2
+  (_, logs2) <- captureSafeRmLogs tmpDir "EMPTY 2" ["e", "-f", "-t", trashDir]
+  pure $ capturedToBs [logs1, logs2]
   where
-    expectedLogs1 =
-      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e2/.trash",
-        Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:284:8] Trash home does not exist."
-      ]
-    expectedLogs2 =
-      [ Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:280:4] Trash home: <dir>/e2/.trash",
-        Exact "[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:284:8] Trash home does not exist."
-      ]
+    desc = "Calling empty twice does not error"
+    gpath = goldenPath </> "twice.golden"
+
+goldenPath :: FilePath
+goldenPath = "test/functional/Functional/Commands/E"

@@ -6,9 +6,11 @@ module SafeRm.Utils
     concatMNonEmpty,
     prependMNonEmpty,
     allM1,
+    uniqueSeqFromList,
   )
 where
 
+import Data.HashSet qualified as Set
 import SafeRm.Prelude
 
 -- | Applies the function when we have a Just.
@@ -52,3 +54,13 @@ allM = foldr f (pure True)
       m >>= \case
         True -> acc
         False -> pure False
+
+-- | Transforms a foldable's unique elements into a 'Seq'.
+--
+-- @since 0.1
+uniqueSeqFromList :: (Foldable f, Hashable a) => f a -> Seq a
+uniqueSeqFromList = view _2 . foldr go ((∅), (∅))
+  where
+    go x (found, acc)
+      | x ∉ found = (Set.insert x found, acc |> x)
+      | otherwise = (found, acc)

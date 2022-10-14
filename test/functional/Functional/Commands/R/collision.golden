@@ -1,0 +1,25 @@
+TERMINAL LIST
+Type:      File
+Name:      f1
+Original:  <dir>/r4/f1
+Created:   2020-05-31 12:00:00 
+Entries:      1
+Total Files:  1
+Size:         10.00B 
+
+
+EXCEPTION RESTORE
+Encountered exception(s)
+- Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
+
+
+LOGS RESTORE
+[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs:239:4] Trash home: <dir>/r4/.trash
+[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/r4/.trash/.index.csv
+[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs:250:10] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.restore.restoring][Warn][src/SafeRm.hs:255:10] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
+[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs:262:4] Restored: 
+[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:134:8] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'RestoreCollision) (MkPathI {unPathI = "f1"},MkPathI {unPathI = "<dir>/r4/f1"}) :| [])
+
+

@@ -33,6 +33,8 @@ import SafeRm.Data.Paths
     PathIndex (OriginalPath, TrashName),
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.UniqueSeq (UniqueSeq)
+import SafeRm.Effects.FileSystemReader (FileSystemReader)
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Effects.Timing (Timing (getSystemTime))
@@ -63,7 +65,7 @@ delete ::
     MonadUnliftIO m,
     Timing m
   ) =>
-  HashSet (PathI OriginalPath) ->
+  UniqueSeq (PathI OriginalPath) ->
   m ()
 delete paths = addNamespace "delete" $ do
   (trashHome, indexPath) <- asks getTrashPaths
@@ -120,7 +122,7 @@ deletePermanently ::
     Terminal m
   ) =>
   Bool ->
-  HashSet (PathI TrashName) ->
+  UniqueSeq (PathI TrashName) ->
   m ()
 deletePermanently force paths = addNamespace "deletePermanently" $ do
   (trashHome, indexPath) <- asks getTrashPaths
@@ -202,7 +204,8 @@ getIndex = addNamespace "getIndex" $ do
 -- @since 0.1
 getMetadata ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadIO m,
     MonadReader env m
@@ -229,7 +232,7 @@ restore ::
     MonadReader env m,
     MonadUnliftIO m
   ) =>
-  HashSet (PathI TrashName) ->
+  UniqueSeq (PathI TrashName) ->
   m ()
 restore paths = addNamespace "restore" $ do
   (trashHome, indexPath) <- asks getTrashPaths

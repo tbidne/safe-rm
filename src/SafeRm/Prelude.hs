@@ -10,6 +10,12 @@ module SafeRm.Prelude
 
     -- * Container Operators
     Empty (..),
+
+    -- ** Insertion
+    Insert (..),
+    Sequenced (..),
+
+    -- ** Operations
     Union (..),
     (⋃),
     Difference (..),
@@ -79,7 +85,7 @@ import Data.List.NonEmpty as X (NonEmpty ((:|)))
 import Data.Maybe as X (Maybe (Just, Nothing), fromMaybe, maybe)
 import Data.Monoid as X (Monoid (mconcat, mempty))
 import Data.Ord as X
-  ( Ord (compare, (<=), (>), (>=)),
+  ( Ord (compare, (<), (<=), (>), (>=)),
     Ordering (EQ, GT, LT),
     min,
   )
@@ -186,6 +192,21 @@ instance Empty (HashMap k v) where
 instance Empty (Seq a) where
   (∅) = Seq.empty
 
+class Insert α where
+  type InsertC α :: Constraint
+  type IElem α
+  (⟇) :: InsertC α => IElem α -> α -> α
+
+instance Insert (HashSet a) where
+  type InsertC (HashSet a) = Hashable a
+  type IElem (HashSet a) = a
+  (⟇) = Set.insert
+
+instance Insert (HashMap k v) where
+  type InsertC (HashMap k v) = Hashable k
+  type IElem (HashMap k v) = (k, v)
+  (⟇) (k, v) = Map.insert k v
+
 -- | Types with a \'union\'.
 --
 -- @since 0.1
@@ -206,6 +227,14 @@ instance Hashable a => Union (HashSet a) where
 -- | @since 0.1
 instance Hashable k => Union (HashMap k v) where
   (∪) = Map.union
+
+-- | @since 0.1
+instance Hashable a => Union (Seq a) where
+  x ∪ y = view _2 $ foldr go ((∅), (∅)) (x <> y)
+    where
+      go z (found, acc)
+        | z ∉ found = (Set.insert z found, acc |> z)
+        | otherwise = (found, acc)
 
 -- | Types with a \'difference\'.
 --
@@ -274,3 +303,28 @@ instance CMap HashSet where
 instance CMap (HashMap k) where
   type CMapC (HashMap k) _ = ()
   φ = Map.map
+
+-- | @since 0.1
+instance CMap Seq where
+  type CMapC Seq _ = ()
+  φ = fmap
+
+-- | @since 0.1
+class Sequenced α where
+  type SElem α
+
+  -- | Appends an element to the sequence.
+  --
+  -- @since 0.1
+  (⋗) :: α -> SElem α -> α
+
+  -- | Prepends an element to the sequence.
+  --
+  -- @since 0.1
+  (⋖) :: SElem α -> α -> α
+
+-- | @since 0.1
+instance Sequenced (Seq a) where
+  type SElem (Seq a) = a
+  (⋗) = (|>)
+  (⋖) = (<|)

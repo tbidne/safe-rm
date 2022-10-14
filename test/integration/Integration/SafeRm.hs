@@ -17,6 +17,7 @@ import Integration.Prelude
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
+import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (SomeExceptions),
@@ -83,7 +84,7 @@ delete mtestDir = askOption $ \(MkMaxRuns limit) ->
 
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
-        αTest === indexOrigPaths
+        αTest ^. #set === indexOrigPaths
 
 deleteSome :: IO FilePath -> TestTree
 deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
@@ -139,7 +140,7 @@ deleteSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
         -- index should exactly match α
-        αTest === indexOrigPaths
+        αTest ^. #set === indexOrigPaths
 
 deletePermanently :: IO FilePath -> TestTree
 deletePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
@@ -240,7 +241,7 @@ deleteSomePermanently mtestDir = askOption $ \(MkMaxRuns limit) ->
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
         -- γ should still exist in the trash index
-        toTestDir γ === indexOrigPaths
+        toTestDir γ ^. #set === indexOrigPaths
 
         annotate "Assert files do not exist"
         assertFilesDoNotExist (φ (trashDir </>) (α ∪ β))
@@ -349,7 +350,7 @@ restoreSome mtestDir = askOption $ \(MkMaxRuns limit) ->
         let indexOrigPaths = Map.foldl' toOrigPath (∅) index
 
         -- γ should still exist in the trash index
-        toTestDir γ === indexOrigPaths
+        toTestDir γ ^. #set === indexOrigPaths
 
         annotate "Assert files exist"
         assertFilesExist (toTestDir α ∪ toTrashDir γ)
@@ -442,24 +443,24 @@ natToInt i
   where
     intMax = fromIntegral (maxBound :: Int)
 
-genFileNameSet :: Gen (HashSet FilePath)
-genFileNameSet = Set.fromList <$> Gen.list range genFileName
+genFileNameSet :: Gen (UniqueSeq FilePath)
+genFileNameSet = fromFoldable <$> Gen.list range genFileName
   where
     range = Range.linear 0 100
 
-gen2FileNameSets :: Gen (HashSet FilePath, HashSet FilePath)
+gen2FileNameSets :: Gen (UniqueSeq FilePath, UniqueSeq FilePath)
 gen2FileNameSets = do
-  α <- Set.fromList <$> Gen.list range genFileName
-  β <- Set.fromList <$> Gen.list range (genFileNameNoDupes α)
+  α <- fromFoldable <$> Gen.list range genFileName
+  β <- fromFoldable <$> Gen.list range (genFileNameNoDupes α)
   pure (α, β)
   where
     range = Range.linear 1 100
 
-gen3FileNameSets :: Gen (HashSet FilePath, HashSet FilePath, HashSet FilePath)
+gen3FileNameSets :: Gen (UniqueSeq FilePath, UniqueSeq FilePath, UniqueSeq FilePath)
 gen3FileNameSets = do
-  α <- Set.fromList <$> Gen.list range genFileName
-  β <- Set.fromList <$> Gen.list range (genFileNameNoDupes α)
-  γ <- Set.fromList <$> Gen.list range (genFileNameNoDupes (α ∪ β))
+  α <- fromFoldable <$> Gen.list range genFileName
+  β <- fromFoldable <$> Gen.list range (genFileNameNoDupes α)
+  γ <- fromFoldable <$> Gen.list range (genFileNameNoDupes (α ∪ β))
   pure (α, β, γ)
   where
     range = Range.linear 1 100
@@ -467,7 +468,7 @@ gen3FileNameSets = do
 genFileName :: Gen FilePath
 genFileName = genFileNameNoDupes (∅)
 
-genFileNameNoDupes :: HashSet FilePath -> Gen FilePath
+genFileNameNoDupes :: UniqueSeq FilePath -> Gen FilePath
 genFileNameNoDupes paths =
   Gen.filter
     (∉ paths)
