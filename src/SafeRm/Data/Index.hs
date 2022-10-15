@@ -109,7 +109,7 @@ readIndex indexPath = addNamespace "readIndex" $ do
       acc <- macc
       throwIfDuplicates indexPath acc pd
       throwIfTrashNonExtant trashHome pd
-      pure $ Map.insert fileName pd acc
+      pure $ (fileName, pd) ⟇ acc
       where
         fileName = pd ^. #fileName
 

@@ -8,7 +8,6 @@ where
 
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as Map
-import Data.HashSet qualified as Set
 import Data.List qualified as L
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
@@ -482,7 +481,7 @@ genChar = Gen.filterT (not . badChars) Gen.unicode
     badChars c = Ch.isControl c || L.elem c ['/', '.']
 
 toOrigPath :: HashSet FilePath -> PathData -> HashSet FilePath
-toOrigPath acc pd = Set.insert (pd ^. #originalPath % #unPathI) acc
+toOrigPath acc pd = (pd ^. #originalPath % #unPathI) ⟇ acc
 
 mkEnv :: FilePath -> IO Env
 mkEnv fp = do

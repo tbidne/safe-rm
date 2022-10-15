@@ -84,7 +84,7 @@ class MonadLogger m => LoggerContext m where
 --
 -- @since 0.1
 addNamespace :: LoggerContext m => Text -> m a -> m a
-addNamespace txt = localNamespace (over' #unNamespace (|> txt))
+addNamespace txt = localNamespace (over' #unNamespace (⋗ txt))
 
 -- | Reads the 'LogLevel'.
 --

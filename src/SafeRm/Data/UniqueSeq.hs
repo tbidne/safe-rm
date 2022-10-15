@@ -10,7 +10,7 @@ module SafeRm.Data.UniqueSeq
   )
 where
 
-import Data.HashSet qualified as Set
+import Containers.Class qualified as C
 import GHC.Exts (IsList (Item, fromList, toList))
 import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
 import SafeRm.Prelude
@@ -63,32 +63,33 @@ instance Hashable a => Monoid (UniqueSeq a) where
 
 -- | @since 0.1
 instance Empty (UniqueSeq a) where
-  (∅) = UnsafeUniqueSeq (∅) (∅)
+  empty = UnsafeUniqueSeq (∅) (∅)
 
 -- | @since 0.1
 instance Hashable a => Union (UniqueSeq a) where
-  UnsafeUniqueSeq xseq xset ∪ UnsafeUniqueSeq yseq yset =
+  union (UnsafeUniqueSeq xseq xset) (UnsafeUniqueSeq yseq yset) =
     UnsafeUniqueSeq (view _2 (foldr go ((∅), (∅)) (xseq <> yseq))) (xset ∪ yset)
     where
+      go :: a -> (HashSet a, Seq a) -> (HashSet a, Seq a)
       go z (found, acc)
-        | z ∉ found = (Set.insert z found, acc |> z)
+        | z ∉ found = (z ⟇ found, acc ⋗ z)
         | otherwise = (found, acc)
 
 -- | @since 0.1
 instance Hashable a => Member (UniqueSeq a) where
-  type MKey (UniqueSeq a) = a
-  x ∈ UnsafeUniqueSeq _ set = x ∈ set
+  type MElem (UniqueSeq a) = a
+  member x (UnsafeUniqueSeq _ set) = x ∈ set
 
 -- | @since 0.1
 instance Hashable a => Sequenced (UniqueSeq a) where
   type SElem (UniqueSeq a) = a
-  (⋗) = flip (insert (flip (|>)))
-  (⋖) = insert (<|)
+  append = flip (insert (flip (|>)))
+  prepend = insert (<|)
 
 -- | @since 0.1
 instance CMap UniqueSeq where
   type CMapC UniqueSeq a = Hashable a
-  φ f (UnsafeUniqueSeq seq set) = UnsafeUniqueSeq (φ f seq) (φ f set)
+  cmap f (UnsafeUniqueSeq seq set) = UnsafeUniqueSeq (φ f seq) (φ f set)
 
 -- | @since 0.1
 instance Hashable a => IsList (UniqueSeq a) where

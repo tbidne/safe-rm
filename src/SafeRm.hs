@@ -83,7 +83,7 @@ delete paths = addNamespace "delete" $ do
         pd <- PathData.toPathData currTime trashHome fp
         $(logDebug) (showt pd)
         PathData.mvOriginalToTrash trashHome pd
-        modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+        modifyIORef' deletedPathsRef ((pd ^. #fileName, pd) ⟇)
     )
       `catchAny` \ex -> do
         $(logWarn) (displayExceptiont ex)
@@ -138,7 +138,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
         ( do
             $(logDebug) (showt pd)
             PathData.deletePathData trashHome pd
-            modifyIORef' deletedPathsRef (Map.insert (pd ^. #fileName) pd)
+            modifyIORef' deletedPathsRef ((pd ^. #fileName, pd) ⟇)
         )
           `catchAny` \ex -> do
             $(logWarn) (displayExceptiont ex)
@@ -249,7 +249,7 @@ restore paths = addNamespace "restore" $ do
     ( do
         $(logDebug) (showt pd)
         PathData.mvTrashToOriginal trashHome pd
-        modifyIORef' restoredPathsRef (Map.insert (pd ^. #fileName) pd)
+        modifyIORef' restoredPathsRef ((pd ^. #fileName, pd) ⟇)
     )
       `catchAny` \ex -> do
         $(logWarn) (displayExceptiont ex)

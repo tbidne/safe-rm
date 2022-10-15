@@ -15,5 +15,7 @@ extra-deps:
   commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
 - git: https://github.com/tbidne/byte-types.git
   commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+- git: https://github.com/tbidne/classy-containers.git
+  commit: ea3f684a7f0c167ca74157dbe43e1d70b2d554eb
 nix:
   shell-file: nix/stack.nix

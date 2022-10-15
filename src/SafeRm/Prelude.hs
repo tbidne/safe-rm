@@ -7,25 +7,26 @@ module SafeRm.Prelude
     -- * Text
     showt,
     displayExceptiont,
-
-    -- * Container Operators
-    Empty (..),
-
-    -- ** Insertion
-    Insert (..),
-    Sequenced (..),
-
-    -- ** Operations
-    Union (..),
-    (⋃),
-    Difference (..),
-    (∆),
-    Member (..),
-    (∉),
-    CMap (..),
   )
 where
 
+import Containers.Class as X
+  ( CMap (cmap),
+    Empty,
+    Insert,
+    Member (MElem),
+    Sequenced,
+    Union,
+    φ,
+    (∅),
+    (∈),
+    (∉),
+    (∖),
+    (∪),
+    (⋖),
+    (⋗),
+    (⟇),
+  )
 import Control.Applicative as X
   ( Alternative (empty, (<|>)),
     Applicative (pure, (<*>)),
@@ -74,9 +75,7 @@ import Data.Foldable as X
 import Data.Function as X (const, flip, id, ($), (.))
 import Data.Functor as X (Functor (fmap), ($>), (<$>), (<&>))
 import Data.HashMap.Strict as X (HashMap)
-import Data.HashMap.Strict qualified as Map
 import Data.HashSet as X (HashSet)
-import Data.HashSet qualified as Set
 import Data.Hashable as X (Hashable (hashWithSalt))
 import Data.Int as X (Int)
 import Data.Kind as X (Constraint, Type)
@@ -92,7 +91,6 @@ import Data.Ord as X
 import Data.Proxy as X (Proxy (Proxy))
 import Data.Semigroup as X (Semigroup ((<>)))
 import Data.Sequence as X (Seq, (<|), (|>))
-import Data.Sequence qualified as Seq
 import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
@@ -172,159 +170,3 @@ showt = T.pack . show
 
 displayExceptiont :: Exception e => e -> Text
 displayExceptiont = T.pack . displayException
-
--- | Types that have a notion of empty.
---
--- @since 0.1
-class Empty α where
-  -- | @since 0.1
-  (∅) :: α
-
--- | @since 0.1
-instance Empty (HashSet a) where
-  (∅) = Set.empty
-
--- | @since 0.1
-instance Empty (HashMap k v) where
-  (∅) = Map.empty
-
--- | @since 0.1
-instance Empty (Seq a) where
-  (∅) = Seq.empty
-
-class Insert α where
-  type InsertC α :: Constraint
-  type IElem α
-  (⟇) :: InsertC α => IElem α -> α -> α
-
-instance Insert (HashSet a) where
-  type InsertC (HashSet a) = Hashable a
-  type IElem (HashSet a) = a
-  (⟇) = Set.insert
-
-instance Insert (HashMap k v) where
-  type InsertC (HashMap k v) = Hashable k
-  type IElem (HashMap k v) = (k, v)
-  (⟇) (k, v) = Map.insert k v
-
--- | Types with a \'union\'.
---
--- @since 0.1
-class Union α where
-  -- | @since 0.1
-  (∪) :: α -> α -> α
-
-infixl 6 ∪
-
--- | @since 0.1
-(⋃) :: (Empty α, Foldable ρ, Union α) => ρ α -> α
-(⋃) = foldr (∪) (∅)
-
--- | @since 0.1
-instance Hashable a => Union (HashSet a) where
-  (∪) = Set.union
-
--- | @since 0.1
-instance Hashable k => Union (HashMap k v) where
-  (∪) = Map.union
-
--- | @since 0.1
-instance Hashable a => Union (Seq a) where
-  x ∪ y = view _2 $ foldr go ((∅), (∅)) (x <> y)
-    where
-      go z (found, acc)
-        | z ∉ found = (Set.insert z found, acc |> z)
-        | otherwise = (found, acc)
-
--- | Types with a \'difference\'.
---
--- @since 0.1
-class Difference α where
-  (∖) :: α -> α -> α
-
--- | @since 0.1
-instance Hashable a => Difference (HashSet a) where
-  (∖) = Set.difference
-
--- | @since 0.1
-instance Hashable k => Difference (HashMap k v) where
-  (∖) = Map.difference
-
--- | Symmetric difference.
---
--- @since 0.1
-(∆) :: (Difference α, Union α) => α -> α -> α
-x ∆ y = (x ∖ y) ∪ (y ∖ x)
-
-infixl 6 ∆
-
--- | Types with a notion of \'member\'.
---
--- @since 0.1
-class Member α where
-  type MKey α
-  (∈) :: MKey α -> α -> Bool
-
-infix 4 ∈
-
--- | @since 0.1
-instance Hashable a => Member (HashSet a) where
-  type MKey (HashSet a) = a
-  (∈) = Set.member
-
--- | @since 0.1
-instance Hashable k => Member (HashMap k v) where
-  type MKey (HashMap k v) = k
-  (∈) = Map.member
-
--- | Negation of '(∈)'.
---
--- @since 0.1
-(∉) :: Member α => MKey α -> α -> Bool
-(∉) x = not . (∈) x
-
-infix 4 ∉
-
--- | Generalized 'fmap'.
---
--- @since 0.1
-class CMap ρ where
-  -- | Constraint on the image, if any.
-  type CMapC ρ α :: Constraint
-
-  φ :: CMapC ρ β => (α -> β) -> ρ α -> ρ β
-
--- | @since 0.1
-instance CMap HashSet where
-  type CMapC HashSet a = Hashable a
-  φ = Set.map
-
--- | @since 0.1
-instance CMap (HashMap k) where
-  type CMapC (HashMap k) _ = ()
-  φ = Map.map
-
--- | @since 0.1
-instance CMap Seq where
-  type CMapC Seq _ = ()
-  φ = fmap
-
--- | @since 0.1
-class Sequenced α where
-  type SElem α
-
-  -- | Appends an element to the sequence.
-  --
-  -- @since 0.1
-  (⋗) :: α -> SElem α -> α
-
-  -- | Prepends an element to the sequence.
-  --
-  -- @since 0.1
-  (⋖) :: SElem α -> α -> α
-
--- | @since 0.1
-instance Sequenced (Seq a) where
-  type SElem (Seq a) = a
-  (⋗) = (|>)
-  (⋖) = (<|)
