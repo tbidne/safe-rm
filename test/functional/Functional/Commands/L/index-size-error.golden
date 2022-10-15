@@ -10,6 +10,7 @@ LOGS LIST
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Index size: 1
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num entries: 2
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Log does not exist
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num all files: 2
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Total size: MkSomeSize SB (MkBytes 15.0)
 [2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'TrashIndexSizeMismatch) (MkPathI {unPathI = "<dir>/l5/.trash"},2,1)

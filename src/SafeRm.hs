@@ -68,7 +68,7 @@ delete ::
   UniqueSeq (PathI OriginalPath) ->
   m ()
 delete paths = addNamespace "delete" $ do
-  (trashHome, indexPath) <- asks getTrashPaths
+  (trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
 
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
@@ -125,7 +125,7 @@ deletePermanently ::
   UniqueSeq (PathI TrashName) ->
   m ()
 deletePermanently force paths = addNamespace "deletePermanently" $ do
-  (trashHome, indexPath) <- asks getTrashPaths
+  (trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
 
   index <- Index.readIndex indexPath
@@ -212,7 +212,7 @@ getMetadata ::
   ) =>
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
-  paths@(trashHome, _) <- asks getTrashPaths
+  paths@(trashHome, _, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
     True -> Metadata.toMetadata paths
@@ -235,7 +235,7 @@ restore ::
   UniqueSeq (PathI TrashName) ->
   m ()
 restore paths = addNamespace "restore" $ do
-  (trashHome, indexPath) <- asks getTrashPaths
+  (trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex

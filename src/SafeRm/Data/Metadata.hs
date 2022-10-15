@@ -15,8 +15,12 @@ import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
+import Numeric.Literal.Rational (FromRational (afromRational))
 import SafeRm.Data.Index qualified as Index
-import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome, TrashIndex))
+import SafeRm.Data.Paths
+  ( PathI (MkPathI),
+    PathIndex (TrashHome, TrashIndex, TrashLog),
+  )
 import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
@@ -39,6 +43,10 @@ data Metadata = MkMetadata
     --
     -- @since 0.1
     numFiles :: !Natural,
+    -- | Size of the log file.
+    --
+    -- @since 0.1
+    logSize :: !(SomeSize Double),
     -- | Total size of the trash directory.
     --
     -- @since 0.1
@@ -61,12 +69,12 @@ makeFieldLabelsNoPrefix ''Metadata
 
 -- | @since 0.1
 instance Semigroup Metadata where
-  MkMetadata a b c <> MkMetadata a' b' c' =
-    MkMetadata (a + a') (b + b') (c .+. c')
+  MkMetadata a b c d <> MkMetadata a' b' c' d' =
+    MkMetadata (a + a') (b + b') (c .+. c') (d .+. d')
 
 -- | @since 0.1
 instance Monoid Metadata where
-  mempty = MkMetadata 0 0 zero
+  mempty = MkMetadata 0 0 zero zero
 
 -- | @since 0.1
 instance Pretty Metadata where
@@ -75,6 +83,7 @@ instance Pretty Metadata where
       strs =
         [ "Entries:     " <+> pretty (stats ^. #numEntries),
           "Total Files: " <+> pretty (stats ^. #numFiles),
+          "Log size:    " <+> pretty (formatSz $ stats ^. #logSize),
           "Size:        " <+> pretty (formatSz $ stats ^. #size)
         ]
       formatSz =
@@ -90,36 +99,57 @@ toMetadata ::
     LoggerContext m,
     MonadIO m
   ) =>
-  (PathI TrashHome, PathI TrashIndex) ->
+  (PathI TrashHome, PathI TrashIndex, PathI TrashLog) ->
   m Metadata
-toMetadata (trashHome@(MkPathI th), trashIndex) = addNamespace "toMetadata" $ do
-  index <- view #unIndex <$> Index.readIndex trashIndex
-  let numIndex = Map.size index
-  $(logDebug) ("Index size: " <> showt numIndex)
-  numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
-  $(logDebug) ("Num entries: " <> showt numEntries)
-  allFiles <- getAllFiles th
-  allSizes <- toDouble <$> foldl' sumFileSizes (pure zero) allFiles
-  let numFiles = length allFiles - 1
-      normalized = Bytes.normalize allSizes
+toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
+  addNamespace "toMetadata" $ do
+    -- Index size
+    index <- view #unIndex <$> Index.readIndex trashIndex
+    let numIndex = Map.size index
+    $(logDebug) ("Index size: " <> showt numIndex)
 
-  $(logDebug) ("Num all files: " <> showt numFiles)
-  $(logDebug) ("Total size: " <> showt normalized)
+    -- Num entries
+    numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
+    $(logDebug) ("Num entries: " <> showt numEntries)
 
-  -- NOTE: Verify that sizes are the same. Because reading the index verifies
-  -- that there are no duplicate entries and each entry corresponds to a real
-  -- trash path, this guarantees that the index exactly corresponds to the
-  -- trash state.
-  when (numEntries /= numIndex) $
-    throwIO $
-      MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
+    -- Log size
+    let logPath = trashLog ^. #unPathI
+    logExists <- Dir.doesFileExist logPath
+    logSize <-
+      if logExists
+        then do
+          logSize' <-
+            Bytes.normalize . toDouble <$> getFileSize logPath
+          $(logDebug) ("Log size: " <> showt logSize')
+          pure logSize'
+        else do
+          $(logDebug) "Log does not exist"
+          pure (afromRational 0)
 
-  pure $
-    MkMetadata
-      { numEntries = toNat numEntries,
-        numFiles = toNat numFiles,
-        size = normalized
-      }
+    -- Summed size
+    allFiles <- getAllFiles th
+    allSizes <- toDouble <$> foldl' sumFileSizes (pure zero) allFiles
+    let numFiles = length allFiles - 1
+        size = Bytes.normalize allSizes
+
+    $(logDebug) ("Num all files: " <> showt numFiles)
+    $(logDebug) ("Total size: " <> showt size)
+
+    -- NOTE: Verify that sizes are the same. Because reading the index verifies
+    -- that there are no duplicate entries and each entry corresponds to a real
+    -- trash path, this guarantees that the index exactly corresponds to the
+    -- trash state.
+    when (numEntries /= numIndex) $
+      throwIO $
+        MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
+
+    pure $
+      MkMetadata
+        { numEntries = toNat numEntries,
+          numFiles = toNat numFiles,
+          logSize,
+          size
+        }
   where
     sumFileSizes macc f = do
       !acc <- macc

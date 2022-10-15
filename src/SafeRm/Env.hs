@@ -5,13 +5,14 @@ module SafeRm.Env
   ( HasTrashHome (..),
     getTrashPaths,
     getTrashIndex,
+    getTrashLog,
   )
 where
 
 import Optics.Core (A_Getter, Is, LabelOptic')
 import SafeRm.Data.Paths
   ( PathI,
-    PathIndex (TrashHome, TrashIndex),
+    PathIndex (TrashHome, TrashIndex, TrashLog),
     liftPathI,
   )
 import SafeRm.Prelude
@@ -35,11 +36,20 @@ class HasTrashHome a where
 -- | Retrieves all trash paths.
 --
 -- @since 0.1
-getTrashPaths :: HasTrashHome a => a -> (PathI TrashHome, PathI TrashIndex)
-getTrashPaths x = (getTrashHome x, getTrashIndex x)
+getTrashPaths ::
+  HasTrashHome a =>
+  a ->
+  (PathI TrashHome, PathI TrashIndex, PathI TrashLog)
+getTrashPaths x = (getTrashHome x, getTrashIndex x, getTrashLog x)
 
 -- | Retrieves the trash index path.
 --
 -- @since 0.1
 getTrashIndex :: HasTrashHome a => a -> PathI TrashIndex
 getTrashIndex = liftPathI (</> ".index.csv") . getTrashHome
+
+-- | Retrieves the trash log path.
+--
+-- @since 0.1
+getTrashLog :: HasTrashHome a => a -> PathI TrashLog
+getTrashLog = liftPathI (</> ".log") . getTrashHome
