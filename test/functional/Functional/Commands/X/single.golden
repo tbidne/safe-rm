@@ -9,11 +9,11 @@ Size:         10.00B
 
 
 LOGS PERM DELETE
-[2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs:129:4] Trash home: <dir>/x1/.trash
-[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/x1/.trash/.index.csv
-[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/x1/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug][src/SafeRm.hs:139:14] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/x1/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.deletePermanently][Info][src/SafeRm.hs:175:4] Deleted: f1
+[2020-05-31 12:00:00][functional.deletePermanently][Debug] Trash home: <dir>/x1/.trash
+[2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug] Index path: <dir>/x1/.trash/.index.csv
+[2020-05-31 12:00:00][functional.deletePermanently.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/x1/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.deletePermanently.deleting][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/x1/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.deletePermanently][Info] Deleted: f1
 
 
 TERMINAL LIST 2

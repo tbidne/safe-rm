@@ -2,16 +2,16 @@ EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 
 LOGS LIST
-[2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs:195:4] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional.getMetadata][Debug][src/SafeRm.hs:216:4] Trash home: <dir>/l5/.trash
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:98:4] Index size: 1
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:100:4] Num entries: 2
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:106:4] Num all files: 2
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs:107:4] Total size: MkSomeSize SB (MkBytes 15.0)
-[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:134:8] MkExceptionI (Proxy ExceptionIndex 'TrashIndexSizeMismatch) (MkPathI {unPathI = "<dir>/l5/.trash"},2,1)
+[2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getMetadata][Debug] Trash home: <dir>/l5/.trash
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Index size: 1
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num entries: 2
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num all files: 2
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Total size: MkSomeSize SB (MkBytes 15.0)
+[2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'TrashIndexSizeMismatch) (MkPathI {unPathI = "<dir>/l5/.trash"},2,1)
 
 

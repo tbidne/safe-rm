@@ -15,6 +15,7 @@ module SafeRm.Effects.Logger
 
     -- * Formatting
     formatLog,
+    formatLogNoLoc,
 
     -- * LogStr
     logStrToBs,
@@ -110,7 +111,7 @@ readLogLevel other =
 logLevelStrings :: String
 logLevelStrings = "[none|error|warn|info|debug]"
 
--- | Produces a formatted 'LogStr'.
+-- | Produces a formatted 'LogStr' with code location.
 --
 -- @since 0.1
 formatLog ::
@@ -121,10 +122,35 @@ formatLog ::
   LogLevel ->
   msg ->
   m LogStr
-formatLog withNewline loc lvl msg = do
+formatLog withNewline loc = formatLogLoc withNewline (Just loc)
+
+-- | Produces a formatted 'LogStr' without code location.
+--
+-- @since 0.1
+formatLogNoLoc ::
+  (LoggerContext m, Timing m) =>
+  ToLogStr msg =>
+  Bool ->
+  LogLevel ->
+  msg ->
+  m LogStr
+formatLogNoLoc withNewline = formatLogLoc withNewline Nothing
+
+-- | Produces a formatted 'LogStr'.
+--
+-- @since 0.1
+formatLogLoc ::
+  (LoggerContext m, Timing m) =>
+  ToLogStr msg =>
+  Bool ->
+  Maybe Loc ->
+  LogLevel ->
+  msg ->
+  m LogStr
+formatLogLoc withNewline mloc lvl msg = do
   timestampTxt <- toLogStr . Timing.toString <$> getSystemTime
   namespace <- getNamespace
-  let locTxt = toLogStr $ partialLoc loc
+  let locTxt = maybe "" (brackets . toLogStr . partialLoc) mloc
       namespaceTxt = toLogStr $ displayNamespace namespace
       lvlTxt = toLogStr $ showLevel lvl
       msgTxt = toLogStr msg
@@ -136,7 +162,7 @@ formatLog withNewline loc lvl msg = do
           [ brackets timestampTxt,
             brackets namespaceTxt,
             brackets lvlTxt,
-            brackets locTxt,
+            locTxt,
             " ",
             msgTxt,
             newline

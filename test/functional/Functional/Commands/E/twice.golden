@@ -1,10 +1,10 @@
 LOGS EMPTY 1
-[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:283:4] Trash home: <dir>/e2/.trash
-[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:287:8] Trash home does not exist.
+[2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home: <dir>/e2/.trash
+[2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home does not exist.
 
 
 LOGS EMPTY 2
-[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:283:4] Trash home: <dir>/e2/.trash
-[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs:287:8] Trash home does not exist.
+[2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home: <dir>/e2/.trash
+[2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home does not exist.
 
 

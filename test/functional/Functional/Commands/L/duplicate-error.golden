@@ -2,10 +2,10 @@ EXCEPTION LIST
 Trash paths should be unique, but found multiple entries in the trash index '<dir>/l4/.trash/.index.csv' for the following path: foo
 
 LOGS LIST
-[2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs:195:4] Index path: <dir>/l4/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs:103:4] Index path: <dir>/l4/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs:108:8] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs:134:8] MkExceptionI (Proxy ExceptionIndex 'DuplicateIndexPath) (MkPathI {unPathI = "<dir>/l4/.trash/.index.csv"},MkPathI {unPathI = "foo"})
+[2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l4/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l4/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'DuplicateIndexPath) (MkPathI {unPathI = "<dir>/l4/.trash/.index.csv"},MkPathI {unPathI = "foo"})
 
 

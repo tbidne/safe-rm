@@ -108,8 +108,8 @@ instance Timing FuncIO where
       localTime = LocalTime (toEnum 59_000) midday
 
 instance MonadLogger FuncIO where
-  monadLoggerLog loc _src lvl msg = do
-    formatted <- Logger.formatLog True loc lvl msg
+  monadLoggerLog _loc _src lvl msg = do
+    formatted <- Logger.formatLogNoLoc True lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
