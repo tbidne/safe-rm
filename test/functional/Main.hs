@@ -9,6 +9,7 @@ import Functional.Commands.L qualified as L
 import Functional.Commands.M qualified as M
 import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
+import Functional.Logging qualified as Logging
 import Functional.Prelude
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
@@ -29,7 +30,8 @@ main =
           E.tests args,
           R.tests args,
           L.tests args,
-          M.tests args
+          M.tests args,
+          Logging.tests args
         ]
 
 setup :: IO FilePath

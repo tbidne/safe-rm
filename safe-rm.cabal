@@ -173,6 +173,7 @@ test-suite functional
     Functional.Commands.M
     Functional.Commands.R
     Functional.Commands.X
+    Functional.Logging
     Functional.Prelude
 
   build-depends:

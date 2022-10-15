@@ -9,6 +9,7 @@ module SafeRm.Runner
     runCmd,
 
     -- * Helpers
+    getEnv,
     getConfiguration,
   )
 where
@@ -21,6 +22,7 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome),
   )
+import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Effects.FileSystemReader (FileSystemReader)
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
@@ -141,13 +143,15 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
 getEnv :: MonadIO m => m (Env, Command)
 getEnv = do
   (mergedConfig, command) <- getConfiguration
+
   trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
+  -- NOTE: Needed so below openFile command does not fail
+  Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
   logFile <- case join (mergedConfig ^. #logLevel) of
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      -- FIXME: if the trash directory does not exist yet then this will fail!
       h <- liftIO $ IO.openFile logPath IO.AppendMode
       pure $
         Just $
