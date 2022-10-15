@@ -27,4 +27,4 @@ source-repository-package
 source-repository-package
     type: git
     location: https://github.com/tbidne/classy-containers.git
-    tag: 855525eeab7c0f32d23afda3f07e69f615d3db16
+    tag: 5a7d60ea4f1a1f2ccc59c26c68acca3ad1ec332e

@@ -68,11 +68,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1665823292,
-        "narHash": "sha256-voJ22BPw20nalYgnrxvAnzTJaRx1YzmWzblZaBFWeSs=",
+        "lastModified": 1665874531,
+        "narHash": "sha256-8J4/M4fi6o2ZFDzAsSUFtZmZr09wPMpFHByOB3hAwqk=",
         "owner": "tbidne",
         "repo": "classy-containers",
-        "rev": "855525eeab7c0f32d23afda3f07e69f615d3db16",
+        "rev": "5a7d60ea4f1a1f2ccc59c26c68acca3ad1ec332e",
         "type": "github"
       },
       "original": {
