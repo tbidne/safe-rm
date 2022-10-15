@@ -5,41 +5,52 @@
 
 packages:
 - completed:
+    hackage: env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
     pantry-tree:
       sha256: af965e0380b7a6889116657802e98b8b6e982bb2ea6550151b7d2abd364f3074
       size: 419
-    hackage: env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
   original:
     hackage: env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
 - completed:
+    hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
     pantry-tree:
       sha256: 0313e1494edd350cd2b2c60890a8ee64d5ad3e74cb4df3942cebdd3746ba6f99
       size: 1040
-    hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
   original:
     hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
 - completed:
+    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+    git: https://github.com/tbidne/algebra-simple.git
     name: algebra-simple
     pantry-tree:
       sha256: 31a41c91df1a085c44b05a31f9ba71327f072b2f0f5349c6789650d1849eeba9
       size: 4142
-    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
-    git: https://github.com/tbidne/algebra-simple.git
     version: '0.1'
   original:
     commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
     git: https://github.com/tbidne/algebra-simple.git
 - completed:
+    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+    git: https://github.com/tbidne/byte-types.git
     name: byte-types
     pantry-tree:
       sha256: 02fe220d0192a03e7bc499bf396e6c5c6a1c3558e5b3bb35e022b5469f456c55
       size: 9159
-    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
-    git: https://github.com/tbidne/byte-types.git
     version: '0.1'
   original:
     commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
     git: https://github.com/tbidne/byte-types.git
+- completed:
+    commit: 855525eeab7c0f32d23afda3f07e69f615d3db16
+    git: https://github.com/tbidne/classy-containers.git
+    name: classy-containers
+    pantry-tree:
+      sha256: d64502dfa52f5203f2ad9b3c8febb4ba55b810ae910d39013a76c83775bc25a5
+      size: 1858
+    version: '0.1'
+  original:
+    commit: 855525eeab7c0f32d23afda3f07e69f615d3db16
+    git: https://github.com/tbidne/classy-containers.git
 snapshots:
 - completed:
     sha256: 0045231024ce03226f53d9a77ca753726436a903c3e4750f1f79e3cb5f3cd906

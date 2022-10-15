@@ -11,7 +11,7 @@ module SafeRm.Prelude
 where
 
 import Containers.Class as X
-  ( CMap (cmap),
+  ( CMap,
     Empty,
     Insert,
     Member (MElem),

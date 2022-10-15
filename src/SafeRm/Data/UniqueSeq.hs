@@ -10,7 +10,14 @@ module SafeRm.Data.UniqueSeq
   )
 where
 
-import Containers.Class qualified as C
+import Containers.Class
+  ( CMap (CMapC),
+    Empty (empty),
+    Member (member),
+    Sequenced (SElem, append, prepend),
+    Union (union),
+    cmap,
+  )
 import GHC.Exts (IsList (Item, fromList, toList))
 import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
 import SafeRm.Prelude
@@ -83,8 +90,8 @@ instance Hashable a => Member (UniqueSeq a) where
 -- | @since 0.1
 instance Hashable a => Sequenced (UniqueSeq a) where
   type SElem (UniqueSeq a) = a
-  append = flip (insert (flip (|>)))
-  prepend = insert (<|)
+  append = flip (insertSeq (flip (|>)))
+  prepend = insertSeq (<|)
 
 -- | @since 0.1
 instance CMap UniqueSeq where
@@ -100,8 +107,8 @@ instance Hashable a => IsList (UniqueSeq a) where
   fromList = fromFoldable
 
 -- | @since 0.1
-insert :: Hashable a => (a -> Seq a -> Seq a) -> a -> UniqueSeq a -> UniqueSeq a
-insert seqIns x useq@(UnsafeUniqueSeq seq set)
+insertSeq :: Hashable a => (a -> Seq a -> Seq a) -> a -> UniqueSeq a -> UniqueSeq a
+insertSeq seqIns x useq@(UnsafeUniqueSeq seq set)
   | x ∉ useq = UnsafeUniqueSeq (seqIns x seq) (x ⟇ set)
   | otherwise = useq
 
