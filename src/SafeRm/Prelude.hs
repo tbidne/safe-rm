@@ -25,6 +25,7 @@ import Containers.Class as X
     (∪),
     (⋖),
     (⋗),
+    (♯),
     (⟇),
   )
 import Control.Applicative as X

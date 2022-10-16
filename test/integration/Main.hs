@@ -3,14 +3,12 @@
 -- @since 0.1
 module Main (main) where
 
-import Integration.MaxRuns (MaxRuns)
 import Integration.Prelude
 import Integration.SafeRm qualified as SafeRm
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as T
 import Test.Tasty qualified as Tasty
-import Test.Tasty.Options (OptionDescription (Option))
 import UnliftIO.Directory qualified as Dir
 
 -- | Runs integration tests.
@@ -18,8 +16,7 @@ import UnliftIO.Directory qualified as Dir
 -- @since 0.1
 main :: IO ()
 main = do
-  let options = T.includingOptions [Option @MaxRuns Proxy]
-      ingredients = options : T.defaultIngredients
+  let ingredients = maxRunsIngredient : T.defaultIngredients
   T.defaultMainWithIngredients ingredients $
     Tasty.withResource setup teardown $ \args ->
       testGroup

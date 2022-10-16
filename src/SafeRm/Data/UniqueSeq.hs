@@ -23,6 +23,8 @@ import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
 import SafeRm.Prelude
 
 -- | Like 'Seq' but with the guarantee that all elements are unique.
+-- Note that the 'CMap' instance does _not_ preserve its structure when
+-- the lifted function is not injective.
 --
 -- @since 0.1
 data UniqueSeq a = UnsafeUniqueSeq
@@ -79,7 +81,7 @@ instance Hashable a => Union (UniqueSeq a) where
     where
       go :: a -> (HashSet a, Seq a) -> (HashSet a, Seq a)
       go z (found, acc)
-        | z ∉ found = (z ⟇ found, acc ⋗ z)
+        | z ∉ found = (z ⟇ found, z ⋖ acc)
         | otherwise = (found, acc)
 
 -- | @since 0.1
@@ -96,14 +98,19 @@ instance Hashable a => Sequenced (UniqueSeq a) where
 -- | @since 0.1
 instance CMap UniqueSeq where
   type CMapC UniqueSeq a = Hashable a
-  cmap f (UnsafeUniqueSeq seq set) = UnsafeUniqueSeq (φ f seq) (φ f set)
+  cmap f (UnsafeUniqueSeq seq _) = UnsafeUniqueSeq newSeq newSet
+    where
+      (newSeq, newSet) = foldr go ((∅), (∅)) seq
+      go x (accSeq, accSet)
+        | y ∉ accSet = (y ⋖ accSeq, y ⟇ accSet)
+        | otherwise = (accSeq, accSet)
+        where
+          y = f x
 
 -- | @since 0.1
 instance Hashable a => IsList (UniqueSeq a) where
   type Item (UniqueSeq a) = a
   toList (UnsafeUniqueSeq seq _) = toList seq
-
-  -- TODO: should verify that order is maintained
   fromList = fromFoldable
 
 -- | @since 0.1
@@ -114,7 +121,7 @@ insertSeq seqIns x useq@(UnsafeUniqueSeq seq set)
 
 -- | @since 0.1
 fromFoldable :: (Foldable f, Hashable a) => f a -> UniqueSeq a
-fromFoldable = foldr (flip (⋗)) (∅)
+fromFoldable = foldr (⋖) (∅)
 
 -- | @since 0.1
 fromSet :: HashSet a -> UniqueSeq a

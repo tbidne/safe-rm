@@ -11,7 +11,6 @@ import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
-import Integration.MaxRuns (MaxRuns (MkMaxRuns))
 import Integration.Prelude
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)

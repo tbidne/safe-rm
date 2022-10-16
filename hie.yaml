@@ -6,6 +6,9 @@ cradle:
     - path: "./lib/file-utils"
       component: "safe-rm:lib:file-utils"
 
+    - path: "./lib/max-runs"
+      component: "safe-rm:lib:max-runs"
+
     - path: "./app/Main.hs"
       component: "safe-rm:exe:sr"
 

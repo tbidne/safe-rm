@@ -107,6 +107,19 @@ library file-utils
   hs-source-dirs:   lib/file-utils
   default-language: GHC2021
 
+library max-runs
+  import:             common-exts
+  default-extensions: ImplicitPrelude
+  exposed-modules:    SafeRm.MaxRuns
+  build-depends:
+    , base
+    , hedgehog
+    , tagged          ^>=0.8.6
+    , tasty
+
+  hs-source-dirs:     lib/max-runs
+  default-language:   GHC2021
+
 executable sr
   import:             common-exts
   default-extensions: ImplicitPrelude
@@ -124,14 +137,19 @@ test-suite unit
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
   other-modules:
+    Unit.Data.UniqueSeq
     Unit.Prelude
     Unit.Runner
 
   build-depends:
     , base
+    , containers
+    , hedgehog        >=1.0.2   && <1.3
+    , max-runs
     , safe-rm
-    , tasty        >=1.1.0.3 && <1.5
-    , tasty-hunit  >=0.9     && <0.11
+    , tasty           >=1.1.0.3 && <1.5
+    , tasty-hedgehog  >=1.2.0.0 && <1.4
+    , tasty-hunit     >=0.9     && <0.11
     , unliftio
 
   hs-source-dirs:   test/unit
@@ -142,7 +160,6 @@ test-suite integration
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
   other-modules:
-    Integration.MaxRuns
     Integration.Prelude
     Integration.SafeRm
 
@@ -150,11 +167,11 @@ test-suite integration
     , base
     , env-guard             ^>=0.2
     , file-utils
-    , hedgehog              >=1.0.2   && <1.3
+    , hedgehog
+    , max-runs
     , safe-rm
-    , tagged                ^>=0.8.6
     , tasty                 >=1.1.0.3 && <1.5
-    , tasty-hedgehog        >=1.2.0.0 && <1.4
+    , tasty-hedgehog
     , unliftio
     , unordered-containers
 

@@ -1,7 +1,9 @@
-.PHONY: build clean test repl watch cic ci formatc format lint lintc ;\
+.PHONY: build clean repl watch ;\
+	test unit integration functional ;\
+	cic ci formatc format lint lintc ;\
 	haddock haddockc hackage
 
-# core
+# dev
 
 ARGS = ""
 
@@ -15,6 +17,22 @@ build:
 clean:
 	cabal clean
 
+repl:
+	if [ -z "$(ARGS)" ]; then \
+		cabal repl safe-rm; \
+	else \
+		cabal repl $(ARGS); \
+	fi
+
+watch:
+	if [ -z "$(ARGS)" ]; then \
+		ghcid --command "cabal repl safe-rm"; \
+	else \
+		cghcid --command "cabal repl $(ARGS)"; \
+	fi
+
+# testing
+
 test:
 	if [ -z "$(ARGS)" ]; then \
 		cabal test; \
@@ -22,18 +40,14 @@ test:
 		cabal test $(ARGS); \
 	fi
 
+unit:
+	cabal test unit
+
+integration:
+	cabal test integration
+
 functional:
 	cabal test functional
-
-repl:
-	if [ -z "$(ARGS)" ]; then \
-		cabal repl; \
-	else \
-		cabal repl $(ARGS); \
-	fi
-
-watch:
-	ghcid --command "cabal repl $(ARGS)"
 
 # ci
 

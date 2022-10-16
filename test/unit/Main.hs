@@ -4,6 +4,7 @@
 module Main (main) where
 
 import Test.Tasty qualified as Tasty
+import Unit.Data.UniqueSeq qualified as UniqueSeq
 import Unit.Prelude
 import Unit.Runner qualified as Runner
 
@@ -12,8 +13,11 @@ import Unit.Runner qualified as Runner
 -- @since 0.1
 main :: IO ()
 main =
-  Tasty.defaultMain $
+  Tasty.defaultMainWithIngredients ingredients $
     testGroup
       "Unit Tests"
-      [ Runner.tests
+      [ Runner.tests,
+        UniqueSeq.tests
       ]
+  where
+    ingredients = maxRunsIngredient : Tasty.defaultIngredients
