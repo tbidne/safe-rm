@@ -1,7 +1,7 @@
--- | Prelude for functional test suite.
+-- | Prelude for unit test suite.
 --
 -- @since 0.1
-module Config.Prelude
+module Unit.Prelude
   ( module X,
     getDefaultTrash,
   )

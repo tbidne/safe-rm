@@ -119,14 +119,13 @@ executable sr
   ghc-options:        -threaded -with-rtsopts=-N
   default-language:   GHC2021
 
-test-suite config
+test-suite unit
   import:           common-exts
   type:             exitcode-stdio-1.0
   main-is:          Main.hs
   other-modules:
-    Config.Args
-    Config.Prelude
-    Config.Toml
+    Unit.Prelude
+    Unit.Runner
 
   build-depends:
     , base
@@ -135,7 +134,7 @@ test-suite config
     , tasty-hunit  >=0.9     && <0.11
     , unliftio
 
-  hs-source-dirs:   test/config
+  hs-source-dirs:   test/unit
   default-language: GHC2021
 
 test-suite integration

@@ -3,17 +3,14 @@ cradle:
     - path: "./src"
       component: "lib:safe-rm"
 
-    - path: "./lib/runner"
-      component: "safe-rm:lib:runner"
-
     - path: "./lib/file-utils"
       component: "safe-rm:lib:file-utils"
 
     - path: "./app/Main.hs"
       component: "safe-rm:exe:sr"
 
-    - path: "./test/config"
-      component: "safe-rm:test:config"
+    - path: "./test/unit"
+      component: "safe-rm:test:unit"
 
     - path: "./test/integration"
       component: "safe-rm:test:integration"
