@@ -24,7 +24,7 @@ import Data.Csv (HasHeader (HasHeader))
 import Data.Csv qualified as Csv
 import Data.Csv.Streaming (Records (Cons, Nil))
 import Data.Csv.Streaming qualified as Csv.Streaming
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HMap
 import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
@@ -37,6 +37,7 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
+import SafeRm.Data.UniqueSeq qualified as USeq
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -84,7 +85,7 @@ instance Pretty Index where
     vsep
       . fmap pretty
       . L.sortBy sortDefault
-      . Map.elems
+      . HMap.elems
       . view #unIndex
 
 -- | Attempts to read the trash index file. If successful, guarantees:
@@ -109,7 +110,7 @@ readIndex indexPath = addNamespace "readIndex" $ do
       acc <- macc
       throwIfDuplicates indexPath acc pd
       throwIfTrashNonExtant trashHome pd
-      pure $ (fileName, pd) ⟇ acc
+      pure $ HMap.insert fileName pd acc
       where
         fileName = pd ^. #fileName
 
@@ -127,13 +128,13 @@ searchIndex keys (MkIndex index) =
   foldr foldKeys mempty trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
-    trashKeys = φ (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
+    trashKeys = USeq.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
       PathI TrashName ->
       ([SomeException], UniqueSeq PathData) ->
       ([SomeException], UniqueSeq PathData)
     foldKeys trashKey acc@(exs, found) =
-      case Map.lookup trashKey index of
+      case HMap.lookup trashKey index of
         Nothing ->
           -- NOTE: since this is the only exception type we do not actually
           -- have to do this; we could simply return the offending trashKey.
@@ -142,7 +143,7 @@ searchIndex keys (MkIndex index) =
           prependEx
             (MkExceptionI @PathNotFound (view #unPathI trashKey))
             acc
-        Just pd -> (exs, found ⋗ pd)
+        Just pd -> (exs, USeq.append found pd)
     prependEx ex = over' _1 (toException ex :)
 
 -- | Reads a csv index file and applies the fold function to each
@@ -211,7 +212,7 @@ throwIfDuplicates ::
   PathData ->
   m ()
 throwIfDuplicates indexPath trashMap pd =
-  when (fileName `Map.member` trashMap) $
+  when (fileName `HMap.member` trashMap) $
     throwIO $
       MkExceptionI @DuplicateIndexPath (indexPath, fileName)
   where
@@ -237,7 +238,7 @@ appendIndex (MkPathI indexPath) =
   (liftIO . BS.appendFile indexPath)
     . BSL.toStrict
     . Csv.encode
-    . Map.elems
+    . HMap.elems
     . view #unIndex
 
 -- | Writes the path data to the trash index, overwriting the index if it
@@ -249,5 +250,5 @@ writeIndex (MkPathI indexPath) =
   (liftIO . BS.writeFile indexPath)
     . BSL.toStrict
     . Csv.encodeDefaultOrderedByName
-    . Map.elems
+    . HMap.elems
     . view #unIndex

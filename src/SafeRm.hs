@@ -20,7 +20,7 @@ module SafeRm
 where
 
 import Data.Char qualified as Ch
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
@@ -73,7 +73,7 @@ delete paths = addNamespace "delete" $ do
 
   Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
 
-  deletedPathsRef <- newIORef (∅)
+  deletedPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
   currTime <- getSystemTime
 
@@ -83,7 +83,7 @@ delete paths = addNamespace "delete" $ do
         pd <- PathData.toPathData currTime trashHome fp
         $(logDebug) (showt pd)
         PathData.mvOriginalToTrash trashHome pd
-        modifyIORef' deletedPathsRef ((pd ^. #fileName, pd) ⟇)
+        modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
         $(logWarn) (displayExceptiont ex)
@@ -131,14 +131,14 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
       (searchExs, toDelete) = Index.searchIndex paths index
-  deletedPathsRef <- newIORef (∅)
+  deletedPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
 
   let deleteFn pd =
         ( do
             $(logDebug) (showt pd)
             PathData.deletePathData trashHome pd
-            modifyIORef' deletedPathsRef ((pd ^. #fileName, pd) ⟇)
+            modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
             $(logWarn) (displayExceptiont ex)
@@ -170,7 +170,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 
   -- override old index
   deletedPaths <- readIORef deletedPathsRef
-  Index.writeIndex indexPath (MkIndex $ indexMap ∖ deletedPaths)
+  Index.writeIndex indexPath (MkIndex $ HMap.difference indexMap deletedPaths)
 
   $(logInfo) ("Deleted: " <> showMapTrashPaths deletedPaths)
 
@@ -241,7 +241,7 @@ restore paths = addNamespace "restore" $ do
   let indexMap = index ^. #unIndex
       (searchExs, toRestore) = Index.searchIndex paths index
 
-  restoredPathsRef <- newIORef (∅)
+  restoredPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
 
   -- move trash paths back to original location
@@ -249,7 +249,7 @@ restore paths = addNamespace "restore" $ do
     ( do
         $(logDebug) (showt pd)
         PathData.mvTrashToOriginal trashHome pd
-        modifyIORef' restoredPathsRef ((pd ^. #fileName, pd) ⟇)
+        modifyIORef' restoredPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
         $(logWarn) (displayExceptiont ex)
@@ -257,7 +257,7 @@ restore paths = addNamespace "restore" $ do
 
   -- override old index
   restoredPaths <- readIORef restoredPathsRef
-  Index.writeIndex indexPath (MkIndex $ indexMap ∖ restoredPaths)
+  Index.writeIndex indexPath (MkIndex $ HMap.difference indexMap restoredPaths)
 
   $(logInfo) ("Restored: " <> showMapOrigPaths restoredPaths)
 
@@ -313,7 +313,7 @@ showMapElems :: Lens' PathData (PathI i) -> HashMap (PathI TrashName) PathData -
 showMapElems toPathI =
   T.intercalate ", "
     . fmap (T.pack . view (toPathI % #unPathI))
-    . Map.elems
+    . HMap.elems
 
 noBuffering :: MonadIO m => m ()
 noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout

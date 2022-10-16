@@ -6,7 +6,6 @@ module SafeRm.Utils
     concatMNonEmpty,
     prependMNonEmpty,
     allM1,
-    uniqueSeqFromList,
   )
 where
 
@@ -53,14 +52,3 @@ allM = foldr f (pure True)
       m >>= \case
         True -> acc
         False -> pure False
-
--- | Transforms a foldable's unique elements into a 'Seq'.
---
--- @since 0.1
-uniqueSeqFromList :: forall f a. (Foldable f, Hashable a) => f a -> Seq a
-uniqueSeqFromList = view _2 . foldr go ((∅), (∅))
-  where
-    go :: a -> (HashSet a, Seq a) -> (HashSet a, Seq a)
-    go x (found, acc)
-      | x ∉ found = (x ⟇ found, acc ⋗ x)
-      | otherwise = (found, acc)

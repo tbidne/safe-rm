@@ -49,11 +49,6 @@ newtype Namespace = MkNamespace
       -- | @since 0.1
       Show
     )
-  deriving
-    ( -- | @since 0.1
-      Empty
-    )
-    via (Seq Text)
 
 -- | @since 0.1
 instance IsString Namespace where
@@ -85,7 +80,7 @@ class MonadLogger m => LoggerContext m where
 --
 -- @since 0.1
 addNamespace :: LoggerContext m => Text -> m a -> m a
-addNamespace txt = localNamespace (over' #unNamespace (⋗ txt))
+addNamespace txt = localNamespace (over' #unNamespace (|> txt))
 
 -- | Reads the 'LogLevel'.
 --

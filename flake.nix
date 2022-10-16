@@ -2,7 +2,6 @@
   description = "A simple utility for deleting files";
   inputs.algebra-simple-src.url = "github:tbidne/algebra-simple";
   inputs.byte-types-src.url = "github:tbidne/byte-types";
-  inputs.classy-containers-src.url = "github:tbidne/classy-containers";
   inputs.flake-compat = {
     url = "github:edolstra/flake-compat";
     flake = false;
@@ -12,7 +11,6 @@
   outputs =
     { algebra-simple-src
     , byte-types-src
-    , classy-containers-src
     , flake-compat
     , flake-utils
     , nixpkgs
@@ -48,9 +46,6 @@
             byte-types =
               pkgs.haskell.lib.doJailbreak
                 (final.callCabal2nix "byte-types" byte-types-src { });
-            classy-containers =
-              pkgs.haskell.lib.doJailbreak
-                (final.callCabal2nix "classy-containers" classy-containers-src { });
             package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
             tasty-hedgehog = prev.tasty-hedgehog_1_3_0_0;
           };

@@ -40,17 +40,6 @@ packages:
   original:
     commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
     git: https://github.com/tbidne/byte-types.git
-- completed:
-    commit: 5a7d60ea4f1a1f2ccc59c26c68acca3ad1ec332e
-    git: https://github.com/tbidne/classy-containers.git
-    name: classy-containers
-    pantry-tree:
-      sha256: ad57540387ee24b05d7b8acc4ca84c78e58dc26ef2c4d7bd4b5cc09135209d71
-      size: 1811
-    version: '0.1'
-  original:
-    commit: 5a7d60ea4f1a1f2ccc59c26c68acca3ad1ec332e
-    git: https://github.com/tbidne/classy-containers.git
 snapshots:
 - completed:
     sha256: 0045231024ce03226f53d9a77ca753726436a903c3e4750f1f79e3cb5f3cd906

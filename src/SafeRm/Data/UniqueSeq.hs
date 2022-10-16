@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides the 'UniqueSeq' type.
@@ -5,19 +6,25 @@
 -- @since 0.1
 module SafeRm.Data.UniqueSeq
   ( UniqueSeq (MkUniqueSeq),
+
+    -- * Creation
+    empty,
+    singleton,
     fromFoldable,
     fromSet,
+
+    -- * Lookup
+    member,
+
+    -- * Operations
+    prepend,
+    append,
+    union,
+    map,
   )
 where
 
-import Containers.Class
-  ( CMap (CMapC),
-    Empty (empty),
-    Member (member),
-    Sequenced (SElem, append, prepend),
-    Union (union),
-    cmap,
-  )
+import Data.HashSet qualified as HSet
 import GHC.Exts (IsList (Item, fromList, toList))
 import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
 import SafeRm.Prelude
@@ -64,48 +71,53 @@ instance
 
 -- | @since 0.1
 instance Hashable a => Semigroup (UniqueSeq a) where
-  (<>) = (∪)
+  (<>) = union
 
 -- | @since 0.1
 instance Hashable a => Monoid (UniqueSeq a) where
-  mempty = (∅)
+  mempty = UnsafeUniqueSeq [] HSet.empty
 
 -- | @since 0.1
-instance Empty (UniqueSeq a) where
-  empty = UnsafeUniqueSeq (∅) (∅)
+empty :: UniqueSeq a
+empty = UnsafeUniqueSeq [] HSet.empty
 
 -- | @since 0.1
-instance Hashable a => Union (UniqueSeq a) where
-  union (UnsafeUniqueSeq xseq xset) (UnsafeUniqueSeq yseq yset) =
-    UnsafeUniqueSeq (view _2 (foldr go ((∅), (∅)) (xseq <> yseq))) (xset ∪ yset)
-    where
-      go :: a -> (HashSet a, Seq a) -> (HashSet a, Seq a)
-      go z (found, acc)
-        | z ∉ found = (z ⟇ found, z ⋖ acc)
-        | otherwise = (found, acc)
+singleton :: Hashable a => a -> UniqueSeq a
+singleton x = UnsafeUniqueSeq [x] (HSet.singleton x)
 
 -- | @since 0.1
-instance Hashable a => Member (UniqueSeq a) where
-  type MElem (UniqueSeq a) = a
-  member x (UnsafeUniqueSeq _ set) = x ∈ set
+union :: forall a. Hashable a => UniqueSeq a -> UniqueSeq a -> UniqueSeq a
+union (UnsafeUniqueSeq xseq _) (UnsafeUniqueSeq yseq _) =
+  UnsafeUniqueSeq newSeq newSet
+  where
+    (newSeq, newSet) = foldr go ([], HSet.empty) (xseq <> yseq)
+    go :: a -> (Seq a, HashSet a) -> (Seq a, HashSet a)
+    go z (accSeq, accSet)
+      | notHSetMember z accSet = (z <| accSeq, HSet.insert z accSet)
+      | otherwise = (accSeq, accSet)
 
 -- | @since 0.1
-instance Hashable a => Sequenced (UniqueSeq a) where
-  type SElem (UniqueSeq a) = a
-  append = flip (insertSeq (flip (|>)))
-  prepend = insertSeq (<|)
+member :: Hashable a => a -> UniqueSeq a -> Bool
+member x (UnsafeUniqueSeq _ set) = HSet.member x set
 
 -- | @since 0.1
-instance CMap UniqueSeq where
-  type CMapC UniqueSeq a = Hashable a
-  cmap f (UnsafeUniqueSeq seq _) = UnsafeUniqueSeq newSeq newSet
-    where
-      (newSeq, newSet) = foldr go ((∅), (∅)) seq
-      go x (accSeq, accSet)
-        | y ∉ accSet = (y ⋖ accSeq, y ⟇ accSet)
-        | otherwise = (accSeq, accSet)
-        where
-          y = f x
+append :: Hashable a => UniqueSeq a -> a -> UniqueSeq a
+append = flip (insertSeq (flip (|>)))
+
+-- | @since 0.1
+prepend :: Hashable a => a -> UniqueSeq a -> UniqueSeq a
+prepend = insertSeq (<|)
+
+-- | @since 0.1
+map :: Hashable b => (a1 -> b) -> UniqueSeq a1 -> UniqueSeq b
+map f (UnsafeUniqueSeq seq _) = UnsafeUniqueSeq newSeq newSet
+  where
+    (newSeq, newSet) = foldr go ([], HSet.empty) seq
+    go x (accSeq, accSet)
+      | notHSetMember y accSet = (y <| accSeq, HSet.insert y accSet)
+      | otherwise = (accSeq, accSet)
+      where
+        y = f x
 
 -- | @since 0.1
 instance Hashable a => IsList (UniqueSeq a) where
@@ -116,15 +128,18 @@ instance Hashable a => IsList (UniqueSeq a) where
 -- | @since 0.1
 insertSeq :: Hashable a => (a -> Seq a -> Seq a) -> a -> UniqueSeq a -> UniqueSeq a
 insertSeq seqIns x useq@(UnsafeUniqueSeq seq set)
-  | x ∉ useq = UnsafeUniqueSeq (seqIns x seq) (x ⟇ set)
+  | notHSetMember x set = UnsafeUniqueSeq (seqIns x seq) (HSet.insert x set)
   | otherwise = useq
 
 -- | @since 0.1
 fromFoldable :: (Foldable f, Hashable a) => f a -> UniqueSeq a
-fromFoldable = foldr (⋖) (∅)
+fromFoldable = foldr prepend (UnsafeUniqueSeq [] HSet.empty)
 
 -- | @since 0.1
 fromSet :: HashSet a -> UniqueSeq a
 fromSet set = UnsafeUniqueSeq seq set
   where
-    seq = foldr (flip (⋗)) (∅) set
+    seq = foldr (flip (|>)) [] set
+
+notHSetMember :: Hashable a => a -> HashSet a -> Bool
+notHSetMember x = not . HSet.member x

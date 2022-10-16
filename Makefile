@@ -28,7 +28,7 @@ watch:
 	if [ -z "$(ARGS)" ]; then \
 		ghcid --command "cabal repl safe-rm"; \
 	else \
-		cghcid --command "cabal repl $(ARGS)"; \
+		ghcid --command "cabal repl $(ARGS)"; \
 	fi
 
 # testing

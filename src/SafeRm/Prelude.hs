@@ -10,26 +10,8 @@ module SafeRm.Prelude
   )
 where
 
-import Containers.Class as X
-  ( CMap,
-    Empty,
-    Insert,
-    Member (MElem),
-    Sequenced,
-    Union,
-    φ,
-    (∅),
-    (∈),
-    (∉),
-    (∖),
-    (∪),
-    (⋖),
-    (⋗),
-    (♯),
-    (⟇),
-  )
 import Control.Applicative as X
-  ( Alternative (empty, (<|>)),
+  ( Alternative ((<|>)),
     Applicative (pure, (<*>)),
     (*>),
   )
