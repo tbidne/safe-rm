@@ -112,9 +112,11 @@ insertSeq seqIns x useq@(UnsafeUniqueSeq seq set)
   | x ∉ useq = UnsafeUniqueSeq (seqIns x seq) (x ⟇ set)
   | otherwise = useq
 
+-- | @since 0.1
 fromFoldable :: (Foldable f, Hashable a) => f a -> UniqueSeq a
 fromFoldable = foldr (flip (⋗)) (∅)
 
+-- | @since 0.1
 fromSet :: HashSet a -> UniqueSeq a
 fromSet set = UnsafeUniqueSeq seq set
   where
