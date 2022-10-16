@@ -11,6 +11,9 @@ where
 
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
+import Data.Text.Encoding.Error qualified as TEncError
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as TLEnc
 import Data.Time (LocalTime (LocalTime))
 import Data.Time.LocalTime (midday)
 import Functional.Prelude
@@ -128,7 +131,7 @@ logging args = goldenVsStringDiff desc diff gpath $ do
 
   -- Test logging. In particular, test that startup does not fail when the
   -- log file does not already exist.
-  BSL.fromStrict <$> BS.readFile (trashDir </> ".log")
+  replaceDir testDir <$> BS.readFile (trashDir </> ".log")
   where
     desc = "Logging is successful"
     gpath = goldenPath </> "logs.golden"
@@ -149,3 +152,12 @@ transformEnv env = do
         logLevel,
         logNamespace = "logging-tests"
       }
+
+-- ByteString does not appear to offer a "replace" function, so we convert to
+-- (lazy) text, perform the replace, then convert to lazy bytestring.
+replaceDir :: FilePath -> ByteString -> BSL.ByteString
+replaceDir fp =
+  TLEnc.encodeUtf8
+    . TL.replace (TL.pack fp) "<dir>"
+    . TLEnc.decodeUtf8With TEncError.lenientDecode
+    . BSL.fromStrict
