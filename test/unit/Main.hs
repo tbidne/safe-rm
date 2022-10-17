@@ -13,11 +13,9 @@ import Unit.Runner qualified as Runner
 -- @since 0.1
 main :: IO ()
 main =
-  Tasty.defaultMainWithIngredients ingredients $
+  Tasty.defaultMain $
     testGroup
       "Unit Tests"
       [ Runner.tests,
         UniqueSeq.tests
       ]
-  where
-    ingredients = maxRunsIngredient : Tasty.defaultIngredients

@@ -25,7 +25,6 @@ import Hedgehog as X
     (===),
   )
 import SafeRm.FileUtils as X
-import SafeRm.MaxRuns as X (MaxRuns (MkMaxRuns), maxRunsIngredient)
 import SafeRm.Prelude as X
 import Test.Tasty as X (TestTree, askOption, testGroup)
 import Test.Tasty.Hedgehog as X (testPropertyNamed)

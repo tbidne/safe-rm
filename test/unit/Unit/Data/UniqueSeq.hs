@@ -34,28 +34,26 @@ invariantTests =
     ]
 
 isListIsomorphism :: TestTree
-isListIsomorphism = askOption $ \(MkMaxRuns limit) ->
+isListIsomorphism =
   testPropertyNamed "fromList . toList === id" "isListIsomorphism" $ do
-    withTests limit $
-      property $ do
-        xs <- forAll genUniqueSeq
-        let useq = toList xs
-        annotateShow useq
-        xs === fromList useq
+    property $ do
+      xs <- forAll genUniqueSeq
+      let useq = toList xs
+      annotateShow useq
+      xs === fromList useq
 
 isListOrder :: TestTree
-isListOrder = askOption $ \(MkMaxRuns limit) ->
+isListOrder =
   testPropertyNamed "toList . fromList preserves order" "isListOrder" $ do
-    withTests limit $
-      property $ do
-        origList <- forAll genUniqueList
-        let useq = fromList @(UniqueSeq Int) origList
-        annotateShow useq
+    property $ do
+      origList <- forAll genUniqueList
+      let useq = fromList @(UniqueSeq Int) origList
+      annotateShow useq
 
-        let newList = toList useq
-        annotateShow newList
+      let newList = toList useq
+      annotateShow newList
 
-        compareLists HSet.empty newList origList
+      compareLists HSet.empty newList origList
   where
     -- For newList, origList, want to verify that the lists are the same,
     -- modulo newList omitting duplicates. Note that this does not check
@@ -96,17 +94,16 @@ isListOrder = askOption $ \(MkMaxRuns limit) ->
         found' = HSet.insert n found
 
 fromFoldableOrder :: TestTree
-fromFoldableOrder = askOption $ \(MkMaxRuns limit) ->
+fromFoldableOrder =
   testPropertyNamed "fromFoldable preserves order" "fromFoldableOrder" $ do
-    withTests limit $
-      property $ do
-        xs <- forAll genUniqueList
-        let useq@(MkUniqueSeq seq _) = USeq.fromFoldable xs
+    property $ do
+      xs <- forAll genUniqueList
+      let useq@(MkUniqueSeq seq _) = USeq.fromFoldable xs
 
-        annotateShow seq
-        sameOrder xs seq
+      annotateShow seq
+      sameOrder xs seq
 
-        uniqseqInvariants useq
+      uniqseqInvariants useq
   where
     sameOrder [] Empty = pure ()
     sameOrder (x : _) Empty = annotateShow x *> failure
@@ -116,25 +113,23 @@ fromFoldableOrder = askOption $ \(MkMaxRuns limit) ->
       sameOrder xs ys
 
 cmapInvariant :: TestTree
-cmapInvariant = askOption $ \(MkMaxRuns limit) ->
+cmapInvariant =
   testPropertyNamed "cmap invariants" "cmapInvariant" $ do
-    withTests limit $
-      property $ do
-        useq <- forAll genUniqueSeq
-        let useq' = USeq.map even useq
-        uniqseqInvariants useq'
+    property $ do
+      useq <- forAll genUniqueSeq
+      let useq' = USeq.map even useq
+      uniqseqInvariants useq'
 
 insertInvariant :: TestTree
-insertInvariant = askOption $ \(MkMaxRuns limit) ->
+insertInvariant =
   testPropertyNamed "insert invariants" "insertInvariant" $ do
-    withTests limit $
-      property $ do
-        xs <- forAll genList
-        let useqPrepend = foldr USeq.prepend USeq.empty xs
-            useqAppend = foldl' USeq.append USeq.empty xs
+    property $ do
+      xs <- forAll genList
+      let useqPrepend = foldr USeq.prepend USeq.empty xs
+          useqAppend = foldl' USeq.append USeq.empty xs
 
-        uniqseqInvariants useqPrepend
-        uniqseqInvariants useqAppend
+      uniqseqInvariants useqPrepend
+      uniqseqInvariants useqAppend
 
 lawsTests :: TestTree
 lawsTests =
@@ -145,37 +140,35 @@ lawsTests =
     ]
 
 monoid :: TestTree
-monoid = askOption $ \(MkMaxRuns limit) ->
+monoid =
   testPropertyNamed "union is a monoid" "unionMonoid" $ do
-    withTests limit $
-      property $ do
-        a <- forAll genUniqueSeq
-        b <- forAll genUniqueSeq
-        c <- forAll genUniqueSeq
+    property $ do
+      a <- forAll genUniqueSeq
+      b <- forAll genUniqueSeq
+      c <- forAll genUniqueSeq
 
-        annotate "Identity"
-        a === a `USeq.union` USeq.empty
-        a === USeq.empty `USeq.union` a
+      annotate "Identity"
+      a === a `USeq.union` USeq.empty
+      a === USeq.empty `USeq.union` a
 
-        annotate "Associativity"
-        (a `USeq.union` b) `USeq.union` c === a `USeq.union` (b `USeq.union` c)
+      annotate "Associativity"
+      (a `USeq.union` b) `USeq.union` c === a `USeq.union` (b `USeq.union` c)
 
 insertMember :: TestTree
-insertMember = askOption $ \(MkMaxRuns limit) ->
+insertMember =
   testPropertyNamed "x ∈ insert x useq" "insertMember" $ do
-    withTests limit $
-      property $ do
-        useq <- forAll genUniqueSeq
-        x <- forAll genInt
+    property $ do
+      useq <- forAll genUniqueSeq
+      x <- forAll genInt
 
-        let useqA = USeq.append useq x
-            useqP = USeq.prepend x useq
+      let useqA = USeq.append useq x
+          useqP = USeq.prepend x useq
 
-        annotateShow useqA
-        assert $ USeq.member x useqA
+      annotateShow useqA
+      assert $ USeq.member x useqA
 
-        annotateShow useqP
-        assert $ USeq.member x useqP
+      annotateShow useqP
+      assert $ USeq.member x useqP
 
 uniqseqInvariants :: (Hashable a, Show a) => UniqueSeq a -> PropertyT IO ()
 uniqseqInvariants useq = do

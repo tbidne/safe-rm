@@ -29,10 +29,10 @@ jobs:
         run: cabal build
 
       - name: Unit Tests
-        run: cabal test unit --enable-tests --test-options '--max-runs 10000'
+        run: cabal test unit --enable-tests --test-options '--hedgehog-tests 10000'
 
       - name: Integration Tests
-        run: cabal test integration --enable-tests --test-options '--max-runs 10000'
+        run: cabal test integration --enable-tests --test-options '--hedgehog-tests 10000'
 
       - name: Functional Tests
         run: cabal test functional --enable-tests

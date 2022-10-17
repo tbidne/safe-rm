@@ -15,9 +15,8 @@ import UnliftIO.Directory qualified as Dir
 --
 -- @since 0.1
 main :: IO ()
-main = do
-  let ingredients = maxRunsIngredient : T.defaultIngredients
-  T.defaultMainWithIngredients ingredients $
+main =
+  T.defaultMain $
     Tasty.withResource setup teardown $ \args ->
       testGroup
         "Integration Tests"

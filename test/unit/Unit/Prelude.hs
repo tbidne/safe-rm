@@ -12,6 +12,7 @@ import Hedgehog as X
     MonadGen,
     MonadTest,
     Property,
+    TestLimit,
     annotate,
     annotateShow,
     assert,
@@ -21,7 +22,6 @@ import Hedgehog as X
     withTests,
     (===),
   )
-import SafeRm.MaxRuns as X (MaxRuns (MkMaxRuns), maxRunsIngredient)
 import SafeRm.Prelude as X
 import Test.Tasty as X (TestTree, askOption, testGroup)
 import Test.Tasty.HUnit as X
