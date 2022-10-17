@@ -221,6 +221,7 @@ benchmark benchmarks
     , base
     , bytestring
     , env-guard
+    , file-utils
     , safe-rm
     , tasty-bench  ^>=0.3
     , unliftio
