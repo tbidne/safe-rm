@@ -30,8 +30,6 @@ import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
 import SafeRm.Prelude
 
 -- | Like 'Seq' but with the guarantee that all elements are unique.
--- Note that the 'CMap' instance does _not_ preserve its structure when
--- the lifted function is not injective.
 --
 -- @since 0.1
 data UniqueSeq a = UnsafeUniqueSeq
