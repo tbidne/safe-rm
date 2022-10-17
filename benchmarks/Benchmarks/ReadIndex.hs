@@ -77,5 +77,5 @@ mkEnv trashHome = do
   pure $
     MkEnv
       { trashHome = trashHome,
-        logEnv = MkLogEnv Nothing (∅)
+        logEnv = MkLogEnv Nothing ""
       }
