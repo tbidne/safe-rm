@@ -1,10 +1,14 @@
 EXCEPTION LIST
 Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough input) at ""
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/Index.hs:178:7 in safe-rm-0.1-inplace:SafeRm.Data.Index
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l2/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l2/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Error] Error end of stream: parse error (not enough input)
-[2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'ReadIndex) (MkPathI {unPathI = "<dir>/l2/.trash/.index.csv"},"parse error (not enough input) at \"\"")
+[2020-05-31 12:00:00][functional][Error] Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough input) at ""
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/Index.hs:178:7 in safe-rm-0.1-inplace:SafeRm.Data.Index
 
 

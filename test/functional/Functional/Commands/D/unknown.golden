@@ -1,12 +1,28 @@
 EXCEPTION DELETE
 Encountered exception(s)
-- Path not found: <dir>/d3/bad file
 
+- Path not found: <dir>/d3/bad file
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/PathData.hs:196:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+
+
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm.hs:111:5 in safe-rm-0.1-inplace:SafeRm
 
 LOGS DELETE
 [2020-05-31 12:00:00][functional.delete][Debug] Trash home: <dir>/d3/.trash
 [2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d3/bad file
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/PathData.hs:196:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
 [2020-05-31 12:00:00][functional.delete][Info] Deleted: 
-[2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'SomeExceptions) (MkExceptionI (Proxy ExceptionIndex 'PathNotFound) "<dir>/d3/bad file" :| [])
+[2020-05-31 12:00:00][functional][Error] Encountered exception(s)
+
+- Path not found: <dir>/d3/bad file
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/PathData.hs:196:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+
+
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm.hs:111:5 in safe-rm-0.1-inplace:SafeRm
 
 

@@ -1,5 +1,7 @@
 EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/Metadata.hs:143:7 in safe-rm-0.1-inplace:SafeRm.Data.Metadata
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
@@ -13,6 +15,8 @@ LOGS LIST
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Log does not exist
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num all files: 2
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Total size: MkSomeSize SB (MkBytes 15.0)
-[2020-05-31 12:00:00][functional][Error] MkExceptionI (Proxy ExceptionIndex 'TrashIndexSizeMismatch) (MkPathI {unPathI = "<dir>/l5/.trash"},2,1)
+[2020-05-31 12:00:00][functional][Error] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
+CallStack (from HasCallStack):
+  throwCS, called at src/SafeRm/Data/Metadata.hs:143:7 in safe-rm-0.1-inplace:SafeRm.Data.Metadata
 
 

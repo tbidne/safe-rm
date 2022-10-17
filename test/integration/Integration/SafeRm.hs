@@ -114,7 +114,7 @@ deleteSome mtestDir =
             `catch` \(ex :: ExceptionI SomeExceptions) -> do
               pure $ Just ex
 
-      (MkExceptionI exs) <-
+      (MkExceptionI exs _) <-
         maybe
           (annotate "Expected exceptions, received none" *> failure)
           pure
@@ -223,7 +223,7 @@ deleteSomePermanently mtestDir =
             `catch` \(ex :: ExceptionI SomeExceptions) -> do
               pure $ Just ex
 
-      (MkExceptionI exs) <-
+      (MkExceptionI exs _) <-
         maybe
           (annotate "Expected exceptions, received none" *> failure)
           pure
@@ -330,7 +330,7 @@ restoreSome mtestDir =
             `catch` \(ex :: ExceptionI SomeExceptions) -> do
               pure $ Just ex
 
-      (MkExceptionI exs) <-
+      (MkExceptionI exs _) <-
         maybe
           (annotate "Expected exceptions, received none" *> failure)
           pure

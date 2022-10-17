@@ -94,57 +94,72 @@ type family ExceptionF e where
 --
 -- @since 0.1
 type ExceptionI :: ExceptionIndex -> Type
-newtype ExceptionI i = MkExceptionI (ExceptionF i)
-
--- | @since 0.1
-deriving stock instance Eq (ExceptionF i) => Eq (ExceptionI i)
+data ExceptionI i = MkExceptionI (ExceptionF i) CallStack
 
 -- | @since 0.1
 instance (Show (ExceptionF i), Typeable i) => Show (ExceptionI i) where
   -- NOTE: not derived so we can include the index.
-  showsPrec i (MkExceptionI e) =
+  showsPrec i (MkExceptionI e cs) =
     Show.showParen
       (i >= Show.appPrec1)
-      (Show.showString baseName . Show.showsPrec Show.appPrec1 e)
+      ( Show.showString baseName
+          . Show.showsPrec Show.appPrec1 e
+          . Show.showsPrec Show.appPrec1 cs
+      )
     where
       baseName = "MkExceptionI (" <> show rep <> ") "
       rep = typeOf @(Proxy i) Proxy
 
 -- | @since 0.1
 instance Exception (ExceptionI PathNotFound) where
-  displayException (MkExceptionI fp) = "Path not found: " <> fp
+  displayException (MkExceptionI fp cs) =
+    mconcat
+      [ "Path not found: ",
+        fp,
+        "\n",
+        prettyCallStack cs
+      ]
 
 -- | @since 0.1
 instance Exception (ExceptionI RenameDuplicate) where
-  displayException (MkExceptionI (MkPathI fp)) =
-    "Failed renaming duplicate file: " <> fp
+  displayException (MkExceptionI (MkPathI fp) cs) =
+    mconcat
+      [ "Failed renaming duplicate file: ",
+        fp,
+        "\n",
+        prettyCallStack cs
+      ]
 
 -- | @since 0.1
 instance Exception (ExceptionI ReadIndex) where
-  displayException (MkExceptionI (MkPathI indexPath, err)) =
+  displayException (MkExceptionI (MkPathI indexPath, err) cs) =
     mconcat
       [ "Error reading index at '",
         indexPath,
         "': ",
-        err
+        err,
+        "\n",
+        prettyCallStack cs
       ]
 
 -- | @since 0.1
 instance Exception (ExceptionI DuplicateIndexPath) where
   displayException
-    (MkExceptionI (MkPathI trashIndex, MkPathI dupName)) =
+    (MkExceptionI (MkPathI trashIndex, MkPathI dupName) cs) =
       mconcat
         [ "Trash paths should be unique, but found multiple entries in the ",
           "trash index '",
           trashIndex,
           "' for the following path: ",
-          dupName
+          dupName,
+          "\n",
+          prettyCallStack cs
         ]
 
 -- | @since 0.1
 instance Exception (ExceptionI TrashPathNotFound) where
   displayException
-    (MkExceptionI (MkPathI trashHome, MkPathI notFound)) =
+    (MkExceptionI (MkPathI trashHome, MkPathI notFound) cs) =
       mconcat
         [ "The path '",
           notFound,
@@ -152,45 +167,55 @@ instance Exception (ExceptionI TrashPathNotFound) where
           trashHome,
           "' despite being listed in the trash index. This can be fixed by ",
           "manually deleting the entry from the index or deleting everything ",
-          "(i.e. sr e)."
+          "(i.e. sr e).",
+          "\n",
+          prettyCallStack cs
         ]
 
 -- | @since 0.1
 instance Exception (ExceptionI RestoreCollision) where
-  displayException (MkExceptionI (MkPathI trashName, MkPathI originalPath)) =
+  displayException (MkExceptionI (MkPathI trashName, MkPathI originalPath) cs) =
     mconcat
       [ "Cannot restore the trash file '",
         trashName,
         "' as one exists at the original location: ",
-        originalPath
+        originalPath,
+        "\n",
+        prettyCallStack cs
       ]
 
 -- | @since 0.1
 instance Exception (ExceptionI TrashIndexSizeMismatch) where
-  displayException (MkExceptionI (MkPathI trashHome, dirSize, indexSize)) =
+  displayException (MkExceptionI (MkPathI trashHome, dirSize, indexSize) cs) =
     mconcat
       [ "Size mismatch between index size (",
         show indexSize,
         ") and number of entries (",
         show dirSize,
         ") in trash: ",
-        trashHome
+        trashHome,
+        "\n",
+        prettyCallStack cs
       ]
 
 -- | @since 0.1
 instance Exception (ExceptionI TomlDecode) where
-  displayException (MkExceptionI tomlError) =
+  displayException (MkExceptionI tomlError cs) =
     mconcat
       [ "Error decoding toml: ",
-        T.unpack (renderTOMLError tomlError)
+        T.unpack (renderTOMLError tomlError),
+        "\n",
+        prettyCallStack cs
       ]
 
 -- | @since 0.1
 instance Exception (ExceptionI SomeExceptions) where
-  displayException (MkExceptionI xs) =
+  displayException (MkExceptionI xs cs) =
     mconcat
-      [ "Encountered exception(s)\n",
-        foldl' foldExs "" xs
+      [ "Encountered exception(s)\n\n",
+        foldl' foldExs "" xs,
+        "\n\n",
+        prettyCallStack cs
       ]
     where
       foldExs acc ex = ("- " <> displayException ex <> "\n") <> acc

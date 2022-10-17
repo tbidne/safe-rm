@@ -85,7 +85,7 @@ haddock:
 haddockc:
 	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- \
 	. \
-	-m SafeRm.Prelude 85 \
+	-m SafeRm.Prelude 95 \
 	-m SafeRm.Runner.Command 20 \
 	-m SafeRm.Runner.Args 50
 

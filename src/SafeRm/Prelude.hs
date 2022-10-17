@@ -1,3 +1,5 @@
+{-# LANGUAGE ImplicitParams #-}
+
 -- | Custom prelude.
 --
 -- @since 0.1
@@ -7,6 +9,9 @@ module SafeRm.Prelude
     -- * Text
     showt,
     displayExceptiont,
+
+    -- * Exception
+    throwCS,
   )
 where
 
@@ -89,7 +94,12 @@ import GHC.Integer as X (Integer)
 import GHC.Natural as X (Natural)
 import GHC.Num as X (Num ((+), (-)))
 import GHC.Real as X (even, fromIntegral)
-import GHC.Stack as X (HasCallStack)
+import GHC.Stack as X
+  ( CallStack,
+    HasCallStack,
+    callStack,
+    prettyCallStack,
+  )
 import Optics.Core as X
   ( AffineTraversal',
     Iso',
@@ -148,8 +158,20 @@ import UnliftIO.Exception as X
   )
 import UnliftIO.IORef as X (IORef, modifyIORef', newIORef, readIORef)
 
+-- | @since 0.1
 showt :: Show a => a -> Text
 showt = T.pack . show
 
+-- | @since 0.1
 displayExceptiont :: Exception e => e -> Text
 displayExceptiont = T.pack . displayException
+
+-- | 'throwIO' with a 'callStack'.
+--
+-- @since 0.1
+throwCS ::
+  forall m e a.
+  (Exception e, HasCallStack, MonadIO m) =>
+  (CallStack -> e) ->
+  m a
+throwCS f = throwIO (f ?callStack)

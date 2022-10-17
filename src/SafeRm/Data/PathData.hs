@@ -193,7 +193,7 @@ toPathData currTime trashHome originalPath = do
                 pathType = PathTypeDirectory,
                 created = currTime
               }
-        else throwIO $ MkExceptionI @PathNotFound (origPath ^. #unPathI)
+        else throwCS $ MkExceptionI @PathNotFound (origPath ^. #unPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -218,7 +218,7 @@ mkUniqPath fp = do
     go :: Word16 -> m (PathI TrashName)
     go !counter
       | counter == maxBound =
-          throwIO $
+          throwCS $
             MkExceptionI @RenameDuplicate fp
       | otherwise = do
           let fp' = fp <> MkPathI (mkSuffix counter)
@@ -262,7 +262,7 @@ mvTrashToOriginal ::
 mvTrashToOriginal (MkPathI trashHome) pd = do
   exists <- originalPathExists pd
   when exists $
-    throwIO $
+    throwCS $
       MkExceptionI @RestoreCollision (fileName, originalPath)
   renameFn trashPath (pd ^. #originalPath % #unPathI)
   where

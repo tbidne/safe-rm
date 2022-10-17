@@ -133,7 +133,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (showt ex)
+      $(logError) (displayExceptiont ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
@@ -213,7 +213,7 @@ getConfiguration = do
             Left err -> throwIO err
       case TOML.decode contents of
         Right cfg -> pure cfg
-        Left tomlErr -> throwIO $ MkExceptionI @TomlDecode tomlErr
+        Left tomlErr -> throwCS $ MkExceptionI @TomlDecode tomlErr
 
 printIndex ::
   ( HasTrashHome env,

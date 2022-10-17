@@ -108,7 +108,7 @@ delete paths = addNamespace "delete" $ do
     -- we log in the SafeRm API are those that are non-fatal i.e. ones we
     -- catch. Unhandled ones are left to bubble up, where the runner can
     -- cath and log them.
-    throwIO . MkExceptionI @SomeExceptions
+    throwCS . MkExceptionI @SomeExceptions
 
 -- | Permanently deletes the paths from the trash.
 --
@@ -176,7 +176,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
-    throwIO . MkExceptionI @SomeExceptions
+    throwCS . MkExceptionI @SomeExceptions
 
 -- | Reads the index at either the specified or default location. If the
 -- file does not exist, returns empty.
@@ -263,7 +263,7 @@ restore paths = addNamespace "restore" $ do
 
   exceptions <- readIORef exceptionsRef
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
-    throwIO . MkExceptionI @SomeExceptions
+    throwCS . MkExceptionI @SomeExceptions
 
 -- | Empties the trash. Deletes the index file.
 --

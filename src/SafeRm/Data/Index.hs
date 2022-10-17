@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -141,7 +142,7 @@ searchIndex keys (MkIndex index) =
           -- Nevertheless we turn these into exceptions since it makes the
           -- callers' lives easier.
           prependEx
-            (MkExceptionI @PathNotFound (view #unPathI trashKey))
+            (MkExceptionI @PathNotFound (view #unPathI trashKey) ?callstack)
             acc
         Just pd -> (exs, USeq.append found pd)
     prependEx ex = over' _1 (toException ex :)
@@ -174,7 +175,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- End of stream w/ an error.
     runFold _ (Nil (Just err) rest) = do
       $(logError) ("Error end of stream: " <> T.pack err)
-      throwIO $
+      throwCS $
         MkExceptionI @ReadIndex
           ( indexPath,
             mconcat
@@ -188,13 +189,13 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- but just to cover all cases...
     runFold _ (Nil _ rest) = do
       $(logError) ("Unconsumed input: " <> lbsToTxt rest)
-      throwIO $
+      throwCS $
         MkExceptionI @ReadIndex
           (indexPath, "Unconsumed input: " <> lbsToStr rest)
     -- Encountered an error.
     runFold _ (Cons (Left err) _) = do
       $(logError) ("Error reading stream: " <> T.pack err)
-      throwIO $ MkExceptionI @ReadIndex (indexPath, err)
+      throwCS $ MkExceptionI @ReadIndex (indexPath, err)
     -- Inductive case, run fold and recurse
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest
 
@@ -213,7 +214,7 @@ throwIfDuplicates ::
   m ()
 throwIfDuplicates indexPath trashMap pd =
   when (fileName `HMap.member` trashMap) $
-    throwIO $
+    throwCS $
       MkExceptionI @DuplicateIndexPath (indexPath, fileName)
   where
     fileName = pd ^. #fileName
@@ -225,7 +226,7 @@ throwIfTrashNonExtant :: MonadIO m => PathI TrashHome -> PathData -> m ()
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
   unless exists $
-    throwIO $
+    throwCS $
       MkExceptionI @TrashPathNotFound (trashHome, filePath)
   where
     filePath = pd ^. #fileName
