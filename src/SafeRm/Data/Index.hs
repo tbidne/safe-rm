@@ -39,6 +39,7 @@ import SafeRm.Data.Paths
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Data.UniqueSeq qualified as USeq
+import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -96,7 +97,8 @@ instance Pretty Index where
 --
 -- @since 0.1
 readIndex ::
-  ( LoggerContext m,
+  ( FileSystemReader m,
+    LoggerContext m,
     MonadIO m
   ) =>
   PathI TrashIndex ->
@@ -154,7 +156,11 @@ searchIndex keys (MkIndex index) =
 -- @since 0.1
 readIndexWithFold ::
   forall m a.
-  (LoggerContext m, MonadIO m, Monoid a) =>
+  ( FileSystemReader m,
+    LoggerContext m,
+    MonadIO m,
+    Monoid a
+  ) =>
   -- | Fold function.
   (m a -> PathData -> m a) ->
   -- | Path to index file.
@@ -162,7 +168,7 @@ readIndexWithFold ::
   m a
 readIndexWithFold foldFn indexPath@(MkPathI fp) =
   addNamespace "readIndexWithFold" $
-    ((liftIO . BS.readFile) >=> runFold (pure mempty) . decode) fp
+    (readFile >=> runFold (pure mempty) . decode) fp
   where
     decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
     -- NOTE: We fold over the Records manually because its Foldable instance

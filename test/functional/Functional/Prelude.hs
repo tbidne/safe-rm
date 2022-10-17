@@ -41,7 +41,12 @@ import Data.Time (LocalTime (LocalTime))
 import Data.Time.LocalTime (midday)
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
+import SafeRm.Effects.FileSystemReader
+  ( FileSystemReader
+      ( getFileSize,
+        readFile
+      ),
+  )
 import SafeRm.Effects.Logger
   ( LoggerContext (getNamespace, localNamespace),
     Namespace,
@@ -97,6 +102,7 @@ newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
 
 instance FileSystemReader FuncIO where
   getFileSize = const (pure $ afromInteger 5)
+  readFile = liftIO . readFile
 
 instance Terminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)

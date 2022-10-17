@@ -7,7 +7,12 @@ module SafeRm.Effects.FileSystemReader
 where
 
 import Control.Monad.Trans (MonadTrans (lift))
+import Data.ByteString qualified as BS
 import Data.Bytes (Bytes (MkBytes), Size (B))
+import SafeRm.Exceptions
+  ( ExceptionI (MkExceptionI),
+    ExceptionIndex (OneException, PathNotFound),
+  )
 import SafeRm.Prelude
 import UnliftIO.Directory qualified as Dir
 
@@ -19,6 +24,8 @@ class Monad m => FileSystemReader m where
   --
   -- @since 0.1
   getFileSize :: FilePath -> m (Bytes B Natural)
+
+  readFile :: FilePath -> m ByteString
 
 -- | @since 0.1
 instance FileSystemReader IO where
@@ -36,6 +43,16 @@ instance FileSystemReader IO where
                 ]
         | otherwise = fromIntegral x
 
+  readFile :: FilePath -> IO ByteString
+  readFile f = do
+    exists <- Dir.doesFileExist f
+    unless exists $
+      throwCS @_ @(ExceptionI PathNotFound) $
+        MkExceptionI f
+    BS.readFile f
+      `catch` \ex -> throwCS @_ @(ExceptionI OneException) $ MkExceptionI ex
+
 -- | @since 0.1
 instance FileSystemReader m => FileSystemReader (ReaderT env m) where
   getFileSize = lift . getFileSize
+  readFile = lift . readFile

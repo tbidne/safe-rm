@@ -19,7 +19,12 @@ import Data.Time.LocalTime (midday)
 import Functional.Prelude
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
+import SafeRm.Effects.FileSystemReader
+  ( FileSystemReader
+      ( getFileSize,
+        readFile
+      ),
+  )
 import SafeRm.Effects.Logger
   ( LoggerContext
       ( getNamespace,
@@ -79,6 +84,7 @@ instance LoggerContext LoggerT where
 
 instance FileSystemReader LoggerT where
   getFileSize = const (pure $ afromInteger 5)
+  readFile = liftIO . readFile
 
 instance Terminal LoggerT where
   putStr = const (pure ())
@@ -94,7 +100,8 @@ tests :: IO FilePath -> TestTree
 tests args =
   testGroup
     "Logging"
-    [ logging args
+    [ logging args,
+      excludesMetadata args
     ]
 
 logging :: IO FilePath -> TestTree
@@ -112,15 +119,7 @@ logging args = goldenVsStringDiff desc diff gpath $ do
   createFiles filesToDelete
   assertFilesExist filesToDelete
 
-  bracket
-    ( do
-        (env, cmd) <- SysEnv.withArgs delArgList Runner.getEnv
-        (,cmd) <$> transformEnv env
-    )
-    (\(loggerEnv, _) -> loggerEnv ^. #logFinalizer)
-    ( \(loggerEnv, cmd) ->
-        runLoggerT (Runner.runCmd cmd) loggerEnv
-    )
+  runLogging delArgList
 
   -- file assertions
   assertFilesExist
@@ -135,6 +134,34 @@ logging args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Logging is successful"
     gpath = goldenPath </> "logs.golden"
+
+excludesMetadata :: IO FilePath -> TestTree
+excludesMetadata args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "logging"
+      trashDir = testDir </> ".trash"
+      filesToDelete = (testDir </>) <$> ["f1", "f2", "f3"]
+      delArgList =
+        ["-t", trashDir, "--log-level", "debug"]
+          <> ("d" : filesToDelete)
+      listArgList =
+        ["-t", trashDir, "--log-level", "debug", "l"]
+      metadataArgList =
+        ["-t", trashDir, "--log-level", "debug", "m"]
+
+  -- setup
+  clearDirectory testDir
+  createFiles filesToDelete
+  assertFilesExist filesToDelete
+
+  runLogging delArgList
+  runLogging listArgList
+  runLogging metadataArgList
+
+  replaceDir testDir <$> BS.readFile (trashDir </> ".log")
+  where
+    desc = "Log file is excluded from metadata entries count"
+    gpath = goldenPath </> "log-metadata-excluded.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Logging"
@@ -161,3 +188,15 @@ replaceDir fp =
     . TL.replace (TL.pack fp) "<dir>"
     . TLEnc.decodeUtf8With TEncError.lenientDecode
     . BSL.fromStrict
+
+runLogging :: [String] -> IO ()
+runLogging argList = do
+  bracket
+    ( do
+        (env, cmd) <- SysEnv.withArgs argList Runner.getEnv
+        (,cmd) <$> transformEnv env
+    )
+    (\(loggerEnv, _) -> loggerEnv ^. #logFinalizer)
+    ( \(loggerEnv, cmd) ->
+        runLoggerT (Runner.runCmd cmd) loggerEnv
+    )

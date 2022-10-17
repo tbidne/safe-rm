@@ -29,7 +29,7 @@ Encountered exception(s)
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:179:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:180:5 in safe-rm-0.1-inplace:SafeRm
 
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug] Trash home: <dir>/x4/.trash
@@ -50,7 +50,7 @@ LOGS PERM DELETE
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:179:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:180:5 in safe-rm-0.1-inplace:SafeRm
 
 
 TERMINAL LIST 2

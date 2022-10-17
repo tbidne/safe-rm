@@ -18,7 +18,7 @@ CallStack (from HasCallStack):
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:266:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:269:5 in safe-rm-0.1-inplace:SafeRm
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r4/.trash
@@ -37,6 +37,6 @@ CallStack (from HasCallStack):
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:266:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:269:5 in safe-rm-0.1-inplace:SafeRm
 
 

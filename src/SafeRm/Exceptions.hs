@@ -57,6 +57,10 @@ data ExceptionIndex
     --
     -- @since 0.1
     TomlDecode
+  | -- | An arbitrary exception.
+    --
+    -- @since 0.1
+    OneException
   | -- | Collects multiple arbitrary exceptions.
     --
     -- @since 0.1
@@ -88,6 +92,7 @@ type family ExceptionF e where
   ExceptionF TrashIndexSizeMismatch = (PathI TrashHome, Int, Int)
   ExceptionF TomlDecode = TOMLError
   ExceptionF SomeExceptions = NonEmpty SomeException
+  ExceptionF OneException = SomeException
 
 -- | Indexed 'Exception' for simplifying the interface for throwing different
 -- types of exceptions.
@@ -204,6 +209,16 @@ instance Exception (ExceptionI TomlDecode) where
     mconcat
       [ "Error decoding toml: ",
         T.unpack (renderTOMLError tomlError),
+        "\n",
+        prettyCallStack cs
+      ]
+
+-- | @since 0.1
+instance Exception (ExceptionI OneException) where
+  displayException (MkExceptionI ex cs) =
+    mconcat
+      [ "Exception: ",
+        displayException ex,
         "\n",
         prettyCallStack cs
       ]

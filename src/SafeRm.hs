@@ -115,7 +115,8 @@ delete paths = addNamespace "delete" $ do
 -- @since 0.1
 deletePermanently ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
@@ -184,7 +185,8 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 -- @since 0.1
 getIndex ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadIO m,
     MonadReader env m
@@ -212,12 +214,12 @@ getMetadata ::
   ) =>
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
-  paths@(trashHome, _, _) <- asks getTrashPaths
+  paths@(trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
-  Paths.applyPathI Dir.doesDirectoryExist trashHome >>= \case
+  Paths.applyPathI Dir.doesFileExist indexPath >>= \case
     True -> Metadata.toMetadata paths
     False -> do
-      $(logDebug) "Trash home does not exist."
+      $(logDebug) "Index does not exist."
       pure mempty
 
 -- | @restore trash p@ restores the trashed path @\<trash\>\/p@ to its original
@@ -227,7 +229,8 @@ getMetadata = addNamespace "getMetadata" $ do
 -- @since 0.1
 restore ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m

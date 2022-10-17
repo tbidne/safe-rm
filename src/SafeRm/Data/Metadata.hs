@@ -109,7 +109,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     $(logDebug) ("Index size: " <> showt numIndex)
 
     -- Num entries
-    numEntries <- (\xs -> length xs - 1) <$> Dir.listDirectory th
+    numEntries <- foldl' countFiles 0 <$> Dir.listDirectory th
     $(logDebug) ("Num entries: " <> showt numEntries)
 
     -- Log size
@@ -159,6 +159,11 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     toDouble = fmap fromIntegral
     toNat :: Int -> Natural
     toNat = fromIntegral
+
+    countFiles :: Int -> FilePath -> Int
+    countFiles !acc fp
+      | fp == ".log" || fp == ".index.csv" = acc
+      | otherwise = acc + 1
 
 getAllFiles :: MonadIO m => FilePath -> m [FilePath]
 getAllFiles fp =

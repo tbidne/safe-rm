@@ -216,7 +216,8 @@ getConfiguration = do
         Left tomlErr -> throwCS $ MkExceptionI @TomlDecode tomlErr
 
 printIndex ::
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    HasTrashHome env,
     LoggerContext m,
     MonadIO m,
     MonadReader env m,
