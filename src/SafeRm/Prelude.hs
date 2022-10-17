@@ -52,7 +52,7 @@ import Data.Bifunctor as X (Bifunctor (bimap))
 import Data.Bool as X (Bool (False, True), not, otherwise, (&&), (||))
 import Data.ByteString as X (ByteString)
 import Data.Char as X (Char)
-import Data.Either as X (Either (Left, Right))
+import Data.Either as X (Either (Left, Right), either)
 import Data.Eq as X (Eq ((/=), (==)))
 import Data.Foldable as X
   ( Foldable (foldMap', foldl', foldr, length),

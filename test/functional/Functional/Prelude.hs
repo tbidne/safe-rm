@@ -195,18 +195,13 @@ captureSafeRmExceptionLogs testDir title argList = do
   (toml, cmd) <- getConfig
   env <- mkFuncEnv toml logsRef terminalRef
 
-  result <-
-    runFuncIO
-      ( (Runner.runCmd cmd $> Nothing)
-          `catch` \(ex :: e) -> pure (Just ex)
-      )
-      env
+  result <- try @_ @e $ runFuncIO (Runner.runCmd cmd) env
 
   case result of
-    Nothing ->
+    Right _ ->
       throwString
         "captureSafeRmExceptionLogs: Expected exception, received none"
-    Just ex -> do
+    Left ex -> do
       logs <- replaceDir testDir <$> readIORef logsRef
       let exceptionBs = exToBuilder testDir ex
           logsBs = txtToBuilder logs

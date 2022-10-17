@@ -108,16 +108,16 @@ deleteSome mtestDir =
       -- delete files
       -- should succeed on α and fail on β
       let toDelete = αTest `USeq.union` toTestDir β
+
       caughtEx <-
         liftIO $
-          (usingSafeRmT env (SafeRm.delete (USeq.map MkPathI toDelete)) $> Nothing)
-            `catch` \(ex :: ExceptionI SomeExceptions) -> do
-              pure $ Just ex
+          try @_ @(ExceptionI SomeExceptions) $
+            usingSafeRmT env (SafeRm.delete (USeq.map MkPathI toDelete))
 
       (MkExceptionI exs _) <-
-        maybe
-          (annotate "Expected exceptions, received none" *> failure)
+        either
           pure
+          (\_ -> annotate "Expected exceptions, received none" *> failure)
           caughtEx
 
       annotateShow exs
@@ -217,16 +217,16 @@ deleteSomePermanently mtestDir =
       -- should succeed on α and fail on β
       let toPermDelete = USeq.map MkPathI (α `USeq.union` β)
       annotateShow toPermDelete
+
       caughtEx <-
         liftIO $
-          (usingSafeRmT env (SafeRm.deletePermanently True toPermDelete) $> Nothing)
-            `catch` \(ex :: ExceptionI SomeExceptions) -> do
-              pure $ Just ex
+          try @_ @(ExceptionI SomeExceptions) $
+            usingSafeRmT env (SafeRm.deletePermanently True toPermDelete)
 
       (MkExceptionI exs _) <-
-        maybe
-          (annotate "Expected exceptions, received none" *> failure)
+        either
           pure
+          (\_ -> annotate "Expected exceptions, received none" *> failure)
           caughtEx
 
       annotateShow exs
@@ -324,16 +324,16 @@ restoreSome mtestDir =
       -- should succeed on α and fail on β
       let toRestore = USeq.map MkPathI (α `USeq.union` β)
       annotateShow toRestore
+
       caughtEx <-
         liftIO $
-          (usingSafeRmT env (SafeRm.restore toRestore) $> Nothing)
-            `catch` \(ex :: ExceptionI SomeExceptions) -> do
-              pure $ Just ex
+          try @_ @(ExceptionI SomeExceptions) $
+            usingSafeRmT env (SafeRm.restore toRestore)
 
       (MkExceptionI exs _) <-
-        maybe
-          (annotate "Expected exceptions, received none" *> failure)
+        either
           pure
+          (\_ -> annotate "Expected exceptions, received none" *> failure)
           caughtEx
 
       annotateShow exs
