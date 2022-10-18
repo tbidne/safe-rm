@@ -126,8 +126,7 @@ instance Exception (ExceptionI PathNotFound) where
     mconcat
       [ "Path not found: ",
         fp,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -136,8 +135,7 @@ instance Exception (ExceptionI RenameDuplicate) where
     mconcat
       [ "Failed renaming duplicate file: ",
         fp,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -148,8 +146,7 @@ instance Exception (ExceptionI ReadIndex) where
         indexPath,
         "': ",
         err,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -162,8 +159,7 @@ instance Exception (ExceptionI DuplicateIndexPath) where
           trashIndex,
           "' for the following path: ",
           dupName,
-          "\n",
-          prettyCallStack cs
+          appendPrettyCs cs
         ]
 
 -- | @since 0.1
@@ -178,8 +174,7 @@ instance Exception (ExceptionI TrashPathNotFound) where
           "' despite being listed in the trash index. This can be fixed by ",
           "manually deleting the entry from the index or deleting everything ",
           "(i.e. sr e).",
-          "\n",
-          prettyCallStack cs
+          appendPrettyCs cs
         ]
 
 -- | @since 0.1
@@ -190,8 +185,7 @@ instance Exception (ExceptionI RestoreCollision) where
         trashName,
         "' as one exists at the original location: ",
         originalPath,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -204,8 +198,7 @@ instance Exception (ExceptionI TrashIndexSizeMismatch) where
         show dirSize,
         ") in trash: ",
         trashHome,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -214,8 +207,7 @@ instance Exception (ExceptionI TomlDecode) where
     mconcat
       [ "Error decoding toml: ",
         T.unpack (renderTOMLError tomlError),
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
@@ -224,21 +216,19 @@ instance Exception (ExceptionI OneException) where
     mconcat
       [ "Exception: ",
         displayException ex,
-        "\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
 
 -- | @since 0.1
 instance Exception (ExceptionI SomeExceptions) where
   displayException (MkExceptionI xs cs) =
     mconcat
-      [ "Encountered exception(s)\n\n",
+      [ "Encountered exception(s)\n",
         foldl' foldExs "" xs,
-        "\n\n",
-        prettyCallStack cs
+        appendPrettyCs cs
       ]
     where
-      foldExs acc ex = ("- " <> displayException ex <> "\n") <> acc
+      foldExs acc ex = ("\n- " <> displayException ex <> "\n") <> acc
 
 -- | Tries the monadic action. If an exception is encountered, it is wrapped
 -- in an 'ExceptionI' 'OneException' and rethrown.
@@ -255,3 +245,6 @@ wrapCS =
   try >=> \case
     Left ex -> throwCS @_ @(ExceptionI OneException) (MkExceptionI ex)
     Right x -> pure x
+
+appendPrettyCs :: CallStack -> String
+appendPrettyCs cs = "\n\n" <> prettyCallStack cs

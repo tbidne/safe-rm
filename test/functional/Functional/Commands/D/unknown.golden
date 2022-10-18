@@ -2,6 +2,7 @@ EXCEPTION DELETE
 Encountered exception(s)
 
 - Path not found: <dir>/d3/bad file
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
@@ -19,6 +20,7 @@ CallStack (from HasCallStack):
 LOGS DELETE
 [2020-05-31 12:00:00][functional.delete][Debug] Trash home: <dir>/d3/.trash
 [2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d3/bad file
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
@@ -29,6 +31,7 @@ CallStack (from HasCallStack):
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Path not found: <dir>/d3/bad file
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData

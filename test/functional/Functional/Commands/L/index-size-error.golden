@@ -1,5 +1,6 @@
 EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata
@@ -21,6 +22,7 @@ LOGS LIST
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num all files: 2
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Total size: MkSomeSize SB (MkBytes 15.0)
 [2020-05-31 12:00:00][functional][Error] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata

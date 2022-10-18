@@ -23,11 +23,14 @@ EXCEPTION PERM DELETE
 Encountered exception(s)
 
 - Path not found: f4
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
   deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+
 - Path not found: f3
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
   deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
@@ -53,11 +56,14 @@ LOGS PERM DELETE
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Path not found: f4
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
   deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+
 - Path not found: f3
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
   deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner

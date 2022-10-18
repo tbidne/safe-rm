@@ -13,6 +13,7 @@ EXCEPTION RESTORE
 Encountered exception(s)
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
@@ -33,6 +34,7 @@ LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.restore.restoring][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.restore.restoring][Warn] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
@@ -43,6 +45,7 @@ CallStack (from HasCallStack):
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
+
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
