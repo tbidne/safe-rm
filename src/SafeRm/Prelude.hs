@@ -133,6 +133,7 @@ import System.IO as X
     FilePath,
     Handle,
     IO,
+    IOMode (AppendMode),
   )
 import Text.Show as X (Show (show))
 import UnliftIO as X (MonadUnliftIO)

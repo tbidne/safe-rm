@@ -41,8 +41,14 @@ import SafeRm.Effects.MonadLoggerContext
     Namespace,
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime), Timestamp (MkTimestamp))
-import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn), print)
+import SafeRm.Effects.MonadSystemTime
+  ( MonadSystemTime (getSystemTime),
+    Timestamp (MkTimestamp),
+  )
+import SafeRm.Effects.MonadTerminal
+  ( MonadTerminal (getChar, putStr, putStrLn),
+    print,
+  )
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Env (Env)
@@ -106,6 +112,7 @@ instance MonadFsReader LoggerT where
 instance MonadTerminal LoggerT where
   putStr = const (pure ())
   putStrLn = putStr
+  getChar = pure 'y'
 
 instance MonadSystemTime LoggerT where
   getSystemTime = pure $ MkTimestamp localTime

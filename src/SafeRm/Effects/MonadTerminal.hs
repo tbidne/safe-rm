@@ -29,14 +29,21 @@ class Monad m => MonadTerminal m where
   -- @since 0.1
   putStrLn :: HasCallStack => String -> m ()
 
+  -- | Retrieves a user-supplied 'Char'.
+  --
+  -- @since 0.1
+  getChar :: m Char
+
 -- | @since 0.1
 instance MonadTerminal IO where
   putStr = IO.putStr
   putStrLn = IO.putStrLn
+  getChar = IO.getChar
 
 instance MonadTerminal m => MonadTerminal (ReaderT e m) where
   putStr = lift . putStr
   putStrLn = lift . putStrLn
+  getChar = lift getChar
 
 -- | @since 0.1
 putText :: (HasCallStack, MonadTerminal m) => Text -> m ()

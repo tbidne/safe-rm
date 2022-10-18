@@ -24,7 +24,14 @@ import SafeRm.Data.Paths
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter (createDirectoryIfMissing))
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
+      ( createDirectoryIfMissing,
+        hClose,
+        hFlush,
+        openFile
+      ),
+  )
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
 import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
@@ -67,7 +74,6 @@ import SafeRm.Runner.Env
 import SafeRm.Runner.SafeRmT (usingSafeRmT)
 import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)
 import System.Exit (ExitCode (ExitSuccess))
-import System.IO qualified as IO
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
@@ -150,6 +156,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
 -- @since 0.1
 getEnv ::
   ( HasCallStack,
+    MonadFsReader m,
     MonadFsWriter m,
     MonadCallStack m,
     MonadUnliftIO m
@@ -166,13 +173,13 @@ getEnv = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- liftIO $ wrapCS $ IO.openFile logPath IO.AppendMode
+      h <- wrapCS $ openFile logPath AppendMode
       pure $
         Just $
           MkLogFile
             { handle = h,
               logLevel = lvl,
-              finalizer = IO.hFlush h `finally` IO.hClose h
+              finalizer = hFlush h `finally` hClose h
             }
   let env =
         MkEnv
@@ -195,6 +202,7 @@ getEnv = do
 -- @since 0.1
 getConfiguration ::
   ( HasCallStack,
+    MonadFsReader m,
     MonadCallStack m,
     MonadUnliftIO m
   ) =>
@@ -226,7 +234,7 @@ getConfiguration = do
   where
     readConfig fp = do
       contents <-
-        liftIO (readFile fp) >>= \contents' -> do
+        readFile fp >>= \contents' -> do
           case TEnc.decodeUtf8' contents' of
             Right txt -> pure txt
             Left err -> throwIO err

@@ -17,16 +17,16 @@ Encountered exception(s)
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  mvTrashToOriginal, called at src/SafeRm.hs:293:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:307:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  throwCS, called at src/SafeRm.hs:310:5 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r4/.trash
@@ -38,9 +38,9 @@ LOGS RESTORE
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  mvTrashToOriginal, called at src/SafeRm.hs:293:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.restore][Info] Restored: 
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
@@ -49,15 +49,15 @@ CallStack (from HasCallStack):
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  mvTrashToOriginal, called at src/SafeRm.hs:293:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:307:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  throwCS, called at src/SafeRm.hs:310:5 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 

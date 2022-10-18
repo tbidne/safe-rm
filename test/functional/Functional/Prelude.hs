@@ -67,8 +67,17 @@ import SafeRm.Effects.MonadLoggerContext
     Namespace,
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime), Timestamp (MkTimestamp))
-import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn))
+import SafeRm.Effects.MonadSystemTime
+  ( MonadSystemTime (getSystemTime),
+    Timestamp (MkTimestamp),
+  )
+import SafeRm.Effects.MonadTerminal
+  ( MonadTerminal
+      ( getChar,
+        putStr,
+        putStrLn
+      ),
+  )
 import SafeRm.Env (HasTrashHome)
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
@@ -130,6 +139,7 @@ instance MonadCallStack FuncIO where
 instance MonadTerminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
+  getChar = pure 'y'
 
 instance MonadSystemTime FuncIO where
   getSystemTime = pure $ MkTimestamp localTime

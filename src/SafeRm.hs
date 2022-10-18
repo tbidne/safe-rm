@@ -52,7 +52,10 @@ import SafeRm.Effects.MonadFsWriter
   )
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime))
-import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn), putTextLn)
+import SafeRm.Effects.MonadTerminal
+  ( MonadTerminal (getChar, putStr, putStrLn),
+    putTextLn,
+  )
 import SafeRm.Env
   ( HasTrashHome (getTrashHome),
     getTrashIndex,
@@ -190,7 +193,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
           let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
           putTextLn pdStr
           putStr "Permanently delete (y/n)? "
-          c <- Ch.toLower <$> liftIO IO.getChar
+          c <- Ch.toLower <$> liftIO getChar
           if
               | c == 'y' -> deleteFn pd *> putStrLn ""
               | c == 'n' -> putStrLn ""
@@ -336,7 +339,7 @@ emptyTrash force = addNamespace "emptyTrash" $ do
         else do
           noBuffering
           putStr "Permanently delete all contents (y/n)? "
-          c <- Ch.toLower <$> liftIO IO.getChar
+          c <- Ch.toLower <$> liftIO getChar
           if
               | c == 'y' -> do
                   $(logDebug) "Deleting contents."

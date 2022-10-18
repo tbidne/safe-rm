@@ -8,10 +8,9 @@ module SafeRm.Runner.SafeRmT
   )
 where
 
-import Data.ByteString qualified as BS
 import SafeRm.Effects.MonadCallStack (MonadCallStack)
 import SafeRm.Effects.MonadFsReader (MonadFsReader)
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter (hPut))
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
@@ -51,7 +50,10 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
     via (ReaderT env m)
 
 -- | @since 0.1
-instance (MonadIO m, MonadSystemTime m) => MonadLogger (SafeRmT Env m) where
+instance
+  (MonadFsWriter m, MonadSystemTime m) =>
+  MonadLogger (SafeRmT Env m)
+  where
   monadLoggerLog loc _src lvl msg = do
     mhandle <- asks (preview (#logEnv % #logFile %? handleAndLevel))
     case mhandle of
@@ -60,7 +62,7 @@ instance (MonadIO m, MonadSystemTime m) => MonadLogger (SafeRmT Env m) where
         when (logLevel <= lvl) $ do
           formatted <- Logger.formatLog True loc lvl msg
           let bs = Logger.logStrToBs formatted
-          liftIO $ BS.hPut handle bs
+          hPut handle bs
     where
       handleAndLevel :: Lens' LogFile (Handle, LogLevel)
       handleAndLevel =
@@ -69,7 +71,10 @@ instance (MonadIO m, MonadSystemTime m) => MonadLogger (SafeRmT Env m) where
           (\lf (h, ll) -> lf {logLevel = ll, handle = h})
 
 -- | @since 0.1
-instance (MonadIO m, MonadSystemTime m) => MonadLoggerContext (SafeRmT Env m) where
+instance
+  (MonadFsWriter m, MonadSystemTime m) =>
+  MonadLoggerContext (SafeRmT Env m)
+  where
   getNamespace = asks (view (#logEnv % #logNamespace))
   localNamespace = local . over' (#logEnv % #logNamespace)
 

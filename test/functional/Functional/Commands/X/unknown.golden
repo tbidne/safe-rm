@@ -15,16 +15,16 @@ Encountered exception(s)
 - Path not found: bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:209:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:143:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:209:5 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  throwCS, called at src/SafeRm.hs:212:5 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:143:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug] Trash home: <dir>/x3/.trash
@@ -36,15 +36,15 @@ LOGS PERM DELETE
 - Path not found: bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:209:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:143:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:209:5 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
+  throwCS, called at src/SafeRm.hs:212:5 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:143:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
