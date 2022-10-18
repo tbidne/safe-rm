@@ -1,8 +1,8 @@
--- | Provides the 'FileSystemReader' typeclass.
+-- | Provides the 'MonadFsReader' typeclass.
 --
 -- @since 0.1
-module SafeRm.Effects.FileSystemReader
-  ( FileSystemReader (..),
+module SafeRm.Effects.MonadFsReader
+  ( MonadFsReader (..),
   )
 where
 
@@ -21,7 +21,7 @@ import UnliftIO.Directory qualified as Dir
 -- | Represents a readable filesystem.
 --
 -- @since 0.1
-class Monad m => FileSystemReader m where
+class Monad m => MonadFsReader m where
   -- | Retrieves a file's size.
   --
   -- @since 0.1
@@ -58,14 +58,14 @@ class Monad m => FileSystemReader m where
   listDirectory :: HasCallStack => FilePath -> m [FilePath]
 
 -- | @since 0.1
-instance FileSystemReader IO where
+instance MonadFsReader IO where
   getFileSize f = MkBytes . natToInt <$> Dir.getFileSize f
     where
       natToInt x
         | x < 0 =
             error $
               mconcat
-                [ "[SafeRm.Effects.FileSystemReader]",
+                [ "[SafeRm.Effects.MonadFsReader]",
                   "getFileSize returned ",
                   show x,
                   " bytes for file: ",
@@ -91,7 +91,7 @@ instance FileSystemReader IO where
   listDirectory = wrapCS . Dir.listDirectory
 
 -- | @since 0.1
-instance FileSystemReader m => FileSystemReader (ReaderT env m) where
+instance MonadFsReader m => MonadFsReader (ReaderT env m) where
   getFileSize = lift . getFileSize
   readFile = lift . readFile
   doesFileExist = lift . doesFileExist

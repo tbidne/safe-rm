@@ -47,12 +47,12 @@ library
     SafeRm.Data.Paths
     SafeRm.Data.PathType
     SafeRm.Data.UniqueSeq
-    SafeRm.Effects.FileSystemReader
-    SafeRm.Effects.FileSystemWriter
-    SafeRm.Effects.Logger
     SafeRm.Effects.MonadCallStack
-    SafeRm.Effects.Terminal
-    SafeRm.Effects.Timing
+    SafeRm.Effects.MonadFsReader
+    SafeRm.Effects.MonadFsWriter
+    SafeRm.Effects.MonadLoggerContext
+    SafeRm.Effects.MonadSystemTime
+    SafeRm.Effects.MonadTerminal
     SafeRm.Env
     SafeRm.Exceptions
     SafeRm.Prelude

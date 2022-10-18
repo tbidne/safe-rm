@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Provides the 'Timing' class.
+-- | Provides the 'MonadSystemTime' class.
 --
 -- @since 0.1
-module SafeRm.Effects.Timing
-  ( Timing (..),
+module SafeRm.Effects.MonadSystemTime
+  ( MonadSystemTime (..),
     Timestamp (..),
     toString,
     toText,
@@ -80,18 +80,18 @@ instance ToField Timestamp where
 -- | Class for retrieving the current system time.
 --
 -- @since 0.1
-class Monad m => Timing m where
+class Monad m => MonadSystemTime m where
   -- | @since 0.1
   getSystemTime :: HasCallStack => m Timestamp
 
 -- | @since 0.1
-instance Timing IO where
+instance MonadSystemTime IO where
   getSystemTime =
     MkTimestamp . Local.zonedTimeToLocalTime
       <$> liftIO Local.getZonedTime
 
 -- | @since 0.1
-instance Timing m => Timing (ReaderT e m) where
+instance MonadSystemTime m => MonadSystemTime (ReaderT e m) where
   getSystemTime = lift getSystemTime
 
 -- | Formats the time.

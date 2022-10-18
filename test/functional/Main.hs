@@ -11,13 +11,13 @@ import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Logging qualified as Logging
 import Functional.Prelude
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly
       ),
   )
-import SafeRm.Effects.Terminal (Terminal (putStrLn))
+import SafeRm.Effects.MonadTerminal (MonadTerminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
 import UnliftIO.Directory qualified as Dir

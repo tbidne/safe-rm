@@ -20,8 +20,9 @@ import Data.Time.LocalTime (midday)
 import Functional.Prelude
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.FileSystemReader
-  ( FileSystemReader
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
+import SafeRm.Effects.MonadFsReader
+  ( MonadFsReader
       ( canonicalizePath,
         doesDirectoryExist,
         doesFileExist,
@@ -31,18 +32,17 @@ import SafeRm.Effects.FileSystemReader
         readFile
       ),
   )
-import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
-import SafeRm.Effects.Logger
-  ( LoggerContext
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
+import SafeRm.Effects.MonadLoggerContext
+  ( MonadLoggerContext
       ( getNamespace,
         localNamespace
       ),
     Namespace,
   )
-import SafeRm.Effects.Logger qualified as Logger
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
-import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), print)
-import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
+import SafeRm.Effects.MonadLoggerContext qualified as Logger
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime), Timestamp (MkTimestamp))
+import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn), print)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Env (Env)
@@ -65,7 +65,7 @@ deriving anyclass instance HasTrashHome LoggerEnv
 newtype LoggerT a = MkLoggerT (ReaderT LoggerEnv IO a)
   deriving
     ( Applicative,
-      FileSystemWriter,
+      MonadFsWriter,
       Functor,
       Monad,
       MonadIO,
@@ -90,11 +90,11 @@ instance MonadLogger LoggerT where
       print bs
       liftIO $ BS.hPut handle bs
 
-instance LoggerContext LoggerT where
+instance MonadLoggerContext LoggerT where
   getNamespace = asks (view #logNamespace)
   localNamespace = local . over' #logNamespace
 
-instance FileSystemReader LoggerT where
+instance MonadFsReader LoggerT where
   getFileSize = const (pure $ afromInteger 5)
   readFile = liftIO . readFile
   doesFileExist = liftIO . doesFileExist
@@ -103,11 +103,11 @@ instance FileSystemReader LoggerT where
   canonicalizePath = liftIO . canonicalizePath
   listDirectory = liftIO . listDirectory
 
-instance Terminal LoggerT where
+instance MonadTerminal LoggerT where
   putStr = const (pure ())
   putStrLn = putStr
 
-instance Timing LoggerT where
+instance MonadSystemTime LoggerT where
   getSystemTime = pure $ MkTimestamp localTime
     where
       localTime = LocalTime (toEnum 59_000) midday

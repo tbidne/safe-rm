@@ -38,15 +38,15 @@ import SafeRm.Data.Paths
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( appendFile,
         writeFile
       ),
   )
-import SafeRm.Effects.Logger (LoggerContext, addNamespace)
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex
@@ -102,8 +102,8 @@ instance Pretty Index where
 --
 -- @since 0.1
 readIndex ::
-  ( FileSystemReader m,
-    LoggerContext m,
+  ( MonadFsReader m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m
   ) =>
@@ -155,9 +155,9 @@ searchIndex keys (MkIndex index) =
 -- @since 0.1
 readIndexWithFold ::
   forall m a.
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m,
     Monoid a
@@ -233,7 +233,7 @@ throwIfDuplicates indexPath trashMap pd =
 --
 -- @since 0.1
 throwIfTrashNonExtant ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m
@@ -252,7 +252,7 @@ throwIfTrashNonExtant trashHome pd = do
 -- | Appends the path data to the trash index. The header is not included.
 --
 -- @since 0.1
-appendIndex :: FileSystemWriter m => PathI TrashIndex -> Index -> m ()
+appendIndex :: MonadFsWriter m => PathI TrashIndex -> Index -> m ()
 appendIndex (MkPathI indexPath) =
   appendFile indexPath
     . BSL.toStrict
@@ -264,7 +264,7 @@ appendIndex (MkPathI indexPath) =
 -- exists. The header is included.
 --
 -- @since 0.1
-writeIndex :: FileSystemWriter m => PathI TrashIndex -> Index -> m ()
+writeIndex :: MonadFsWriter m => PathI TrashIndex -> Index -> m ()
 writeIndex (MkPathI indexPath) =
   writeFile indexPath
     . BSL.toStrict

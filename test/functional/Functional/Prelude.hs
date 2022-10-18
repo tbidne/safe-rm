@@ -49,8 +49,9 @@ import GHC.Stack.Types
   )
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.FileSystemReader
-  ( FileSystemReader
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
+import SafeRm.Effects.MonadFsReader
+  ( MonadFsReader
       ( canonicalizePath,
         doesDirectoryExist,
         doesFileExist,
@@ -60,15 +61,14 @@ import SafeRm.Effects.FileSystemReader
         readFile
       ),
   )
-import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
-import SafeRm.Effects.Logger
-  ( LoggerContext (getNamespace, localNamespace),
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
+import SafeRm.Effects.MonadLoggerContext
+  ( MonadLoggerContext (getNamespace, localNamespace),
     Namespace,
   )
-import SafeRm.Effects.Logger qualified as Logger
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
-import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
-import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
+import SafeRm.Effects.MonadLoggerContext qualified as Logger
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime), Timestamp (MkTimestamp))
+import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn))
 import SafeRm.Env (HasTrashHome)
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
@@ -106,7 +106,7 @@ deriving anyclass instance HasTrashHome FuncEnv
 newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
   deriving
     ( Applicative,
-      FileSystemWriter,
+      MonadFsWriter,
       Functor,
       Monad,
       MonadIO,
@@ -115,7 +115,7 @@ newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
     )
     via (ReaderT FuncEnv IO)
 
-instance FileSystemReader FuncIO where
+instance MonadFsReader FuncIO where
   getFileSize = const (pure $ afromInteger 5)
   readFile = liftIO . readFile
   doesFileExist = liftIO . doesFileExist
@@ -127,11 +127,11 @@ instance FileSystemReader FuncIO where
 instance MonadCallStack FuncIO where
   getCallStack = pure $ fixPackage ?callStack
 
-instance Terminal FuncIO where
+instance MonadTerminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
 
-instance Timing FuncIO where
+instance MonadSystemTime FuncIO where
   getSystemTime = pure $ MkTimestamp localTime
     where
       localTime = LocalTime (toEnum 59_000) midday
@@ -143,7 +143,7 @@ instance MonadLogger FuncIO where
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
 
-instance LoggerContext FuncIO where
+instance MonadLoggerContext FuncIO where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 
@@ -153,7 +153,7 @@ runFuncIO (MkFuncIO rdr) = runReaderT rdr
 -- | Represents captured input of some kind. Different constructors are
 -- to make golden tests easier to understand (i.e. included labels)
 data CapturedOutput
-  = Terminal Builder Builder
+  = MonadTerminal Builder Builder
   | Logs Builder Builder
   | Exception Builder Builder
   deriving stock (Show)
@@ -163,7 +163,7 @@ data CapturedOutput
 capturedToBs :: [CapturedOutput] -> BSL.ByteString
 capturedToBs = Builder.toLazyByteString . foldr go ""
   where
-    go (Terminal title bs) acc = fmt "TERMINAL " title bs acc
+    go (MonadTerminal title bs) acc = fmt "TERMINAL " title bs acc
     go (Logs title bs) acc = fmt "LOGS " title bs acc
     go (Exception title bs) acc = fmt "EXCEPTION " title bs acc
     fmt cons title bs acc =
@@ -204,7 +204,7 @@ captureSafeRmLogs testDir title argList = do
   let terminalBs = Builder.byteString $ TEnc.encodeUtf8 terminal
       logsBs = Builder.byteString $ TEnc.encodeUtf8 logs
 
-  pure (Terminal title terminalBs, Logs title logsBs)
+  pure (MonadTerminal title terminalBs, Logs title logsBs)
   where
     argList' = "-c" : "none" : argList
     getConfig = SysEnv.withArgs argList' Runner.getConfiguration

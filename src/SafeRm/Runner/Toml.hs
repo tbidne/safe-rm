@@ -11,7 +11,7 @@ module SafeRm.Runner.Toml
 where
 
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import SafeRm.Effects.Logger (readLogLevel)
+import SafeRm.Effects.MonadLoggerContext (readLogLevel)
 import SafeRm.Prelude
 import SafeRm.Runner.Args (Args)
 import TOML

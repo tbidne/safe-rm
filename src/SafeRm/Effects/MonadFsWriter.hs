@@ -1,8 +1,8 @@
--- | Provides the 'FileSystemWriter' typeclass.
+-- | Provides the 'MonadFsWriter' typeclass.
 --
 -- @since 0.1
-module SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter (..),
+module SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter (..),
   )
 where
 
@@ -15,7 +15,7 @@ import UnliftIO.Directory qualified as Dir
 -- | Represents a readable filesystem.
 --
 -- @since 0.1
-class Monad m => FileSystemWriter m where
+class Monad m => MonadFsWriter m where
   -- | Writes to a file.
   --
   -- @since 0.1
@@ -52,7 +52,7 @@ class Monad m => FileSystemWriter m where
   createDirectoryIfMissing :: HasCallStack => Bool -> FilePath -> m ()
 
 -- | @since 0.1
-instance FileSystemWriter IO where
+instance MonadFsWriter IO where
   writeFile f = wrapCS . BS.writeFile f
   appendFile f = wrapCS . BS.appendFile f
   renameFile f = wrapCS . Dir.renameFile f
@@ -62,7 +62,7 @@ instance FileSystemWriter IO where
   createDirectoryIfMissing b = wrapCS . Dir.createDirectoryIfMissing b
 
 -- | @since 0.1
-instance FileSystemWriter m => FileSystemWriter (ReaderT env m) where
+instance MonadFsWriter m => MonadFsWriter (ReaderT env m) where
   writeFile f = lift . writeFile f
   appendFile f = lift . appendFile f
   renameFile f = lift . renameFile f

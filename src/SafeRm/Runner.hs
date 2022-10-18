@@ -22,12 +22,12 @@ import SafeRm.Data.Paths
     PathIndex (TrashHome),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
-import SafeRm.Effects.FileSystemWriter (FileSystemWriter (createDirectoryIfMissing))
-import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
-import SafeRm.Effects.Terminal (Terminal, putTextLn)
-import SafeRm.Effects.Timing (Timing)
+import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter (createDirectoryIfMissing))
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
+import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -78,13 +78,13 @@ import UnliftIO.Directory qualified as Dir
 --
 -- @since 0.1
 runSafeRm ::
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     MonadCallStack m,
     MonadUnliftIO m,
-    Terminal m,
-    Timing m
+    MonadTerminal m,
+    MonadSystemTime m
   ) =>
   m ()
 runSafeRm =
@@ -117,16 +117,16 @@ runSafeRm =
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
 -- custom env.
 runCmd ::
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
-    Terminal m,
-    Timing m
+    MonadTerminal m,
+    MonadSystemTime m
   ) =>
   Command ->
   m ()
@@ -150,7 +150,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
 -- @since 0.1
 getEnv ::
   ( HasCallStack,
-    FileSystemWriter m,
+    MonadFsWriter m,
     MonadCallStack m,
     MonadUnliftIO m
   ) =>
@@ -235,32 +235,32 @@ getConfiguration = do
         Left tomlErr -> throwCS $ MkExceptionI @TomlDecode tomlErr
 
 printIndex ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m,
-    Terminal m
+    MonadTerminal m
   ) =>
   m ()
 printIndex = SafeRm.getIndex >>= prettyDel
 
 printMetadata ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m,
-    Terminal m
+    MonadTerminal m
   ) =>
   m ()
 printMetadata = SafeRm.getMetadata >>= prettyDel
 
-prettyDel :: (HasCallStack, Pretty a, Terminal m) => a -> m ()
+prettyDel :: (HasCallStack, Pretty a, MonadTerminal m) => a -> m ()
 prettyDel =
   putTextLn
     . renderStrict

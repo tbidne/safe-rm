@@ -21,9 +21,9 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashLog),
   )
-import SafeRm.Effects.FileSystemReader
-import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadFsReader
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
@@ -95,9 +95,9 @@ instance Pretty Metadata where
 --
 -- @since 0.1
 toMetadata ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m
   ) =>
@@ -168,7 +168,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
       | otherwise = acc + 1
 
 getAllFiles ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m

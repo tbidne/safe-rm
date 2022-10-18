@@ -51,23 +51,23 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.FileSystemReader
-  ( FileSystemReader
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadFsReader
+  ( MonadFsReader
       ( canonicalizePath,
         doesDirectoryExist,
         doesFileExist,
         doesPathExist
       ),
   )
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( removePathForcibly,
         renameDirectory,
         renameFile
       ),
   )
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
-import SafeRm.Effects.Timing (Timestamp)
+import SafeRm.Effects.MonadSystemTime (Timestamp)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, RenameDuplicate, RestoreCollision),
@@ -167,7 +167,7 @@ headerNames = ["Type", "Name", "Original", "Created"]
 --
 -- @since 0.1
 toPathData ::
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m
@@ -225,7 +225,7 @@ toPathData currTime trashHome originalPath = do
 -- @since 0.1
 mkUniqPath ::
   forall m.
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m
@@ -278,8 +278,8 @@ mapOrd f x y = f x `compare` f y
 --
 -- @since 0.1
 mvTrashToOriginal ::
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m
@@ -305,7 +305,7 @@ mvTrashToOriginal (MkPathI trashHome) pd = do
 --
 -- @since 0.1
 deletePathData ::
-  FileSystemWriter m =>
+  MonadFsWriter m =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -317,7 +317,7 @@ deletePathData (MkPathI trashHome) pd = removePathForcibly trashPath
 --
 -- @since 0.1
 mvOriginalToTrash ::
-  (FileSystemWriter m, HasCallStack) =>
+  (MonadFsWriter m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -334,7 +334,7 @@ mvOriginalToTrash trashHome pd =
 --
 -- @since 0.1
 trashPathExists ::
-  (FileSystemReader m, HasCallStack) =>
+  (MonadFsReader m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m Bool
@@ -350,7 +350,7 @@ trashPathExists (MkPathI trashHome) pd = existsFn trashPath
 --
 -- @since 0.1
 originalPathExists ::
-  (FileSystemReader m, HasCallStack) =>
+  (MonadFsReader m, HasCallStack) =>
   PathData ->
   m Bool
 originalPathExists pd = existsFn (pd ^. #originalPath % #unPathI)

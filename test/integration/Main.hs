@@ -5,13 +5,13 @@ module Main (main) where
 
 import Integration.Prelude
 import Integration.SafeRm qualified as SafeRm
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly
       ),
   )
-import SafeRm.Effects.Terminal (Terminal (putStrLn))
+import SafeRm.Effects.MonadTerminal (MonadTerminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as T
 import Test.Tasty qualified as Tasty

@@ -1,8 +1,8 @@
--- | Provides the 'Terminal' typeclass.
+-- | Provides the 'MonadTerminal' typeclass.
 --
 -- @since 0.1
-module SafeRm.Effects.Terminal
-  ( Terminal (..),
+module SafeRm.Effects.MonadTerminal
+  ( MonadTerminal (..),
     putText,
     putTextLn,
     print,
@@ -17,8 +17,8 @@ import System.IO qualified as IO
 -- | Represents a terminal.
 --
 -- @since 0.1
-type Terminal :: (Type -> Type) -> Constraint
-class Monad m => Terminal m where
+type MonadTerminal :: (Type -> Type) -> Constraint
+class Monad m => MonadTerminal m where
   -- | Simple print function without newline.
   --
   -- @since 0.1
@@ -30,22 +30,22 @@ class Monad m => Terminal m where
   putStrLn :: HasCallStack => String -> m ()
 
 -- | @since 0.1
-instance Terminal IO where
+instance MonadTerminal IO where
   putStr = IO.putStr
   putStrLn = IO.putStrLn
 
-instance Terminal m => Terminal (ReaderT e m) where
+instance MonadTerminal m => MonadTerminal (ReaderT e m) where
   putStr = lift . putStr
   putStrLn = lift . putStrLn
 
 -- | @since 0.1
-putText :: (HasCallStack, Terminal m) => Text -> m ()
+putText :: (HasCallStack, MonadTerminal m) => Text -> m ()
 putText = putStr . T.unpack
 
 -- | @since 0.1
-putTextLn :: (HasCallStack, Terminal m) => Text -> m ()
+putTextLn :: (HasCallStack, MonadTerminal m) => Text -> m ()
 putTextLn = putStrLn . T.unpack
 
 -- | @since 0.1
-print :: forall m a. (HasCallStack, Show a, Terminal m) => a -> m ()
+print :: forall m a. (HasCallStack, Show a, MonadTerminal m) => a -> m ()
 print = putStrLn . show

@@ -18,11 +18,11 @@ where
 
 import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
-import SafeRm.Effects.FileSystemReader
-  ( FileSystemReader (doesDirectoryExist),
+import SafeRm.Effects.MonadFsReader
+  ( MonadFsReader (doesDirectoryExist),
   )
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly,
         writeFile

@@ -40,7 +40,7 @@ import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
-import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Prelude
 import SafeRm.Runner.Command
   ( Command

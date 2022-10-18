@@ -4,8 +4,8 @@
 -- | Provides logging utilities.
 --
 -- @since 0.1
-module SafeRm.Effects.Logger
-  ( LoggerContext (..),
+module SafeRm.Effects.MonadLoggerContext
+  ( MonadLoggerContext (..),
     Namespace (..),
     addNamespace,
 
@@ -31,8 +31,8 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
 import Language.Haskell.TH (Loc (loc_filename, loc_start))
-import SafeRm.Effects.Timing (Timing (getSystemTime))
-import SafeRm.Effects.Timing qualified as Timing
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime))
+import SafeRm.Effects.MonadSystemTime qualified as MonadSystemTime
 import SafeRm.Prelude
 import System.Log.FastLogger qualified as FL
 
@@ -65,7 +65,7 @@ displayNamespace =
 -- | Adds context to 'MonadLogger'.
 --
 -- @since 0.1
-class MonadLogger m => LoggerContext m where
+class MonadLogger m => MonadLoggerContext m where
   -- | Retrieves the namespace.
   --
   -- @since 0.1
@@ -79,7 +79,7 @@ class MonadLogger m => LoggerContext m where
 -- | Adds to the namespace.
 --
 -- @since 0.1
-addNamespace :: (HasCallStack, LoggerContext m) => Text -> m a -> m a
+addNamespace :: (HasCallStack, MonadLoggerContext m) => Text -> m a -> m a
 addNamespace txt = localNamespace (over' #unNamespace (|> txt))
 
 -- | Reads the 'LogLevel'.
@@ -110,7 +110,7 @@ logLevelStrings = "[none|error|warn|info|debug]"
 --
 -- @since 0.1
 formatLog ::
-  (HasCallStack, LoggerContext m, Timing m) =>
+  (HasCallStack, MonadLoggerContext m, MonadSystemTime m) =>
   ToLogStr msg =>
   Bool ->
   Loc ->
@@ -123,7 +123,7 @@ formatLog withNewline loc = formatLogLoc withNewline (Just loc)
 --
 -- @since 0.1
 formatLogNoLoc ::
-  (HasCallStack, LoggerContext m, Timing m) =>
+  (HasCallStack, MonadLoggerContext m, MonadSystemTime m) =>
   ToLogStr msg =>
   Bool ->
   LogLevel ->
@@ -136,8 +136,8 @@ formatLogNoLoc withNewline = formatLogLoc withNewline Nothing
 -- @since 0.1
 formatLogLoc ::
   ( HasCallStack,
-    LoggerContext m,
-    Timing m,
+    MonadLoggerContext m,
+    MonadSystemTime m,
     ToLogStr msg
   ) =>
   Bool ->
@@ -146,7 +146,7 @@ formatLogLoc ::
   msg ->
   m LogStr
 formatLogLoc withNewline mloc lvl msg = do
-  timestampTxt <- toLogStr . Timing.toString <$> getSystemTime
+  timestampTxt <- toLogStr . MonadSystemTime.toString <$> getSystemTime
   namespace <- getNamespace
   let locTxt = maybe "" (brackets . toLogStr . partialLoc) mloc
       namespaceTxt = toLogStr $ displayNamespace namespace

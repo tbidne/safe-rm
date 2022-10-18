@@ -9,13 +9,13 @@ module SafeRm.Runner.SafeRmT
 where
 
 import Data.ByteString qualified as BS
-import SafeRm.Effects.FileSystemReader (FileSystemReader)
-import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
-import SafeRm.Effects.Logger (LoggerContext)
-import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.MonadCallStack (MonadCallStack)
-import SafeRm.Effects.Terminal (Terminal)
-import SafeRm.Effects.Timing (Timing)
+import SafeRm.Effects.MonadFsReader (MonadFsReader)
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
+import SafeRm.Effects.MonadLoggerContext qualified as Logger
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
+import SafeRm.Effects.MonadTerminal (MonadTerminal)
 import SafeRm.Prelude
 import SafeRm.Runner.Env (Env, LogFile, handle, logLevel)
 
@@ -30,9 +30,9 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       -- | @since 0.1
       Applicative,
       -- | @since 0.1
-      FileSystemReader,
+      MonadFsReader,
       -- | @since 0.1
-      FileSystemWriter,
+      MonadFsWriter,
       -- | @since 0.1
       Monad,
       -- | @since 0.1
@@ -42,16 +42,16 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       -- | @since 0.1
       MonadIO,
       -- | @since 0.1
-      Terminal,
+      MonadTerminal,
       -- | @since 0.1
-      Timing,
+      MonadSystemTime,
       -- | @since 0.1
       MonadUnliftIO
     )
     via (ReaderT env m)
 
 -- | @since 0.1
-instance (MonadIO m, Timing m) => MonadLogger (SafeRmT Env m) where
+instance (MonadIO m, MonadSystemTime m) => MonadLogger (SafeRmT Env m) where
   monadLoggerLog loc _src lvl msg = do
     mhandle <- asks (preview (#logEnv % #logFile %? handleAndLevel))
     case mhandle of
@@ -69,7 +69,7 @@ instance (MonadIO m, Timing m) => MonadLogger (SafeRmT Env m) where
           (\lf (h, ll) -> lf {logLevel = ll, handle = h})
 
 -- | @since 0.1
-instance (MonadIO m, Timing m) => LoggerContext (SafeRmT Env m) where
+instance (MonadIO m, MonadSystemTime m) => MonadLoggerContext (SafeRmT Env m) where
   getNamespace = asks (view (#logEnv % #logNamespace))
   localNamespace = local . over' (#logEnv % #logNamespace)
 

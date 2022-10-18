@@ -36,23 +36,23 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
-import SafeRm.Effects.FileSystemReader
-  ( FileSystemReader
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack), throwCS)
+import SafeRm.Effects.MonadFsReader
+  ( MonadFsReader
       ( doesDirectoryExist,
         doesFileExist,
         getFileSize
       ),
   )
-import SafeRm.Effects.FileSystemWriter
-  ( FileSystemWriter
+import SafeRm.Effects.MonadFsWriter
+  ( MonadFsWriter
       ( createDirectoryIfMissing,
         removeDirectoryRecursive
       ),
   )
-import SafeRm.Effects.Logger (LoggerContext, addNamespace)
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack), throwCS)
-import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
-import SafeRm.Effects.Timing (Timing (getSystemTime))
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime))
+import SafeRm.Effects.MonadTerminal (MonadTerminal (putStr, putStrLn), putTextLn)
 import SafeRm.Env
   ( HasTrashHome (getTrashHome),
     getTrashIndex,
@@ -74,15 +74,15 @@ import System.IO qualified as IO
 -- @since 0.1
 delete ::
   forall env m.
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
-    Timing m
+    MonadSystemTime m
   ) =>
   UniqueSeq (PathI OriginalPath) ->
   m ()
@@ -139,15 +139,15 @@ delete paths = addNamespace "delete" $ do
 -- @since 0.1
 deletePermanently ::
   forall env m.
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
-    Terminal m
+    MonadTerminal m
   ) =>
   Bool ->
   UniqueSeq (PathI TrashName) ->
@@ -214,10 +214,10 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 -- @since 0.1
 getIndex ::
   forall env m.
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m
@@ -237,10 +237,10 @@ getIndex = addNamespace "getIndex" $ do
 -- @since 0.1
 getMetadata ::
   forall env m.
-  ( FileSystemReader m,
+  ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m
@@ -262,11 +262,11 @@ getMetadata = addNamespace "getMetadata" $ do
 -- @since 0.1
 restore ::
   forall env m.
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m
@@ -311,14 +311,14 @@ restore paths = addNamespace "restore" $ do
 -- @since 0.1
 emptyTrash ::
   forall env m.
-  ( FileSystemReader m,
-    FileSystemWriter m,
+  ( MonadFsReader m,
+    MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    LoggerContext m,
+    MonadLoggerContext m,
     MonadIO m,
     MonadReader env m,
-    Terminal m
+    MonadTerminal m
   ) =>
   Bool ->
   m ()
