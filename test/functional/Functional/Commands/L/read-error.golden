@@ -3,8 +3,8 @@ Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough inp
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:185:7 in <package>:SafeRm.Data.Index
-  readIndexWithFold, called at src/SafeRm/Data/Index.hs:114:18 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:184:7 in <package>:SafeRm.Data.Index
+  readIndexWithFold, called at src/SafeRm/Data/Index.hs:113:18 in <package>:SafeRm.Data.Index
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l2/.trash/.index.csv
@@ -14,7 +14,7 @@ LOGS LIST
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:185:7 in <package>:SafeRm.Data.Index
-  readIndexWithFold, called at src/SafeRm/Data/Index.hs:114:18 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:184:7 in <package>:SafeRm.Data.Index
+  readIndexWithFold, called at src/SafeRm/Data/Index.hs:113:18 in <package>:SafeRm.Data.Index
 
 

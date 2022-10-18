@@ -25,21 +25,21 @@ Encountered exception(s)
 - Path not found: f4
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:307:9 in <package>:SafeRm
+  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 - Path not found: f3
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:307:9 in <package>:SafeRm
+  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:310:5 in <package>:SafeRm
+  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
@@ -58,21 +58,21 @@ LOGS RESTORE
 - Path not found: f4
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:307:9 in <package>:SafeRm
+  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 - Path not found: f3
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:307:9 in <package>:SafeRm
+  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:310:5 in <package>:SafeRm
+  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
   restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 

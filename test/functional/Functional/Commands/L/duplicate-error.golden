@@ -3,8 +3,8 @@ Trash paths should be unique, but found multiple entries in the trash index '<di
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:227:5 in <package>:SafeRm.Data.Index
-  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:226:5 in <package>:SafeRm.Data.Index
+  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:119:7 in <package>:SafeRm.Data.Index
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l4/.trash/.index.csv
@@ -15,7 +15,7 @@ LOGS LIST
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:227:5 in <package>:SafeRm.Data.Index
-  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:226:5 in <package>:SafeRm.Data.Index
+  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:119:7 in <package>:SafeRm.Data.Index
 
 

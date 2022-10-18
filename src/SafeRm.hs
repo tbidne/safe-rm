@@ -1,4 +1,3 @@
-{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 

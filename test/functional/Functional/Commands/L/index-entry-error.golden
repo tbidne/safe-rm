@@ -3,8 +3,8 @@ The path 'foo' was not found in the trash directory '<dir>/l3/.trash' despite be
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:247:5 in <package>:SafeRm.Data.Index
-  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:121:7 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:246:5 in <package>:SafeRm.Data.Index
+  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l3/.trash/.index.csv
@@ -14,7 +14,7 @@ LOGS LIST
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:247:5 in <package>:SafeRm.Data.Index
-  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:121:7 in <package>:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:246:5 in <package>:SafeRm.Data.Index
+  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
 
 

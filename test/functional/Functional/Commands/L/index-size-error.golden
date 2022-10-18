@@ -4,7 +4,7 @@ Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata
-  toMetadata, called at src/SafeRm.hs:256:13 in <package>:SafeRm
+  toMetadata, called at src/SafeRm.hs:255:13 in <package>:SafeRm
   getMetadata, called at src/SafeRm/Runner.hs:269:17 in <package>:SafeRm.Runner
   printMetadata, called at src/SafeRm/Runner.hs:146:29 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
@@ -26,7 +26,7 @@ LOGS LIST
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
   throwCS, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata
-  toMetadata, called at src/SafeRm.hs:256:13 in <package>:SafeRm
+  toMetadata, called at src/SafeRm.hs:255:13 in <package>:SafeRm
   getMetadata, called at src/SafeRm/Runner.hs:269:17 in <package>:SafeRm.Runner
   printMetadata, called at src/SafeRm/Runner.hs:146:29 in <package>:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
