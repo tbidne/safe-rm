@@ -13,6 +13,7 @@ import SafeRm.Effects.FileSystemReader (FileSystemReader)
 import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.MonadCallStack (MonadCallStack)
 import SafeRm.Effects.Terminal (Terminal)
 import SafeRm.Effects.Timing (Timing)
 import SafeRm.Prelude
@@ -34,6 +35,8 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       FileSystemWriter,
       -- | @since 0.1
       Monad,
+      -- | @since 0.1
+      MonadCallStack,
       -- | @since 0.1
       MonadReader env,
       -- | @since 0.1

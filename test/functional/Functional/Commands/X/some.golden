@@ -24,22 +24,21 @@ Encountered exception(s)
 
 - Path not found: f4
 CallStack (from HasCallStack):
-  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
-  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 - Path not found: f3
 CallStack (from HasCallStack):
-  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
-  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:198:5 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:209:5 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug] Trash home: <dir>/x4/.trash
@@ -55,22 +54,21 @@ LOGS PERM DELETE
 
 - Path not found: f4
 CallStack (from HasCallStack):
-  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
-  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 - Path not found: f3
 CallStack (from HasCallStack):
-  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
-  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:206:9 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:198:5 in safe-rm-0.1-inplace:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:209:5 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 TERMINAL LIST 2

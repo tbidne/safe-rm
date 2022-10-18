@@ -23,6 +23,7 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Effects.FileSystemReader
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
@@ -97,6 +98,7 @@ toMetadata ::
   ( FileSystemReader m,
     HasCallStack,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m
   ) =>
   (PathI TrashHome, PathI TrashIndex, PathI TrashLog) ->
@@ -168,6 +170,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
 getAllFiles ::
   ( FileSystemReader m,
     HasCallStack,
+    MonadCallStack m,
     MonadIO m
   ) =>
   FilePath ->

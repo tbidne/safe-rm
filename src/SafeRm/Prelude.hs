@@ -1,5 +1,3 @@
-{-# LANGUAGE ImplicitParams #-}
-
 -- | Custom prelude.
 --
 -- @since 0.1
@@ -9,9 +7,6 @@ module SafeRm.Prelude
     -- * Text
     showt,
     displayExceptiont,
-
-    -- * Exception
-    throwCS,
   )
 where
 
@@ -110,6 +105,7 @@ import Optics.Core as X
     lens,
     over',
     preview,
+    prism,
     review,
     set',
     view,
@@ -164,13 +160,3 @@ showt = T.pack . show
 -- | @since 0.1
 displayExceptiont :: Exception e => e -> Text
 displayExceptiont = T.pack . displayException
-
--- | 'throwIO' with a 'callStack'.
---
--- @since 0.1
-throwCS ::
-  forall m e a.
-  (Exception e, HasCallStack, MonadIO m) =>
-  (CallStack -> e) ->
-  m a
-throwCS f = throwIO (f ?callStack)

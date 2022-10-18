@@ -9,6 +9,7 @@ where
 import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString qualified as BS
 import Data.Bytes (Bytes (MkBytes), Size (B))
+import SafeRm.Effects.MonadCallStack (throwCS)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound),

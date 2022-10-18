@@ -50,6 +50,7 @@ library
     SafeRm.Effects.FileSystemReader
     SafeRm.Effects.FileSystemWriter
     SafeRm.Effects.Logger
+    SafeRm.Effects.MonadCallStack
     SafeRm.Effects.Terminal
     SafeRm.Effects.Timing
     SafeRm.Env

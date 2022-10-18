@@ -14,16 +14,18 @@ Encountered exception(s)
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:289:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:276:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:291:5 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:307:5 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r4/.trash
@@ -32,24 +34,27 @@ LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore.restoring][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.restore.restoring][Warn] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:289:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:276:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.restore][Info] Restored: 
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:289:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:276:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:291:5 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:307:5 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 

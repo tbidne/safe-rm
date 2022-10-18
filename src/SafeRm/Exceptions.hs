@@ -4,9 +4,12 @@
 --
 -- @since 0.1
 module SafeRm.Exceptions
-  ( ExceptionI (..),
+  ( -- * Types
+    ExceptionI (..),
     ExceptionIndex (..),
     ExceptionF,
+
+    -- * Functions
     wrapCS,
   )
 where
@@ -19,6 +22,7 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (OriginalPath, TrashHome, TrashIndex, TrashName),
   )
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Prelude
 import TOML (TOMLError, renderTOMLError)
 
@@ -240,7 +244,13 @@ instance Exception (ExceptionI SomeExceptions) where
 -- in an 'ExceptionI' 'OneException' and rethrown.
 --
 -- @since 0.1
-wrapCS :: (HasCallStack, MonadUnliftIO m) => m a -> m a
+wrapCS ::
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadUnliftIO m
+  ) =>
+  m a ->
+  m a
 wrapCS =
   try >=> \case
     Left ex -> throwCS @_ @(ExceptionI OneException) (MkExceptionI ex)

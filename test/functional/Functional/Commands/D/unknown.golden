@@ -3,39 +3,44 @@ Encountered exception(s)
 
 - Path not found: <dir>/d3/bad file
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:213:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:99:15 in safe-rm-0.1-inplace:SafeRm
-  delete, called at src/SafeRm/Runner.hs:133:23 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:102:15 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:127:5 in safe-rm-0.1-inplace:SafeRm
-  delete, called at src/SafeRm/Runner.hs:133:23 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:135:5 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 LOGS DELETE
 [2020-05-31 12:00:00][functional.delete][Debug] Trash home: <dir>/d3/.trash
 [2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d3/bad file
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:213:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:99:15 in safe-rm-0.1-inplace:SafeRm
-  delete, called at src/SafeRm/Runner.hs:133:23 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:102:15 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.delete][Info] Deleted: 
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Path not found: <dir>/d3/bad file
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/PathData.hs:213:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:99:15 in safe-rm-0.1-inplace:SafeRm
-  delete, called at src/SafeRm/Runner.hs:133:23 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:102:15 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:127:5 in safe-rm-0.1-inplace:SafeRm
-  delete, called at src/SafeRm/Runner.hs:133:23 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
+  throwCS, called at src/SafeRm.hs:135:5 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:227:36 in <package>:Functional.Prelude
 
 

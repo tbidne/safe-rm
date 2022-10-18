@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -49,6 +50,7 @@ import SafeRm.Effects.FileSystemWriter
       ),
   )
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack), throwCS)
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Effects.Timing (Timing (getSystemTime))
 import SafeRm.Env
@@ -58,7 +60,7 @@ import SafeRm.Env
   )
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
-    ExceptionIndex (SomeExceptions),
+    ExceptionIndex (PathNotFound, SomeExceptions),
     wrapCS,
   )
 import SafeRm.Prelude
@@ -77,6 +79,7 @@ delete ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
     Timing m
@@ -124,6 +127,11 @@ delete paths = addNamespace "delete" $ do
     -- we log in the SafeRm API are those that are non-fatal i.e. ones we
     -- catch. Unhandled ones are left to bubble up, where the runner can
     -- cath and log them.
+
+    -- NOTE: We do not log these exceptions. In general, the only exceptions
+    -- we log in the SafeRm API are those that are non-fatal i.e. ones we
+    -- catch. Unhandled ones are left to bubble up, where the runner can
+    -- cath and log them.
     throwCS . MkExceptionI @SomeExceptions
 
 -- | Permanently deletes the paths from the trash.
@@ -136,6 +144,7 @@ deletePermanently ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
     Terminal m
@@ -149,7 +158,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
-      (searchExs, toDelete) = Index.searchIndex paths index
+      (searchFailures, toDelete) = Index.searchIndex paths index
   deletedPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
 
@@ -194,6 +203,8 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
   $(logInfo) ("Deleted: " <> showMapTrashPaths deletedPaths)
 
   exceptions <- readIORef exceptionsRef
+  cs <- getCallStack
+  let searchExs = pathsToException cs searchFailures
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
     throwCS . MkExceptionI @SomeExceptions
 
@@ -207,6 +218,7 @@ getIndex ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m,
     MonadReader env m
   ) =>
@@ -229,6 +241,7 @@ getMetadata ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m,
     MonadReader env m
   ) =>
@@ -254,6 +267,7 @@ restore ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m
   ) =>
@@ -264,7 +278,7 @@ restore paths = addNamespace "restore" $ do
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
   index <- Index.readIndex indexPath
   let indexMap = index ^. #unIndex
-      (searchExs, toRestore) = Index.searchIndex paths index
+      (searchFailures, toRestore) = Index.searchIndex paths index
 
   restoredPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
@@ -287,6 +301,8 @@ restore paths = addNamespace "restore" $ do
   $(logInfo) ("Restored: " <> showMapOrigPaths restoredPaths)
 
   exceptions <- readIORef exceptionsRef
+  cs <- getCallStack
+  let searchExs = pathsToException cs searchFailures
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
     throwCS . MkExceptionI @SomeExceptions
 
@@ -347,3 +363,16 @@ noBuffering :: (HasCallStack, MonadIO m) => m ()
 noBuffering = liftIO $ wrapCS $ buffOff IO.stdin *> buffOff IO.stdout
   where
     buffOff h = IO.hSetBuffering h NoBuffering
+
+pathsToException ::
+  Foldable t =>
+  CallStack ->
+  t (PathI 'TrashName) ->
+  [SomeException]
+pathsToException cs = foldr go []
+  where
+    go fp acc = pathToException cs fp : acc
+
+pathToException :: CallStack -> PathI TrashName -> SomeException
+pathToException cs (MkPathI p) =
+  toException $ MkExceptionI @PathNotFound p cs

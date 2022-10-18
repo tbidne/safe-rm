@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -39,6 +40,7 @@ import SafeRm.Effects.Logger
     Namespace,
   )
 import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), print)
 import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
 import SafeRm.Env (HasTrashHome)
@@ -74,6 +76,9 @@ newtype LoggerT a = MkLoggerT (ReaderT LoggerEnv IO a)
 
 runLoggerT :: LoggerT a -> LoggerEnv -> IO a
 runLoggerT (MkLoggerT r) = runReaderT r
+
+instance MonadCallStack LoggerT where
+  getCallStack = pure $ fixPackage ?callStack
 
 instance MonadLogger LoggerT where
   monadLoggerLog loc _src lvl msg = do
@@ -192,8 +197,9 @@ transformEnv env = do
         logNamespace = "logging-tests"
       }
 
--- ByteString does not appear to offer a "replace" function, so we convert to
--- (lazy) text, perform the replace, then convert to lazy bytestring.
+-- HACK: See the note on Functional.Prelude.replaceDir. Note that we cannot
+-- reuse that function directly since that operates on Text, whereas we have
+-- to use ByteString here. Thus we implement the same idea here.
 replaceDir :: FilePath -> ByteString -> BSL.ByteString
 replaceDir fp =
   TLEnc.encodeUtf8

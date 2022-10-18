@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -29,6 +30,9 @@ module Functional.Prelude
     assertFilesDoNotExist,
     assertDirectoriesExist,
     assertDirectoriesDoNotExist,
+
+    -- * Misc
+    fixPackage,
   )
 where
 
@@ -39,6 +43,10 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime))
 import Data.Time.LocalTime (midday)
+import GHC.Stack.Types
+  ( CallStack (PushCallStack),
+    SrcLoc (srcLocPackage),
+  )
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Effects.FileSystemReader
@@ -58,6 +66,7 @@ import SafeRm.Effects.Logger
     Namespace,
   )
 import SafeRm.Effects.Logger qualified as Logger
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn))
 import SafeRm.Effects.Timing (Timestamp (MkTimestamp), Timing (getSystemTime))
 import SafeRm.Env (HasTrashHome)
@@ -114,6 +123,9 @@ instance FileSystemReader FuncIO where
   doesPathExist = liftIO . doesPathExist
   canonicalizePath = liftIO . canonicalizePath
   listDirectory = liftIO . listDirectory
+
+instance MonadCallStack FuncIO where
+  getCallStack = pure $ fixPackage ?callStack
 
 instance Terminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
@@ -270,6 +282,25 @@ mkFuncEnv toml logsRef terminalRef = do
       Nothing -> die "Setup error, no trash home on config"
       Just th -> pure th
 
+-- HACK: Our naive golden tests require exact string quality, which is a
+-- problem since the full paths are non-deterministic, depending on the
+-- environment. Here are some possible remedies:
+--
+-- 1. Don't use golden tests, or use the function that allows us to pass a
+--    custom comparator.
+--    R: Golden tests make updating the output extremely convenient, we're
+--       not ready to give up on an easy diff.
+-- 2. Use a typeclass to mock the directory so it can be deterministic.
+--    R: The main problem here is that we need a _real_ path since we are
+--       interacting with the actual filesystem. We would need to somehow
+--       separate the "logged path" vs. the "used path" which sounds very
+--       complicated.
+-- 3. Search the output text for the non-deterministic path, and replace it
+--    it with a fixed substitute.
+--    R. This is something of a "hack", though it is simple and easy to
+--       implement.
+--
+-- We currently use option 3.
 replaceDir :: FilePath -> Text -> Text
 replaceDir fp = T.replace (T.pack fp) "<dir>"
 
@@ -281,3 +312,11 @@ txtToBuilder = Builder.byteString . TEnc.encodeUtf8
 
 exToBuilder :: Exception e => FilePath -> e -> Builder
 exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException
+
+fixPackage :: CallStack -> CallStack
+fixPackage (PushCallStack a src cs) =
+  PushCallStack a (fixSrcPackage src) (fixPackage cs)
+fixPackage other = other
+
+fixSrcPackage :: SrcLoc -> SrcLoc
+fixSrcPackage = set' #srcLocPackage "<package>"

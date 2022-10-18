@@ -46,11 +46,11 @@ import SafeRm.Effects.FileSystemWriter
       ),
   )
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex
       ( DuplicateIndexPath,
-        PathNotFound,
         ReadIndex,
         TrashPathNotFound
       ),
@@ -104,6 +104,7 @@ instance Pretty Index where
 readIndex ::
   ( FileSystemReader m,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m
   ) =>
   PathI TrashIndex ->
@@ -126,35 +127,26 @@ readIndex indexPath = addNamespace "readIndex" $ do
 --
 -- @since 0.1
 searchIndex ::
-  HasCallStack =>
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
   UniqueSeq (PathI TrashName) ->
   -- | The trash index.
   Index ->
   -- | The trash data matching the input keys.
-  ([SomeException], UniqueSeq PathData)
+  ([PathI TrashName], UniqueSeq PathData)
 searchIndex keys (MkIndex index) =
   foldr foldKeys mempty trashKeys
   where
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = USeq.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
-      HasCallStack =>
       PathI TrashName ->
-      ([SomeException], UniqueSeq PathData) ->
-      ([SomeException], UniqueSeq PathData)
+      ([PathI TrashName], UniqueSeq PathData) ->
+      ([PathI TrashName], UniqueSeq PathData)
     foldKeys trashKey acc@(exs, found) =
       case HMap.lookup trashKey index of
-        Nothing ->
-          -- NOTE: since this is the only exception type we do not actually
-          -- have to do this; we could simply return the offending trashKey.
-          -- Nevertheless we turn these into exceptions since it makes the
-          -- callers' lives easier.
-          prependEx
-            (MkExceptionI @PathNotFound (view #unPathI trashKey) ?callStack)
-            acc
+        Nothing -> prependBadPath trashKey acc
         Just pd -> (exs, USeq.append found pd)
-    prependEx ex = over' _1 (toException ex :)
+    prependBadPath p = over' _1 (p :)
 
 -- | Reads a csv index file and applies the fold function to each
 -- 'PathData' encountered. The fold function allows 'IO' in case it is needed
@@ -166,6 +158,7 @@ readIndexWithFold ::
   ( FileSystemReader m,
     HasCallStack,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m,
     Monoid a
   ) =>
@@ -221,7 +214,10 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 --
 -- @since 0.1
 throwIfDuplicates ::
-  (HasCallStack, MonadIO m) =>
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadIO m
+  ) =>
   PathI TrashIndex ->
   HashMap (PathI TrashName) PathData ->
   PathData ->
@@ -239,6 +235,7 @@ throwIfDuplicates indexPath trashMap pd =
 throwIfTrashNonExtant ::
   ( FileSystemReader m,
     HasCallStack,
+    MonadCallStack m,
     MonadIO m
   ) =>
   PathI TrashHome ->

@@ -66,6 +66,7 @@ import SafeRm.Effects.FileSystemWriter
         renameFile
       ),
   )
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Effects.Timing (Timestamp)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -168,6 +169,7 @@ headerNames = ["Type", "Name", "Original", "Created"]
 toPathData ::
   ( FileSystemReader m,
     HasCallStack,
+    MonadCallStack m,
     MonadIO m
   ) =>
   Timestamp ->
@@ -225,6 +227,7 @@ mkUniqPath ::
   forall m.
   ( FileSystemReader m,
     HasCallStack,
+    MonadCallStack m,
     MonadIO m
   ) =>
   PathI TrashName ->
@@ -278,6 +281,7 @@ mvTrashToOriginal ::
   ( FileSystemReader m,
     FileSystemWriter m,
     HasCallStack,
+    MonadCallStack m,
     MonadIO m
   ) =>
   PathI TrashHome ->

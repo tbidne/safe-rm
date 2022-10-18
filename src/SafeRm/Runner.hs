@@ -25,6 +25,7 @@ import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
 import SafeRm.Effects.FileSystemWriter (FileSystemWriter (createDirectoryIfMissing))
 import SafeRm.Effects.Logger (LoggerContext)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Effects.Timing (Timing)
 import SafeRm.Env (HasTrashHome)
@@ -80,6 +81,7 @@ runSafeRm ::
   ( FileSystemReader m,
     FileSystemWriter m,
     HasCallStack,
+    MonadCallStack m,
     MonadUnliftIO m,
     Terminal m,
     Timing m
@@ -120,6 +122,7 @@ runCmd ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
     Terminal m,
@@ -145,7 +148,13 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
 -- by SafeRm.
 --
 -- @since 0.1
-getEnv :: (HasCallStack, FileSystemWriter m, MonadUnliftIO m) => m (Env, Command)
+getEnv ::
+  ( HasCallStack,
+    FileSystemWriter m,
+    MonadCallStack m,
+    MonadUnliftIO m
+  ) =>
+  m (Env, Command)
 getEnv = do
   (mergedConfig, command) <- getConfiguration
 
@@ -184,7 +193,12 @@ getEnv = do
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: (HasCallStack, MonadUnliftIO m) => m (TomlConfig, Command)
+getConfiguration ::
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadUnliftIO m
+  ) =>
+  m (TomlConfig, Command)
 getConfiguration = do
   -- get CLI args
   args <- liftIO getArgs
@@ -225,6 +239,7 @@ printIndex ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m,
     MonadReader env m,
     Terminal m
@@ -237,6 +252,7 @@ printMetadata ::
     HasCallStack,
     HasTrashHome env,
     LoggerContext m,
+    MonadCallStack m,
     MonadIO m,
     MonadReader env m,
     Terminal m
@@ -256,7 +272,10 @@ prettyDel =
 --
 -- @since 0.1
 trashOrDefault ::
-  (HasCallStack, MonadUnliftIO m) =>
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadUnliftIO m
+  ) =>
   Maybe (PathI TrashHome) ->
   m (PathI TrashHome)
 trashOrDefault = maybe getTrashHome pure
@@ -264,5 +283,10 @@ trashOrDefault = maybe getTrashHome pure
 -- | Retrieves the default trash directory.
 --
 -- @since 0.1
-getTrashHome :: (HasCallStack, MonadUnliftIO m) => m (PathI TrashHome)
+getTrashHome ::
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadUnliftIO m
+  ) =>
+  m (PathI TrashHome)
 getTrashHome = MkPathI . (</> ".trash") <$> wrapCS Dir.getHomeDirectory
