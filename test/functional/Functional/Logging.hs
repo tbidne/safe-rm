@@ -21,10 +21,16 @@ import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Effects.FileSystemReader
   ( FileSystemReader
-      ( getFileSize,
+      ( canonicalizePath,
+        doesDirectoryExist,
+        doesFileExist,
+        doesPathExist,
+        getFileSize,
+        listDirectory,
         readFile
       ),
   )
+import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
 import SafeRm.Effects.Logger
   ( LoggerContext
       ( getNamespace,
@@ -57,6 +63,7 @@ deriving anyclass instance HasTrashHome LoggerEnv
 newtype LoggerT a = MkLoggerT (ReaderT LoggerEnv IO a)
   deriving
     ( Applicative,
+      FileSystemWriter,
       Functor,
       Monad,
       MonadIO,
@@ -85,6 +92,11 @@ instance LoggerContext LoggerT where
 instance FileSystemReader LoggerT where
   getFileSize = const (pure $ afromInteger 5)
   readFile = liftIO . readFile
+  doesFileExist = liftIO . doesFileExist
+  doesDirectoryExist = liftIO . doesDirectoryExist
+  doesPathExist = liftIO . doesPathExist
+  canonicalizePath = liftIO . canonicalizePath
+  listDirectory = liftIO . listDirectory
 
 instance Terminal LoggerT where
   putStr = const (pure ())

@@ -1,7 +1,8 @@
 EXCEPTION LIST
 Trash paths should be unique, but found multiple entries in the trash index '<dir>/l4/.trash/.index.csv' for the following path: foo
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/Index.hs:223:5 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:231:5 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:119:7 in safe-rm-0.1-inplace:SafeRm.Data.Index
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l4/.trash/.index.csv
@@ -10,6 +11,7 @@ LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional][Error] Trash paths should be unique, but found multiple entries in the trash index '<dir>/l4/.trash/.index.csv' for the following path: foo
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm/Data/Index.hs:223:5 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  throwCS, called at src/SafeRm/Data/Index.hs:231:5 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:119:7 in safe-rm-0.1-inplace:SafeRm.Data.Index
 
 

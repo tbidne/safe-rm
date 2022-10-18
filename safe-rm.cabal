@@ -48,6 +48,7 @@ library
     SafeRm.Data.PathType
     SafeRm.Data.UniqueSeq
     SafeRm.Effects.FileSystemReader
+    SafeRm.Effects.FileSystemWriter
     SafeRm.Effects.Logger
     SafeRm.Effects.Terminal
     SafeRm.Effects.Timing
@@ -101,7 +102,6 @@ library file-utils
     , bytestring
     , safe-rm
     , text
-    , unliftio
 
   hs-source-dirs:   lib/file-utils
   default-language: GHC2021

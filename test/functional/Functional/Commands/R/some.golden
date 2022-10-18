@@ -23,13 +23,23 @@ EXCEPTION RESTORE
 Encountered exception(s)
 
 - Path not found: f4
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:267:32 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 - Path not found: f3
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:267:32 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:269:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:291:5 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r5/.trash
@@ -44,13 +54,23 @@ LOGS RESTORE
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Path not found: f4
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:267:32 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 - Path not found: f3
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:267:32 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:269:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:291:5 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:136:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 TERMINAL LIST 2

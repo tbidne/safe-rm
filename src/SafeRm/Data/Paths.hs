@@ -121,20 +121,28 @@ liftPathI' = liftPathI
 -- | Lifts an effectful 'FilePath' transformation to 'PathI'.
 --
 -- @since 0.1
-liftPathIF :: Functor f => (FilePath -> f FilePath) -> PathI i -> f (PathI j)
+liftPathIF ::
+  (Functor f, HasCallStack) =>
+  (HasCallStack => FilePath -> f FilePath) ->
+  PathI i ->
+  f (PathI j)
 liftPathIF f = fmap MkPathI . applyPathI f
 
 -- | 'liftPathIF' specialized to the same index. This should be preferred
 -- as the former is easier to use incorrectly.
 --
 -- @since 0.1
-liftPathIF' :: Functor f => (FilePath -> f FilePath) -> PathI i -> f (PathI i)
+liftPathIF' ::
+  Functor f =>
+  (HasCallStack => FilePath -> f FilePath) ->
+  PathI i ->
+  f (PathI i)
 liftPathIF' = liftPathIF
 
 -- | Lifts a 'FilePath' function to 'PathI'.
 --
 -- @since 0.1
-applyPathI :: (FilePath -> a) -> PathI i -> a
+applyPathI :: HasCallStack => (HasCallStack => FilePath -> a) -> PathI i -> a
 applyPathI f = f . view #unPathI
 
 -- | Returns the trash index's home directory.

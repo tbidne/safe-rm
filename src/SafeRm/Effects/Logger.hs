@@ -69,17 +69,17 @@ class MonadLogger m => LoggerContext m where
   -- | Retrieves the namespace.
   --
   -- @since 0.1
-  getNamespace :: m Namespace
+  getNamespace :: HasCallStack => m Namespace
 
   -- | Locally modifies the namespace.
   --
   -- @since 0.1
-  localNamespace :: (Namespace -> Namespace) -> m a -> m a
+  localNamespace :: HasCallStack => (Namespace -> Namespace) -> m a -> m a
 
 -- | Adds to the namespace.
 --
 -- @since 0.1
-addNamespace :: LoggerContext m => Text -> m a -> m a
+addNamespace :: (HasCallStack, LoggerContext m) => Text -> m a -> m a
 addNamespace txt = localNamespace (over' #unNamespace (|> txt))
 
 -- | Reads the 'LogLevel'.
@@ -110,7 +110,7 @@ logLevelStrings = "[none|error|warn|info|debug]"
 --
 -- @since 0.1
 formatLog ::
-  (LoggerContext m, Timing m) =>
+  (HasCallStack, LoggerContext m, Timing m) =>
   ToLogStr msg =>
   Bool ->
   Loc ->
@@ -123,7 +123,7 @@ formatLog withNewline loc = formatLogLoc withNewline (Just loc)
 --
 -- @since 0.1
 formatLogNoLoc ::
-  (LoggerContext m, Timing m) =>
+  (HasCallStack, LoggerContext m, Timing m) =>
   ToLogStr msg =>
   Bool ->
   LogLevel ->
@@ -135,8 +135,11 @@ formatLogNoLoc withNewline = formatLogLoc withNewline Nothing
 --
 -- @since 0.1
 formatLogLoc ::
-  (LoggerContext m, Timing m) =>
-  ToLogStr msg =>
+  ( HasCallStack,
+    LoggerContext m,
+    Timing m,
+    ToLogStr msg
+  ) =>
   Bool ->
   Maybe Loc ->
   LogLevel ->

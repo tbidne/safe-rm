@@ -5,6 +5,12 @@ module Main (main) where
 
 import Integration.Prelude
 import Integration.SafeRm qualified as SafeRm
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( createDirectoryIfMissing,
+        removePathForcibly
+      ),
+  )
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as T
@@ -33,6 +39,6 @@ setup = do
 teardown :: FilePath -> IO ()
 teardown tmpDir = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
-    cleanup = Dir.removePathForcibly tmpDir
+    cleanup = removePathForcibly tmpDir
     doNothing =
       putStrLn $ "*** Not cleaning up tmp dir: " <> tmpDir

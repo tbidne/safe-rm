@@ -51,6 +51,21 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Effects.FileSystemReader
+  ( FileSystemReader
+      ( canonicalizePath,
+        doesDirectoryExist,
+        doesFileExist,
+        doesPathExist
+      ),
+  )
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( removePathForcibly,
+        renameDirectory,
+        renameFile
+      ),
+  )
 import SafeRm.Effects.Timing (Timestamp)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -58,7 +73,6 @@ import SafeRm.Exceptions
   )
 import SafeRm.Prelude
 import System.FilePath qualified as FP
-import UnliftIO.Directory qualified as Dir
 
 -- | Data for a path.
 --
@@ -152,13 +166,16 @@ headerNames = ["Type", "Name", "Original", "Created"]
 --
 -- @since 0.1
 toPathData ::
-  MonadIO m =>
+  ( FileSystemReader m,
+    HasCallStack,
+    MonadIO m
+  ) =>
   Timestamp ->
   PathI TrashHome ->
   PathI OriginalPath ->
   m PathData
 toPathData currTime trashHome originalPath = do
-  origPath <- Paths.liftPathIF' Dir.canonicalizePath originalPath
+  origPath <- Paths.liftPathIF' canonicalizePath originalPath
   -- NOTE: need to get the file name here because fp could refer to an
   -- absolute path. In this case, </> returns the 2nd arg which is absolutely
   -- not what we want.
@@ -168,7 +185,7 @@ toPathData currTime trashHome originalPath = do
   let fileName = Paths.liftPathI' FP.takeFileName origPath
   uniqPath <- mkUniqPath (trashHome <//> fileName)
   let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
-  isFile <- Paths.applyPathI Dir.doesFileExist origPath
+  isFile <- Paths.applyPathI doesFileExist origPath
   if isFile
     then
       pure
@@ -179,7 +196,7 @@ toPathData currTime trashHome originalPath = do
             created = currTime
           }
     else do
-      isDir <- Paths.applyPathI Dir.doesDirectoryExist origPath
+      isDir <- Paths.applyPathI doesDirectoryExist origPath
       if isDir
         then
           pure
@@ -206,23 +223,26 @@ toPathData currTime trashHome originalPath = do
 -- @since 0.1
 mkUniqPath ::
   forall m.
-  MonadIO m =>
+  ( FileSystemReader m,
+    HasCallStack,
+    MonadIO m
+  ) =>
   PathI TrashName ->
   m (PathI TrashName)
 mkUniqPath fp = do
-  b <- Paths.applyPathI Dir.doesPathExist fp
+  b <- Paths.applyPathI doesPathExist fp
   if b
     then go 1
     else pure fp
   where
-    go :: Word16 -> m (PathI TrashName)
+    go :: HasCallStack => Word16 -> m (PathI TrashName)
     go !counter
       | counter == maxBound =
           throwCS $
             MkExceptionI @RenameDuplicate fp
       | otherwise = do
           let fp' = fp <> MkPathI (mkSuffix counter)
-          b <- Paths.applyPathI Dir.doesPathExist fp'
+          b <- Paths.applyPathI doesPathExist fp'
           if b
             then go (counter + 1)
             else pure fp'
@@ -255,7 +275,11 @@ mapOrd f x y = f x `compare` f y
 --
 -- @since 0.1
 mvTrashToOriginal ::
-  MonadIO m =>
+  ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
+    MonadIO m
+  ) =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -270,18 +294,18 @@ mvTrashToOriginal (MkPathI trashHome) pd = do
     fileName = pd ^. #fileName
     trashPath = trashHome </> (fileName ^. #unPathI)
     renameFn = case pd ^. #pathType of
-      PathTypeFile -> Dir.renameFile
-      PathTypeDirectory -> Dir.renameDirectory
+      PathTypeFile -> renameFile
+      PathTypeDirectory -> renameDirectory
 
 -- | Permanently deletes the 'PathData'.
 --
 -- @since 0.1
 deletePathData ::
-  MonadIO m =>
+  FileSystemWriter m =>
   PathI TrashHome ->
   PathData ->
   m ()
-deletePathData (MkPathI trashHome) pd = Dir.removePathForcibly trashPath
+deletePathData (MkPathI trashHome) pd = removePathForcibly trashPath
   where
     trashPath = trashHome </> (pd ^. #fileName % #unPathI)
 
@@ -289,7 +313,7 @@ deletePathData (MkPathI trashHome) pd = Dir.removePathForcibly trashPath
 --
 -- @since 0.1
 mvOriginalToTrash ::
-  MonadIO m =>
+  (FileSystemWriter m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -298,15 +322,15 @@ mvOriginalToTrash trashHome pd =
   where
     MkPathI trashPath = pathDataToTrashPath trashHome pd
     renameFn = case pd ^. #pathType of
-      PathTypeFile -> Dir.renameFile
-      PathTypeDirectory -> Dir.renameDirectory
+      PathTypeFile -> renameFile
+      PathTypeDirectory -> renameDirectory
 
 -- | Returns 'True' if the 'PathData'\'s @fileName@ corresponds to a real path
 -- that exists in 'TrashHome'.
 --
 -- @since 0.1
 trashPathExists ::
-  MonadIO m =>
+  (FileSystemReader m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m Bool
@@ -314,22 +338,22 @@ trashPathExists (MkPathI trashHome) pd = existsFn trashPath
   where
     trashPath = trashHome </> (pd ^. #fileName % #unPathI)
     existsFn = case pd ^. #pathType of
-      PathTypeFile -> Dir.doesFileExist
-      PathTypeDirectory -> Dir.doesDirectoryExist
+      PathTypeFile -> doesFileExist
+      PathTypeDirectory -> doesDirectoryExist
 
 -- | Returns 'True' if the 'PathData'\'s @originalPath@ corresponds to a real
 -- path that exists.
 --
 -- @since 0.1
 originalPathExists ::
-  MonadIO m =>
+  (FileSystemReader m, HasCallStack) =>
   PathData ->
   m Bool
 originalPathExists pd = existsFn (pd ^. #originalPath % #unPathI)
   where
     existsFn = case pd ^. #pathType of
-      PathTypeFile -> Dir.doesFileExist
-      PathTypeDirectory -> Dir.doesDirectoryExist
+      PathTypeFile -> doesFileExist
+      PathTypeDirectory -> doesDirectoryExist
 
 -- | Gives the 'PathData'\'s full trash path in the given 'TrashHome'.
 --

@@ -10,6 +10,7 @@ where
 
 import Data.ByteString qualified as BS
 import SafeRm.Effects.FileSystemReader (FileSystemReader)
+import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Logger qualified as Logger
 import SafeRm.Effects.Terminal (Terminal)
@@ -29,6 +30,8 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       Applicative,
       -- | @since 0.1
       FileSystemReader,
+      -- | @since 0.1
+      FileSystemWriter,
       -- | @since 0.1
       Monad,
       -- | @since 0.1

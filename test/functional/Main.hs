@@ -11,6 +11,12 @@ import Functional.Commands.R qualified as R
 import Functional.Commands.X qualified as X
 import Functional.Logging qualified as Logging
 import Functional.Prelude
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( createDirectoryIfMissing,
+        removePathForcibly
+      ),
+  )
 import SafeRm.Effects.Terminal (Terminal (putStrLn))
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as Tasty
@@ -43,6 +49,6 @@ setup = do
 teardown :: FilePath -> IO ()
 teardown fp = guardOrElse' "NO_CLEANUP" ExpectEnvSet doNothing cleanup
   where
-    cleanup = Dir.removePathForcibly fp
+    cleanup = removePathForcibly fp
     doNothing =
       putStrLn $ "*** Not cleaning up tmp dir: " <> fp

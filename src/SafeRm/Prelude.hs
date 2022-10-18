@@ -140,7 +140,6 @@ import System.IO as X
   )
 import Text.Show as X (Show (show))
 import UnliftIO as X (MonadUnliftIO)
-import UnliftIO.Directory as X (createDirectoryIfMissing)
 import UnliftIO.Exception as X
   ( Exception (displayException, fromException, toException),
     SomeAsyncException (SomeAsyncException),

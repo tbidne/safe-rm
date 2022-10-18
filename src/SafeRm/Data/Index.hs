@@ -18,7 +18,6 @@ module SafeRm.Data.Index
   )
 where
 
-import Data.ByteString qualified as BS
 import Data.ByteString qualified as BSL
 import Data.ByteString.Char8 qualified as Char8
 import Data.Csv (HasHeader (HasHeader))
@@ -40,6 +39,12 @@ import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Data.UniqueSeq qualified as USeq
 import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( appendFile,
+        writeFile
+      ),
+  )
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
@@ -121,6 +126,7 @@ readIndex indexPath = addNamespace "readIndex" $ do
 --
 -- @since 0.1
 searchIndex ::
+  HasCallStack =>
   -- | The top-level trash keys to find e.g. @foo@ for @~\/.trash\/foo@.
   UniqueSeq (PathI TrashName) ->
   -- | The trash index.
@@ -133,6 +139,7 @@ searchIndex keys (MkIndex index) =
     -- NOTE: drop trailing slashes to match our index's schema
     trashKeys = USeq.map (Paths.liftPathI' FP.dropTrailingPathSeparator) keys
     foldKeys ::
+      HasCallStack =>
       PathI TrashName ->
       ([SomeException], UniqueSeq PathData) ->
       ([SomeException], UniqueSeq PathData)
@@ -144,7 +151,7 @@ searchIndex keys (MkIndex index) =
           -- Nevertheless we turn these into exceptions since it makes the
           -- callers' lives easier.
           prependEx
-            (MkExceptionI @PathNotFound (view #unPathI trashKey) ?callstack)
+            (MkExceptionI @PathNotFound (view #unPathI trashKey) ?callStack)
             acc
         Just pd -> (exs, USeq.append found pd)
     prependEx ex = over' _1 (toException ex :)
@@ -157,6 +164,7 @@ searchIndex keys (MkIndex index) =
 readIndexWithFold ::
   forall m a.
   ( FileSystemReader m,
+    HasCallStack,
     LoggerContext m,
     MonadIO m,
     Monoid a
@@ -213,7 +221,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 --
 -- @since 0.1
 throwIfDuplicates ::
-  MonadIO m =>
+  (HasCallStack, MonadIO m) =>
   PathI TrashIndex ->
   HashMap (PathI TrashName) PathData ->
   PathData ->
@@ -228,7 +236,14 @@ throwIfDuplicates indexPath trashMap pd =
 -- | Verifies that the 'PathData'\'s @fileName@ actually exists.
 --
 -- @since 0.1
-throwIfTrashNonExtant :: MonadIO m => PathI TrashHome -> PathData -> m ()
+throwIfTrashNonExtant ::
+  ( FileSystemReader m,
+    HasCallStack,
+    MonadIO m
+  ) =>
+  PathI TrashHome ->
+  PathData ->
+  m ()
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
   unless exists $
@@ -240,9 +255,9 @@ throwIfTrashNonExtant trashHome pd = do
 -- | Appends the path data to the trash index. The header is not included.
 --
 -- @since 0.1
-appendIndex :: MonadIO m => PathI TrashIndex -> Index -> m ()
+appendIndex :: FileSystemWriter m => PathI TrashIndex -> Index -> m ()
 appendIndex (MkPathI indexPath) =
-  (liftIO . BS.appendFile indexPath)
+  appendFile indexPath
     . BSL.toStrict
     . Csv.encode
     . HMap.elems
@@ -252,9 +267,9 @@ appendIndex (MkPathI indexPath) =
 -- exists. The header is included.
 --
 -- @since 0.1
-writeIndex :: MonadIO m => PathI TrashIndex -> Index -> m ()
+writeIndex :: FileSystemWriter m => PathI TrashIndex -> Index -> m ()
 writeIndex (MkPathI indexPath) =
-  (liftIO . BS.writeFile indexPath)
+  writeFile indexPath
     . BSL.toStrict
     . Csv.encodeDefaultOrderedByName
     . HMap.elems

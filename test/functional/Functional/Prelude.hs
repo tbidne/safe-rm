@@ -43,10 +43,16 @@ import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Effects.FileSystemReader
   ( FileSystemReader
-      ( getFileSize,
+      ( canonicalizePath,
+        doesDirectoryExist,
+        doesFileExist,
+        doesPathExist,
+        getFileSize,
+        listDirectory,
         readFile
       ),
   )
+import SafeRm.Effects.FileSystemWriter (FileSystemWriter)
 import SafeRm.Effects.Logger
   ( LoggerContext (getNamespace, localNamespace),
     Namespace,
@@ -69,7 +75,6 @@ import Test.Tasty.HUnit as X
     testCase,
     (@=?),
   )
-import UnliftIO.Directory qualified as Dir
 import UnliftIO.Environment qualified as SysEnv
 
 -- | Environment for running functional tests.
@@ -92,6 +97,7 @@ deriving anyclass instance HasTrashHome FuncEnv
 newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
   deriving
     ( Applicative,
+      FileSystemWriter,
       Functor,
       Monad,
       MonadIO,
@@ -103,6 +109,11 @@ newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
 instance FileSystemReader FuncIO where
   getFileSize = const (pure $ afromInteger 5)
   readFile = liftIO . readFile
+  doesFileExist = liftIO . doesFileExist
+  doesDirectoryExist = liftIO . doesDirectoryExist
+  doesPathExist = liftIO . doesPathExist
+  canonicalizePath = liftIO . canonicalizePath
+  listDirectory = liftIO . listDirectory
 
 instance Terminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
@@ -220,28 +231,28 @@ captureSafeRmExceptionLogs testDir title argList = do
 assertFilesExist :: [FilePath] -> IO ()
 assertFilesExist paths =
   for_ paths $ \p -> do
-    exists <- Dir.doesFileExist p
+    exists <- doesFileExist p
     assertBool ("Expected file to exist: " <> p) exists
 
 -- | Asserts that files do not exist.
 assertFilesDoNotExist :: [FilePath] -> IO ()
 assertFilesDoNotExist paths =
   for_ paths $ \p -> do
-    exists <- Dir.doesFileExist p
+    exists <- doesFileExist p
     assertBool ("Expected file not to exist: " <> p) (not exists)
 
 -- | Asserts that directories exist.
 assertDirectoriesExist :: [FilePath] -> IO ()
 assertDirectoriesExist paths =
   for_ paths $ \p -> do
-    exists <- Dir.doesDirectoryExist p
+    exists <- doesDirectoryExist p
     assertBool ("Expected directory to exist: " <> p) exists
 
 -- | Asserts that directories do not exist.
 assertDirectoriesDoNotExist :: [FilePath] -> IO ()
 assertDirectoriesDoNotExist paths =
   for_ paths $ \p -> do
-    exists <- Dir.doesDirectoryExist p
+    exists <- doesDirectoryExist p
     assertBool ("Expected directory not to exist: " <> p) (not exists)
 
 mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv

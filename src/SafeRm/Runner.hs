@@ -14,7 +14,6 @@ module SafeRm.Runner
   )
 where
 
-import Data.ByteString qualified as BS
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import SafeRm qualified
@@ -23,7 +22,8 @@ import SafeRm.Data.Paths
     PathIndex (TrashHome),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.FileSystemReader (FileSystemReader)
+import SafeRm.Effects.FileSystemReader (FileSystemReader (readFile))
+import SafeRm.Effects.FileSystemWriter (FileSystemWriter (createDirectoryIfMissing))
 import SafeRm.Effects.Logger (LoggerContext)
 import SafeRm.Effects.Terminal (Terminal, putTextLn)
 import SafeRm.Effects.Timing (Timing)
@@ -31,6 +31,7 @@ import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (TomlDecode),
+    wrapCS,
   )
 import SafeRm.Prelude
 import SafeRm.Runner.Args
@@ -77,6 +78,8 @@ import UnliftIO.Directory qualified as Dir
 -- @since 0.1
 runSafeRm ::
   ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
     MonadUnliftIO m,
     Terminal m,
     Timing m
@@ -96,7 +99,7 @@ runSafeRm =
   where
     closeLogging (e, _) = do
       let mFinalizer = e ^? #logEnv % #logFile %? #finalizer
-      liftIO $ fromMaybe (pure ()) mFinalizer
+      liftIO $ wrapCS $ fromMaybe (pure ()) mFinalizer
 
     doNothingOnSuccess ExitSuccess = pure ()
     doNothingOnSuccess ex = throwIO ex
@@ -113,6 +116,8 @@ runSafeRm =
 -- custom env.
 runCmd ::
   ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
@@ -140,19 +145,19 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
 -- by SafeRm.
 --
 -- @since 0.1
-getEnv :: MonadIO m => m (Env, Command)
+getEnv :: (HasCallStack, FileSystemWriter m, MonadUnliftIO m) => m (Env, Command)
 getEnv = do
   (mergedConfig, command) <- getConfiguration
 
   trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
   -- NOTE: Needed so below openFile command does not fail
-  Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
+  Paths.applyPathI (createDirectoryIfMissing False) trashHome
 
   logFile <- case join (mergedConfig ^. #logLevel) of
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- liftIO $ IO.openFile logPath IO.AppendMode
+      h <- liftIO $ wrapCS $ IO.openFile logPath IO.AppendMode
       pure $
         Just $
           MkLogFile
@@ -179,7 +184,7 @@ getEnv = do
 -- the CLI's value will be used.
 --
 -- @since 0.1
-getConfiguration :: MonadIO m => m (TomlConfig, Command)
+getConfiguration :: (HasCallStack, MonadUnliftIO m) => m (TomlConfig, Command)
 getConfiguration = do
   -- get CLI args
   args <- liftIO getArgs
@@ -190,9 +195,9 @@ getConfiguration = do
     TomlPath tomlPath -> readConfig tomlPath
     -- no toml config path given...
     TomlDefault -> do
-      xdgConfig <- Dir.getXdgDirectory XdgConfig "safe-rm"
+      xdgConfig <- wrapCS $ Dir.getXdgDirectory XdgConfig "safe-rm"
       let defPath = xdgConfig </> "config.toml"
-      exists <- Dir.doesFileExist defPath
+      exists <- wrapCS $ Dir.doesFileExist defPath
       if exists
         then -- 2. config exists at default path: read
           readConfig defPath
@@ -207,7 +212,7 @@ getConfiguration = do
   where
     readConfig fp = do
       contents <-
-        liftIO (BS.readFile fp) >>= \contents' -> do
+        liftIO (readFile fp) >>= \contents' -> do
           case TEnc.decodeUtf8' contents' of
             Right txt -> pure txt
             Left err -> throwIO err
@@ -217,6 +222,7 @@ getConfiguration = do
 
 printIndex ::
   ( FileSystemReader m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadIO m,
@@ -228,6 +234,7 @@ printIndex = SafeRm.getIndex >>= prettyDel
 
 printMetadata ::
   ( FileSystemReader m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadIO m,
@@ -237,7 +244,7 @@ printMetadata ::
   m ()
 printMetadata = SafeRm.getMetadata >>= prettyDel
 
-prettyDel :: (Pretty a, Terminal m) => a -> m ()
+prettyDel :: (HasCallStack, Pretty a, Terminal m) => a -> m ()
 prettyDel =
   putTextLn
     . renderStrict
@@ -248,11 +255,14 @@ prettyDel =
 -- trash location.
 --
 -- @since 0.1
-trashOrDefault :: MonadIO m => Maybe (PathI TrashHome) -> m (PathI TrashHome)
+trashOrDefault ::
+  (HasCallStack, MonadUnliftIO m) =>
+  Maybe (PathI TrashHome) ->
+  m (PathI TrashHome)
 trashOrDefault = maybe getTrashHome pure
 
 -- | Retrieves the default trash directory.
 --
 -- @since 0.1
-getTrashHome :: MonadIO m => m (PathI TrashHome)
-getTrashHome = MkPathI . (</> ".trash") <$> Dir.getHomeDirectory
+getTrashHome :: (HasCallStack, MonadUnliftIO m) => m (PathI TrashHome)
+getTrashHome = MkPathI . (</> ".trash") <$> wrapCS Dir.getHomeDirectory

@@ -21,14 +21,13 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashLog),
   )
-import SafeRm.Effects.FileSystemReader (FileSystemReader (getFileSize))
+import SafeRm.Effects.FileSystemReader
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
   )
 import SafeRm.Prelude
-import UnliftIO.Directory qualified as Dir
 
 -- | Holds trash metadata.
 --
@@ -96,6 +95,7 @@ instance Pretty Metadata where
 -- @since 0.1
 toMetadata ::
   ( FileSystemReader m,
+    HasCallStack,
     LoggerContext m,
     MonadIO m
   ) =>
@@ -109,12 +109,12 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     $(logDebug) ("Index size: " <> showt numIndex)
 
     -- Num entries
-    numEntries <- foldl' countFiles 0 <$> Dir.listDirectory th
+    numEntries <- foldl' countFiles 0 <$> listDirectory th
     $(logDebug) ("Num entries: " <> showt numEntries)
 
     -- Log size
     let logPath = trashLog ^. #unPathI
-    logExists <- Dir.doesFileExist logPath
+    logExists <- doesFileExist logPath
     logSize <-
       if logExists
         then do
@@ -165,14 +165,20 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
       | fp == ".log" || fp == ".index.csv" = acc
       | otherwise = acc + 1
 
-getAllFiles :: MonadIO m => FilePath -> m [FilePath]
+getAllFiles ::
+  ( FileSystemReader m,
+    HasCallStack,
+    MonadIO m
+  ) =>
+  FilePath ->
+  m [FilePath]
 getAllFiles fp =
-  Dir.doesFileExist fp >>= \case
+  doesFileExist fp >>= \case
     True -> pure [fp]
     False ->
-      Dir.doesDirectoryExist fp >>= \case
+      doesDirectoryExist fp >>= \case
         True ->
-          Dir.listDirectory fp
+          listDirectory fp
             >>= fmap join
               . traverse (getAllFiles . (fp </>))
         False -> throwCS $ MkExceptionI @PathNotFound fp

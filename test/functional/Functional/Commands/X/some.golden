@@ -23,13 +23,23 @@ EXCEPTION PERM DELETE
 Encountered exception(s)
 
 - Path not found: f4
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 - Path not found: f3
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:180:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:198:5 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug] Trash home: <dir>/x4/.trash
@@ -44,13 +54,23 @@ LOGS PERM DELETE
 [2020-05-31 12:00:00][functional][Error] Encountered exception(s)
 
 - Path not found: f4
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 - Path not found: f3
-
+CallStack (from HasCallStack):
+  foldKeys, called at src/SafeRm/Data/Index.hs:137:9 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  searchIndex, called at src/SafeRm.hs:152:31 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 CallStack (from HasCallStack):
-  throwCS, called at src/SafeRm.hs:180:5 in safe-rm-0.1-inplace:SafeRm
+  throwCS, called at src/SafeRm.hs:198:5 in safe-rm-0.1-inplace:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:134:33 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 
 TERMINAL LIST 2

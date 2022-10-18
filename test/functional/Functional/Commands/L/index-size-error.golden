@@ -2,6 +2,10 @@ EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 CallStack (from HasCallStack):
   throwCS, called at src/SafeRm/Data/Metadata.hs:143:7 in safe-rm-0.1-inplace:SafeRm.Data.Metadata
+  toMetadata, called at src/SafeRm.hs:240:13 in safe-rm-0.1-inplace:SafeRm
+  getMetadata, called at src/SafeRm/Runner.hs:245:17 in safe-rm-0.1-inplace:SafeRm.Runner
+  printMetadata, called at src/SafeRm/Runner.hs:137:29 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
@@ -18,5 +22,9 @@ LOGS LIST
 [2020-05-31 12:00:00][functional][Error] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 CallStack (from HasCallStack):
   throwCS, called at src/SafeRm/Data/Metadata.hs:143:7 in safe-rm-0.1-inplace:SafeRm.Data.Metadata
+  toMetadata, called at src/SafeRm.hs:240:13 in safe-rm-0.1-inplace:SafeRm
+  getMetadata, called at src/SafeRm/Runner.hs:245:17 in safe-rm-0.1-inplace:SafeRm.Runner
+  printMetadata, called at src/SafeRm/Runner.hs:137:29 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:215:36 in main:Functional.Prelude
 
 

@@ -22,6 +22,7 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
+import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Metadata (Metadata)
@@ -34,7 +35,19 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
-import SafeRm.Effects.FileSystemReader (FileSystemReader)
+import SafeRm.Effects.FileSystemReader
+  ( FileSystemReader
+      ( doesDirectoryExist,
+        doesFileExist,
+        getFileSize
+      ),
+  )
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( createDirectoryIfMissing,
+        removeDirectoryRecursive
+      ),
+  )
 import SafeRm.Effects.Logger (LoggerContext, addNamespace)
 import SafeRm.Effects.Terminal (Terminal (putStr, putStrLn), putTextLn)
 import SafeRm.Effects.Timing (Timing (getSystemTime))
@@ -46,11 +59,11 @@ import SafeRm.Env
 import SafeRm.Exceptions
   ( ExceptionI (MkExceptionI),
     ExceptionIndex (SomeExceptions),
+    wrapCS,
   )
 import SafeRm.Prelude
 import SafeRm.Utils qualified as Utils
 import System.IO qualified as IO
-import UnliftIO.Directory qualified as Dir
 
 -- | @delete trash p@ moves path @p@ to the given trash location @trash@ and
 -- writes an entry in the trash index. If the trash location is not given,
@@ -59,7 +72,10 @@ import UnliftIO.Directory qualified as Dir
 -- @since 0.1
 delete ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
+    HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
     MonadUnliftIO m,
@@ -71,7 +87,7 @@ delete paths = addNamespace "delete" $ do
   (trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
 
-  Paths.applyPathI (Dir.createDirectoryIfMissing False) trashHome
+  Paths.applyPathI (createDirectoryIfMissing False) trashHome
 
   deletedPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
@@ -93,8 +109,8 @@ delete paths = addNamespace "delete" $ do
   deletedPaths <- readIORef deletedPathsRef
   nonEmpty <-
     Utils.allM1
-      [ Paths.applyPathI Dir.doesFileExist indexPath,
-        Paths.applyPathI (fmap (> 0) . Dir.getFileSize) indexPath
+      [ Paths.applyPathI doesFileExist indexPath,
+        Paths.applyPathI (fmap (> afromInteger 0) . getFileSize) indexPath
       ]
   if nonEmpty
     then Index.appendIndex indexPath (MkIndex deletedPaths)
@@ -116,6 +132,8 @@ delete paths = addNamespace "delete" $ do
 deletePermanently ::
   forall env m.
   ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
@@ -186,6 +204,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
 getIndex ::
   forall env m.
   ( FileSystemReader m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadIO m,
@@ -195,7 +214,7 @@ getIndex ::
 getIndex = addNamespace "getIndex" $ do
   indexPath <- asks getTrashIndex
   $(logDebug) ("Index path: " <> T.pack (indexPath ^. #unPathI))
-  Paths.applyPathI Dir.doesFileExist indexPath >>= \case
+  Paths.applyPathI doesFileExist indexPath >>= \case
     True -> Index.readIndex indexPath
     False -> do
       $(logDebug) "Index does not exist."
@@ -207,6 +226,7 @@ getIndex = addNamespace "getIndex" $ do
 getMetadata ::
   forall env m.
   ( FileSystemReader m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadIO m,
@@ -216,7 +236,7 @@ getMetadata ::
 getMetadata = addNamespace "getMetadata" $ do
   paths@(trashHome, indexPath, _) <- asks getTrashPaths
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
-  Paths.applyPathI Dir.doesFileExist indexPath >>= \case
+  Paths.applyPathI doesFileExist indexPath >>= \case
     True -> Metadata.toMetadata paths
     False -> do
       $(logDebug) "Index does not exist."
@@ -230,6 +250,8 @@ getMetadata = addNamespace "getMetadata" $ do
 restore ::
   forall env m.
   ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
     HasTrashHome env,
     LoggerContext m,
     MonadReader env m,
@@ -273,7 +295,10 @@ restore paths = addNamespace "restore" $ do
 -- @since 0.1
 emptyTrash ::
   forall env m.
-  ( HasTrashHome env,
+  ( FileSystemReader m,
+    FileSystemWriter m,
+    HasCallStack,
+    HasTrashHome env,
     LoggerContext m,
     MonadIO m,
     MonadReader env m,
@@ -284,14 +309,14 @@ emptyTrash ::
 emptyTrash force = addNamespace "emptyTrash" $ do
   trashHome@(MkPathI th) <- asks getTrashHome
   $(logDebug) ("Trash home: " <> T.pack (trashHome ^. #unPathI))
-  exists <- Dir.doesDirectoryExist th
+  exists <- doesDirectoryExist th
   if not exists
     then do
       $(logDebug) "Trash home does not exist."
       putStrLn $ th <> " is empty."
     else
       if force
-        then Dir.removeDirectoryRecursive th
+        then removeDirectoryRecursive th
         else do
           noBuffering
           putStr "Permanently delete all contents (y/n)? "
@@ -299,7 +324,7 @@ emptyTrash force = addNamespace "emptyTrash" $ do
           if
               | c == 'y' -> do
                   $(logDebug) "Deleting contents."
-                  Dir.removeDirectoryRecursive th
+                  removeDirectoryRecursive th
                   putStrLn ""
               | c == 'n' -> do
                   $(logDebug) "Not deleting contents."
@@ -318,7 +343,7 @@ showMapElems toPathI =
     . fmap (T.pack . view (toPathI % #unPathI))
     . HMap.elems
 
-noBuffering :: MonadIO m => m ()
-noBuffering = liftIO $ buffOff IO.stdin *> buffOff IO.stdout
+noBuffering :: (HasCallStack, MonadIO m) => m ()
+noBuffering = liftIO $ wrapCS $ buffOff IO.stdin *> buffOff IO.stdout
   where
     buffOff h = IO.hSetBuffering h NoBuffering

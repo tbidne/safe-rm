@@ -7,6 +7,7 @@ module SafeRm.Exceptions
   ( ExceptionI (..),
     ExceptionIndex (..),
     ExceptionF,
+    wrapCS,
   )
 where
 
@@ -234,3 +235,13 @@ instance Exception (ExceptionI SomeExceptions) where
       ]
     where
       foldExs acc ex = ("- " <> displayException ex <> "\n") <> acc
+
+-- | Tries the monadic action. If an exception is encountered, it is wrapped
+-- in an 'ExceptionI' 'OneException' and rethrown.
+--
+-- @since 0.1
+wrapCS :: (HasCallStack, MonadUnliftIO m) => m a -> m a
+wrapCS =
+  try >=> \case
+    Left ex -> throwCS @_ @(ExceptionI OneException) (MkExceptionI ex)
+    Right x -> pure x

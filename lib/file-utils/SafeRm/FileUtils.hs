@@ -16,24 +16,32 @@ module SafeRm.FileUtils
   )
 where
 
-import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as Char8
 import Data.Text qualified as T
+import SafeRm.Effects.FileSystemReader
+  ( FileSystemReader (doesDirectoryExist),
+  )
+import SafeRm.Effects.FileSystemWriter
+  ( FileSystemWriter
+      ( createDirectoryIfMissing,
+        removePathForcibly,
+        writeFile
+      ),
+  )
 import SafeRm.Prelude
 import System.IO (putStrLn)
-import UnliftIO.Directory qualified as Dir
 
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
-createFiles :: (Foldable f, Functor f) => f FilePath -> IO ()
+createFiles :: (Foldable f, Functor f, HasCallStack) => f FilePath -> IO ()
 createFiles = createFilesMap fmap
 
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
 createFilesMap ::
-  Foldable f =>
+  (Foldable f, HasCallStack) =>
   ( (FilePath -> (FilePath, ByteString)) ->
     f FilePath ->
     f (FilePath, ByteString)
@@ -45,10 +53,13 @@ createFilesMap mapper = createFileContents . mapper (,"")
 -- | Creates files at the specified paths.
 --
 -- @since 0.1
-createFileContents :: Foldable f => f (FilePath, ByteString) -> IO ()
+createFileContents ::
+  (Foldable f, HasCallStack) =>
+  f (FilePath, ByteString) ->
+  IO ()
 createFileContents paths = for_ paths $
   \(p, c) ->
-    BS.writeFile p c
+    writeFile p c
       `catchAny` \ex -> do
         putStrLn $
           mconcat
@@ -64,17 +75,17 @@ createFileContents paths = for_ paths $
 -- | Creates empty files at the specified paths.
 --
 -- @since 0.1
-createDirectories :: Foldable f => f FilePath -> IO ()
+createDirectories :: (Foldable f, HasCallStack) => f FilePath -> IO ()
 createDirectories paths =
-  for_ paths $ \p -> Dir.createDirectoryIfMissing True p
+  for_ paths $ \p -> createDirectoryIfMissing True p
 
 -- | Clears a directory by deleting it if it exists and then recreating it.
 --
 -- @since 0.1
-clearDirectory :: FilePath -> IO ()
+clearDirectory :: HasCallStack => FilePath -> IO ()
 clearDirectory path = do
-  exists <- Dir.doesDirectoryExist path
-  when exists $ Dir.removePathForcibly path
+  exists <- doesDirectoryExist path
+  when exists $ removePathForcibly path
   createDirectoryIfMissing False path
 
 -- | Data type used for testing text matches.

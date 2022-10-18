@@ -82,7 +82,7 @@ instance ToField Timestamp where
 -- @since 0.1
 class Monad m => Timing m where
   -- | @since 0.1
-  getSystemTime :: m Timestamp
+  getSystemTime :: HasCallStack => m Timestamp
 
 -- | @since 0.1
 instance Timing IO where

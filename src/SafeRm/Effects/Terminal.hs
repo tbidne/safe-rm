@@ -22,12 +22,12 @@ class Monad m => Terminal m where
   -- | Simple print function without newline.
   --
   -- @since 0.1
-  putStr :: String -> m ()
+  putStr :: HasCallStack => String -> m ()
 
   -- | Simple print function.
   --
   -- @since 0.1
-  putStrLn :: String -> m ()
+  putStrLn :: HasCallStack => String -> m ()
 
 -- | @since 0.1
 instance Terminal IO where
@@ -39,13 +39,13 @@ instance Terminal m => Terminal (ReaderT e m) where
   putStrLn = lift . putStrLn
 
 -- | @since 0.1
-putText :: Terminal m => Text -> m ()
+putText :: (HasCallStack, Terminal m) => Text -> m ()
 putText = putStr . T.unpack
 
 -- | @since 0.1
-putTextLn :: Terminal m => Text -> m ()
+putTextLn :: (HasCallStack, Terminal m) => Text -> m ()
 putTextLn = putStrLn . T.unpack
 
 -- | @since 0.1
-print :: forall m a. (Show a, Terminal m) => a -> m ()
+print :: forall m a. (HasCallStack, Show a, Terminal m) => a -> m ()
 print = putStrLn . show
