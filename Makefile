@@ -58,22 +58,22 @@ ci: lint format haddockc
 # formatting
 
 formatc:
-	nix run github:tbidne/nix-hs-tools/0.6.1#nixpkgs-fmt -- --check ;\
-	nix run github:tbidne/nix-hs-tools/0.6.1#cabal-fmt -- --check ;\
-	nix run github:tbidne/nix-hs-tools/0.6.1#ormolu -- --mode check
+	nix run github:tbidne/nix-hs-tools/0.7#nixpkgs-fmt -- --check ;\
+	nix run github:tbidne/nix-hs-tools/0.7#cabal-fmt -- --check ;\
+	nix run github:tbidne/nix-hs-tools/0.7#ormolu -- --mode check
 
 format:
-	nix run github:tbidne/nix-hs-tools/0.6.1#nixpkgs-fmt ;\
-	nix run github:tbidne/nix-hs-tools/0.6.1#cabal-fmt -- --inplace ;\
-	nix run github:tbidne/nix-hs-tools/0.6.1#ormolu -- --mode inplace
+	nix run github:tbidne/nix-hs-tools/0.7#nixpkgs-fmt ;\
+	nix run github:tbidne/nix-hs-tools/0.7#cabal-fmt -- --inplace ;\
+	nix run github:tbidne/nix-hs-tools/0.7#ormolu -- --mode inplace
 
 # linting
 
 lint:
-	nix run github:tbidne/nix-hs-tools/0.6.1#hlint -- --refact
+	nix run github:tbidne/nix-hs-tools/0.7#hlint -- --refact
 
 lintc:
-	nix run github:tbidne/nix-hs-tools/0.6.1#hlint
+	nix run github:tbidne/nix-hs-tools/0.7#hlint
 
 # generate docs for main package, copy to docs/
 haddock:
@@ -83,7 +83,7 @@ haddock:
 	cp -r dist-newstyle/build/x86_64-linux/ghc-9.2.4/safe-rm-0.1/opt/doc/html/safe-rm/* docs/
 
 haddockc:
-	nix run github:tbidne/nix-hs-tools/0.6.1#haddock-cov -- \
+	nix run github:tbidne/nix-hs-tools/0.7#haddock-cov -- \
 	. \
 	-m SafeRm.Prelude 95 \
 	-m SafeRm.Runner.Command 20 \
