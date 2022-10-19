@@ -15,16 +15,16 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
   toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d5/f4
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
   toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.delete.deleting][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f5"}, originalPath = MkPathI {unPathI = "<dir>/d5/f5"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.delete][Info] Deleted: <dir>/d5/f5, <dir>/d5/f2, <dir>/d5/f1
 [2020-05-31 12:00:00][functional][Error] Exceptions:
@@ -35,8 +35,8 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
   toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 - Path not found: <dir>/d5/f4
 
@@ -44,8 +44,8 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
   toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 
 TERMINAL LIST

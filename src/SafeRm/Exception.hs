@@ -1,12 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- TODO: Rename
-
 -- | Provides exceptions used by SafeRm.
 --
 -- @since 0.1
-module SafeRm.Exceptions
+module SafeRm.Exception
   ( -- * Types
 
     -- ** Specific
@@ -45,8 +43,10 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as TLB
+import Optics.Core (A_Getter, Optic')
+import Optics.Optic (Is)
 import SafeRm.Data.Paths
-  ( PathI (MkPathI),
+  ( PathI,
     PathIndex (OriginalPath, TrashHome, TrashIndex, TrashName),
   )
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
@@ -67,11 +67,9 @@ makePrisms ''PathNotFoundE
 
 -- | @since 0.1
 instance Exception PathNotFoundE where
-  displayException (MkPathNotFoundE fp _) =
-    mconcat
-      [ "Path not found: ",
-        fp
-      ]
+  displayException =
+    ("Path not found: " <>)
+      . view (_MkPathNotFoundE % _1)
 
 -- | Could not rename file due to duplicate names.
 --
@@ -83,15 +81,13 @@ data RenameDuplicateE = MkRenameDuplicateE !(PathI TrashName) !CallStack
     )
 
 -- | @since 0.1
-instance Exception RenameDuplicateE where
-  displayException (MkRenameDuplicateE (MkPathI fp) _) =
-    mconcat
-      [ "Failed renaming duplicate file: ",
-        fp
-      ]
+makePrisms ''RenameDuplicateE
 
 -- | @since 0.1
-makePrisms ''RenameDuplicateE
+instance Exception RenameDuplicateE where
+  displayException =
+    ("Failed renaming duplicate file: " <>)
+      . view (_MkRenameDuplicateE % _1 % #unPathI)
 
 -- | Error reading the index.
 --
@@ -107,12 +103,12 @@ makePrisms ''ReadIndexE
 
 -- | @since 0.1
 instance Exception ReadIndexE where
-  displayException (MkReadIndexE (MkPathI indexPath) err _) =
+  displayException e =
     mconcat
       [ "Error reading index at '",
-        indexPath,
+        e ^. _MkReadIndexE % _1 % #unPathI,
         "': ",
-        err
+        e ^. _MkReadIndexE % _2
       ]
 
 -- | Duplicate paths found in index file.
@@ -133,15 +129,14 @@ makePrisms ''DuplicateIndexPathE
 
 -- | @since 0.1
 instance Exception DuplicateIndexPathE where
-  displayException
-    (MkDuplicateIndexPathE (MkPathI trashIndex) (MkPathI dupName) _) =
-      mconcat
-        [ "Trash paths should be unique, but found multiple entries in the ",
-          "trash index '",
-          trashIndex,
-          "' for the following path: ",
-          dupName
-        ]
+  displayException e =
+    mconcat
+      [ "Trash paths should be unique, but found multiple entries in the ",
+        "trash index '",
+        e ^. _MkDuplicateIndexPathE % _1 % #unPathI,
+        "' for the following path: ",
+        e ^. _MkDuplicateIndexPathE % _2 % #unPathI
+      ]
 
 -- | Path not found in trash error.
 --
@@ -161,17 +156,16 @@ makePrisms ''TrashPathNotFoundE
 
 -- | @since 0.1
 instance Exception TrashPathNotFoundE where
-  displayException
-    (MkTrashPathNotFoundE (MkPathI trashHome) (MkPathI notFound) _) =
-      mconcat
-        [ "The path '",
-          notFound,
-          "' was not found in the trash directory '",
-          trashHome,
-          "' despite being listed in the trash index. This can be fixed by ",
-          "manually deleting the entry from the index or deleting everything ",
-          "(i.e. sr e)."
-        ]
+  displayException e =
+    mconcat
+      [ "The path '",
+        e ^. _MkTrashPathNotFoundE % _2 % #unPathI,
+        "' was not found in the trash directory '",
+        e ^. _MkTrashPathNotFoundE % _1 % #unPathI,
+        "' despite being listed in the trash index. This can be fixed by ",
+        "manually deleting the entry from the index or deleting everything ",
+        "(i.e. sr e)."
+      ]
 
 -- | Collision with existing file when attempting a restore.
 --
@@ -191,18 +185,13 @@ makePrisms ''RestoreCollisionE
 
 -- | @since 0.1
 instance Exception RestoreCollisionE where
-  displayException
-    ( MkRestoreCollisionE
-        (MkPathI trashName)
-        (MkPathI originalPath)
-        _
-      ) =
-      mconcat
-        [ "Cannot restore the trash file '",
-          trashName,
-          "' as one exists at the original location: ",
-          originalPath
-        ]
+  displayException e =
+    mconcat
+      [ "Cannot restore the trash file '",
+        e ^. _MkRestoreCollisionE % _1 % #unPathI,
+        "' as one exists at the original location: ",
+        e ^. _MkRestoreCollisionE % _2 % #unPathI
+      ]
 
 -- | Index size did not match the trash directory.
 --
@@ -223,21 +212,15 @@ makePrisms ''IndexSizeMismatchE
 
 -- | @since 0.1
 instance Exception IndexSizeMismatchE where
-  displayException
-    ( MkIndexSizeMismatchE
-        (MkPathI trashHome)
-        dirSize
-        indexSize
-        _
-      ) =
-      mconcat
-        [ "Size mismatch between index size (",
-          show indexSize,
-          ") and number of entries (",
-          show dirSize,
-          ") in trash: ",
-          trashHome
-        ]
+  displayException e =
+    mconcat
+      [ "Size mismatch between index size (",
+        show (e ^. _MkIndexSizeMismatchE % _3),
+        ") and number of entries (",
+        show (e ^. _MkIndexSizeMismatchE % _2),
+        ") in trash: ",
+        e ^. _MkIndexSizeMismatchE % _1 % #unPathI
+      ]
 
 -- | Error decoding TOML file.
 --
@@ -253,11 +236,11 @@ makePrisms ''TomlDecodeE
 
 -- | @since 0.1
 instance Exception TomlDecodeE where
-  displayException (MkTomlDecodeE tomlError _) =
-    mconcat
-      [ "Error decoding toml: ",
-        T.unpack (renderTOMLError tomlError)
-      ]
+  displayException =
+    ("Error decoding toml: " <>)
+      . T.unpack
+      . renderTOMLError
+      . view (_MkTomlDecodeE % _1)
 
 -- | Arbitrary exception. 'SomeException' with 'CallStack'.
 --
@@ -273,11 +256,10 @@ makePrisms ''ArbitraryE
 
 -- | @since 0.1
 instance Exception ArbitraryE where
-  displayException (MkArbitraryE ex _) =
-    mconcat
-      [ "Exception:",
-        displayException ex
-      ]
+  displayException =
+    ("Exception:" <>)
+      . displayException
+      . view (_MkArbitraryE % _1)
 
 -- | Aggregates multiple exceptions.
 --
@@ -313,9 +295,7 @@ withStackTracing ::
   m a
 withStackTracing =
   tryAny >=> \case
-    Left ex ->
-      throwCallStack @_ @ArbitraryE
-        (MkArbitraryE ex)
+    Left ex -> throwCallStack @_ @ArbitraryE (MkArbitraryE ex)
     Right x -> pure x
 
 -- | If 'True', uses 'displayTrace'; otherwise uses 'displayException'.
@@ -332,14 +312,15 @@ displayTraceIf True = displayTrace
 --
 -- @since 0.1
 displayTrace :: Exception e => e -> Text
-displayTrace e = case fromException someEx of
-  Just ex@(MkExceptions _) ->
-    builderToStrict $ displayExceptions traceSomeException ex
-  Nothing -> builderToStrict $ traceSomeException someEx
+displayTrace e = builderToStrict $ case fromException @Exceptions someEx of
+  Just ex -> displayExceptions traceSomeException ex
+  Nothing -> traceSomeException someEx
   where
     someEx = toException e
     builderToStrict = TL.toStrict . TLB.toLazyText
 
+-- | Transforms the SomeException into a Text Builder, appending CallStack
+-- data if we find it.
 traceSomeException :: SomeException -> Builder
 traceSomeException e = case tryGetCallStack e of
   Left cs ->
@@ -349,28 +330,30 @@ traceSomeException e = case tryGetCallStack e of
       ]
   Right _ -> TLB.fromString $ displayException e
 
+-- | Attempts to convert the SomeException into an exception type known to
+-- have a CallStack field.
 tryGetCallStack :: SomeException -> Either CallStack ()
 tryGetCallStack someEx = do
   -- NOTE: Somewhat gross, but is simple and works. We take advantage
   -- of Left's early exit so the nesting does not reach Lovecraftian levels.
-  go (view (_MkPathNotFoundE % _2)) someEx
-  go (view (_MkRenameDuplicateE % _2)) someEx
-  go (view (_MkReadIndexE % _3)) someEx
-  go (view (_MkDuplicateIndexPathE % _3)) someEx
-  go (view (_MkTrashPathNotFoundE % _3)) someEx
-  go (view (_MkRestoreCollisionE % _3)) someEx
-  go (view (_MkIndexSizeMismatchE % _4)) someEx
-  go (view (_MkTomlDecodeE % _2)) someEx
-  go (view (_MkArbitraryE % _2)) someEx
+  go (_MkPathNotFoundE % _2) someEx
+  go (_MkRenameDuplicateE % _2) someEx
+  go (_MkReadIndexE % _3) someEx
+  go (_MkDuplicateIndexPathE % _3) someEx
+  go (_MkTrashPathNotFoundE % _3) someEx
+  go (_MkRestoreCollisionE % _3) someEx
+  go (_MkIndexSizeMismatchE % _4) someEx
+  go (_MkTomlDecodeE % _2) someEx
+  go (_MkArbitraryE % _2) someEx
   where
     go ::
-      forall e.
-      Exception e =>
-      (e -> CallStack) ->
+      forall e k i.
+      (Exception e, Is k A_Getter) =>
+      Optic' k i e CallStack ->
       SomeException ->
       Either CallStack ()
     go getCs ex = case fromException @e ex of
-      Just x -> Left $ getCs x
+      Just x -> Left $ view getCs x
       Nothing -> Right ()
 
 displayExceptions ::

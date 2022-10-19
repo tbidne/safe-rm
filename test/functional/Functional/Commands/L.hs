@@ -8,7 +8,7 @@ where
 
 import Data.ByteString.Char8 qualified as Char8
 import Functional.Prelude
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( DuplicateIndexPathE,
     IndexSizeMismatchE,
     ReadIndexE,

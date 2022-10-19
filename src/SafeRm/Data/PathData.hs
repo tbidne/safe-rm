@@ -68,7 +68,7 @@ import SafeRm.Effects.MonadFsWriter
       ),
   )
 import SafeRm.Effects.MonadSystemTime (Timestamp)
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( PathNotFoundE (MkPathNotFoundE),
     RenameDuplicateE (MkRenameDuplicateE),
     RestoreCollisionE (MkRestoreCollisionE),

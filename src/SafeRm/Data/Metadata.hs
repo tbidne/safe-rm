@@ -24,7 +24,7 @@ import SafeRm.Data.Paths
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( IndexSizeMismatchE (MkIndexSizeMismatchE),
     PathNotFoundE (MkPathNotFoundE),
   )

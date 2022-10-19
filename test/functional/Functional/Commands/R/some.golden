@@ -42,15 +42,15 @@ LOGS RESTORE
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:308:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 - Path not found: f3
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:308:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 
 TERMINAL LIST 2

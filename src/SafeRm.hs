@@ -60,7 +60,7 @@ import SafeRm.Env
     getTrashIndex,
     getTrashPaths,
   )
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( Exceptions (MkExceptions),
     PathNotFoundE (MkPathNotFoundE),
     displayTrace,

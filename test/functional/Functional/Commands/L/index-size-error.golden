@@ -19,6 +19,6 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata
   toMetadata, called at src/SafeRm.hs:257:13 in <package>:SafeRm
-  getMetadata, called at src/SafeRm/Runner.hs:308:17 in <package>:SafeRm.Runner
-  printMetadata, called at src/SafeRm/Runner.hs:148:29 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  getMetadata, called at src/SafeRm/Runner.hs:300:17 in <package>:SafeRm.Runner
+  printMetadata, called at src/SafeRm/Runner.hs:140:29 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude

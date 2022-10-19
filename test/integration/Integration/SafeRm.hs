@@ -18,7 +18,7 @@ import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Exceptions (Exceptions (MkExceptions))
+import SafeRm.Exception (Exceptions (MkExceptions))
 import SafeRm.Runner.Env
   ( Env (MkEnv),
     LogEnv (MkLogEnv),

@@ -7,7 +7,7 @@ module Functional.Commands.X
 where
 
 import Functional.Prelude
-import SafeRm.Exceptions (Exceptions)
+import SafeRm.Exception (Exceptions)
 
 -- | @since 0.1
 tests :: IO FilePath -> TestTree

@@ -46,7 +46,7 @@ import SafeRm.Effects.MonadFsWriter
       ),
   )
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( DuplicateIndexPathE (MkDuplicateIndexPathE),
     ReadIndexE (MkReadIndexE),
     TrashPathNotFoundE (MkTrashPathNotFoundE),

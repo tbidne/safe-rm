@@ -25,8 +25,8 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
   mvTrashToOriginal, called at src/SafeRm.hs:294:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.restore][Info] Restored: 
 [2020-05-31 12:00:00][functional][Error] Exceptions:
 
@@ -36,5 +36,5 @@ CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
   throwCallStack, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
   mvTrashToOriginal, called at src/SafeRm.hs:294:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude

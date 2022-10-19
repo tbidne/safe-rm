@@ -42,15 +42,15 @@ LOGS PERM DELETE
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:210:9 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:145:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 - Path not found: f3
 
 CallStack (from HasCallStack):
   getCallStack, called at src/SafeRm.hs:210:9 in <package>:SafeRm
-  deletePermanently, called at src/SafeRm/Runner.hs:145:33 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
+  deletePermanently, called at src/SafeRm/Runner.hs:137:33 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
 
 
 TERMINAL LIST 2

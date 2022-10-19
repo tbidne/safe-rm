@@ -54,7 +54,7 @@ library
     SafeRm.Effects.MonadSystemTime
     SafeRm.Effects.MonadTerminal
     SafeRm.Env
-    SafeRm.Exceptions
+    SafeRm.Exception
     SafeRm.Prelude
     SafeRm.Runner
     SafeRm.Runner.Args

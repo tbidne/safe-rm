@@ -36,7 +36,7 @@ import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
 import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
-import SafeRm.Exceptions
+import SafeRm.Exception
   ( ArbitraryE (MkArbitraryE),
     TomlDecodeE (MkTomlDecodeE),
     displayTrace,

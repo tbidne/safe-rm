@@ -8,7 +8,7 @@ where
 
 import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString qualified as BS
-import SafeRm.Exceptions (withStackTracing)
+import SafeRm.Exception (withStackTracing)
 import SafeRm.Prelude
 import System.IO qualified as IO
 import UnliftIO.Directory qualified as Dir
