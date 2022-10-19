@@ -10,23 +10,9 @@ Size:         10.00B
 
 
 EXCEPTION RESTORE
-Encountered exception(s)
+Exceptions:
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:292:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r4/.trash
@@ -36,28 +22,19 @@ LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore.restoring][Warn] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:292:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:294:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.restore][Info] Restored: 
-[2020-05-31 12:00:00][functional][Error] Encountered exception(s)
+[2020-05-31 12:00:00][functional][Error] Exceptions:
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:292:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:293:5 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:294:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude

@@ -10,41 +10,20 @@ Size:         10.00B
 
 
 EXCEPTION RESTORE
-Encountered exception(s)
+Exceptions:
 
 - Path not found: bad file
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r3/.trash
 [2020-05-31 12:00:00][functional.restore.readIndex][Debug] Index path: <dir>/r3/.trash/.index.csv
 [2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r3/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.restore][Info] Restored: 
-[2020-05-31 12:00:00][functional][Error] Encountered exception(s)
+[2020-05-31 12:00:00][functional][Error] Exceptions:
 
 - Path not found: bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:306:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:309:5 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:145:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
+  getCallStack, called at src/SafeRm.hs:308:9 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:147:24 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude

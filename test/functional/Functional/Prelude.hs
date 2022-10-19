@@ -39,6 +39,7 @@ where
 import Data.ByteString.Builder (Builder)
 import Data.ByteString.Builder qualified as Builder
 import Data.ByteString.Lazy qualified as BSL
+import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime))
@@ -171,20 +172,24 @@ data CapturedOutput
 -- | Transforms a list of 'CapturedOutput' into a lazy bytestring to be used
 -- with golden tests.
 capturedToBs :: [CapturedOutput] -> BSL.ByteString
-capturedToBs = Builder.toLazyByteString . foldr go ""
+capturedToBs =
+  Builder.toLazyByteString
+    . mconcat
+    . L.intersperse "\n\n"
+    . foldr go []
   where
     go (MonadTerminal title bs) acc = fmt "TERMINAL " title bs acc
     go (Logs title bs) acc = fmt "LOGS " title bs acc
     go (Exception title bs) acc = fmt "EXCEPTION " title bs acc
+    fmt :: Builder -> Builder -> Builder -> [Builder] -> [Builder]
     fmt cons title bs acc =
       mconcat
         [ cons,
           title,
           "\n",
-          bs,
-          "\n\n",
-          acc
+          bs
         ]
+        : acc
 
 -- | Runs safe-rm.
 runSafeRm :: FilePath -> [String] -> IO ()

@@ -3,3 +3,7 @@ trash-home = "./tmp"
 
 # File log level
 log-level = "info"
+
+# Determines if we print stack traces to the console on errors. Stack traces
+# are always included in file logs regardless of this setting.
+show-trace = true

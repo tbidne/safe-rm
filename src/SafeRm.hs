@@ -35,7 +35,7 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack), throwCS)
+import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
 import SafeRm.Effects.MonadFsReader
   ( MonadFsReader
       ( doesDirectoryExist,
@@ -61,9 +61,10 @@ import SafeRm.Env
     getTrashPaths,
   )
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (PathNotFound, SomeExceptions),
-    wrapCS,
+  ( Exceptions (MkExceptions),
+    PathNotFoundE (MkPathNotFoundE),
+    displayTrace,
+    withStackTracing,
   )
 import SafeRm.Prelude
 import SafeRm.Utils qualified as Utils
@@ -107,7 +108,7 @@ delete paths = addNamespace "delete" $ do
         modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (displayExceptiont ex)
+        $(logWarn) (displayTrace ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -128,13 +129,14 @@ delete paths = addNamespace "delete" $ do
     -- NOTE: We do not log these exceptions. In general, the only exceptions
     -- we log in the SafeRm API are those that are non-fatal i.e. ones we
     -- catch. Unhandled ones are left to bubble up, where the runner can
-    -- cath and log them.
-
-    -- NOTE: We do not log these exceptions. In general, the only exceptions
-    -- we log in the SafeRm API are those that are non-fatal i.e. ones we
-    -- catch. Unhandled ones are left to bubble up, where the runner can
-    -- cath and log them.
-    throwCS . MkExceptionI @SomeExceptions
+    -- catch and log them.
+    --
+    -- Also notice that we use throwIO here and not throwCallStack. The
+    -- Exceptions type is uses solely to aggregate exceptions encountered here,
+    -- deletePermanently, and restore. All the exceptions it wraps should have
+    -- their own call stack data, so adding more clutters the output for little
+    -- gain.
+    throwIO . MkExceptions
 
 -- | Permanently deletes the paths from the trash.
 --
@@ -171,7 +173,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
             modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            $(logWarn) (displayExceptiont ex)
+            $(logWarn) (displayTrace ex)
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
@@ -208,7 +210,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
   cs <- getCallStack
   let searchExs = pathsToException cs searchFailures
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
-    throwCS . MkExceptionI @SomeExceptions
+    throwIO . MkExceptions
 
 -- | Reads the index at either the specified or default location. If the
 -- file does not exist, returns empty.
@@ -293,7 +295,7 @@ restore paths = addNamespace "restore" $ do
         modifyIORef' restoredPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (displayExceptiont ex)
+        $(logWarn) (displayTrace ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -306,7 +308,7 @@ restore paths = addNamespace "restore" $ do
   cs <- getCallStack
   let searchExs = pathsToException cs searchFailures
   Utils.whenJust (Utils.concatMNonEmpty searchExs exceptions) $
-    throwCS . MkExceptionI @SomeExceptions
+    throwIO . MkExceptions
 
 -- | Empties the trash. Deletes the index file.
 --
@@ -362,7 +364,7 @@ showMapElems toPathI =
     . HMap.elems
 
 noBuffering :: (HasCallStack, MonadIO m) => m ()
-noBuffering = liftIO $ wrapCS $ buffOff IO.stdin *> buffOff IO.stdout
+noBuffering = liftIO $ withStackTracing $ buffOff IO.stdin *> buffOff IO.stdout
   where
     buffOff h = IO.hSetBuffering h NoBuffering
 
@@ -377,4 +379,4 @@ pathsToException cs = foldr go []
 
 pathToException :: CallStack -> PathI TrashName -> SomeException
 pathToException cs (MkPathI p) =
-  toException $ MkExceptionI @PathNotFound p cs
+  toException $ MkPathNotFoundE p cs

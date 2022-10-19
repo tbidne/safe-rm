@@ -14,15 +14,15 @@ module SafeRm.Runner
   )
 where
 
-import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
+import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import SafeRm qualified
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
 import SafeRm.Effects.MonadFsWriter
   ( MonadFsWriter
@@ -37,9 +37,11 @@ import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (TomlDecode),
-    wrapCS,
+  ( ArbitraryE (MkArbitraryE),
+    TomlDecodeE (MkTomlDecodeE),
+    displayTrace,
+    displayTraceIf,
+    withStackTracing,
   )
 import SafeRm.Prelude
 import SafeRm.Runner.Args
@@ -71,9 +73,8 @@ import SafeRm.Runner.Env
     logLevel,
     logNamespace,
   )
-import SafeRm.Runner.SafeRmT (usingSafeRmT)
+import SafeRm.Runner.SafeRmT (runSafeRmT)
 import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)
-import System.Exit (ExitCode (ExitSuccess))
 import TOML qualified
 import UnliftIO.Directory (XdgDirectory (XdgConfig))
 import UnliftIO.Directory qualified as Dir
@@ -93,31 +94,24 @@ runSafeRm ::
     MonadSystemTime m
   ) =>
   m ()
-runSafeRm =
+runSafeRm = do
+  (config, cmd) <- getConfiguration
+
+  -- NOTE: Using setUncaughtExceptionHandler means we do not have to manually
+  -- catch exceptions and print ourselves, just to get nicer output from
+  -- show.
+  let handleFn :: Exception e => e -> Text
+      handleFn = displayTraceIf (fromMaybe False (config ^. #showTrace))
+  liftIO $ setUncaughtExceptionHandler (putTextLn . handleFn)
+
   bracket
-    getEnv
+    (configToEnv config)
     closeLogging
-    ( \(env, cmd) ->
-        usingSafeRmT env (runCmd cmd)
-    )
-    -- NOTE: the doNothingOnSuccess has to be _outside_ the bracket to
-    -- successfully catch the ExitSuccess.
-    `catch` doNothingOnSuccess
-    `catchAny` handleEx
+    (runSafeRmT (runCmd cmd))
   where
-    closeLogging (e, _) = do
-      let mFinalizer = e ^? #logEnv % #logFile %? #finalizer
-      liftIO $ wrapCS $ fromMaybe (pure ()) mFinalizer
-
-    doNothingOnSuccess ExitSuccess = pure ()
-    doNothingOnSuccess ex = throwIO ex
-
-    -- NOTE: Finally, print any exceptions to the console before exiting with
-    -- failure. We need this _outside_ of the setup in case the setup itself
-    -- fails.
-    handleEx ex = liftIO $ do
-      putTextLn $ T.pack $ displayException ex
-      exitFailure
+    closeLogging env = do
+      let mFinalizer = env ^? #logEnv % #logFile %? #finalizer
+      liftIO $ withStackTracing $ fromMaybe (pure ()) mFinalizer
 
 -- | Runs SafeRm in the given environment. This is useful in conjunction with
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
@@ -147,7 +141,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (displayExceptiont ex)
+      $(logError) (displayTrace ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
@@ -173,7 +167,7 @@ getEnv = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- wrapCS $ openFile logPath AppendMode
+      h <- withStackTracing $ openFile logPath AppendMode
       pure $
         Just $
           MkLogFile
@@ -191,6 +185,41 @@ getEnv = do
                 }
           }
   pure (env, command)
+
+configToEnv ::
+  ( HasCallStack,
+    MonadCallStack m,
+    MonadFsWriter m,
+    MonadUnliftIO m
+  ) =>
+  TomlConfig ->
+  m Env
+configToEnv mergedConfig = do
+  trashHome <- trashOrDefault $ mergedConfig ^. #trashHome
+  -- NOTE: Needed so below openFile command does not fail
+  Paths.applyPathI (createDirectoryIfMissing False) trashHome
+
+  logFile <- case join (mergedConfig ^. #logLevel) of
+    Nothing -> pure Nothing
+    Just lvl -> do
+      let logPath = trashHome ^. #unPathI </> ".log"
+      h <- withStackTracing $ openFile logPath AppendMode
+      pure $
+        Just $
+          MkLogFile
+            { handle = h,
+              logLevel = lvl,
+              finalizer = hFlush h `finally` hClose h
+            }
+  pure $
+    MkEnv
+      { trashHome,
+        logEnv =
+          MkLogEnv
+            { logFile,
+              logNamespace = "runner"
+            }
+      }
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the user
 -- configuration. For values shared between the CLI and Toml file, the CLI
@@ -217,9 +246,9 @@ getConfiguration = do
     TomlPath tomlPath -> readConfig tomlPath
     -- no toml config path given...
     TomlDefault -> do
-      xdgConfig <- wrapCS $ Dir.getXdgDirectory XdgConfig "safe-rm"
+      xdgConfig <- withStackTracing $ Dir.getXdgDirectory XdgConfig "safe-rm"
       let defPath = xdgConfig </> "config.toml"
-      exists <- wrapCS $ Dir.doesFileExist defPath
+      exists <- withStackTracing $ Dir.doesFileExist defPath
       if exists
         then -- 2. config exists at default path: read
           readConfig defPath
@@ -237,10 +266,12 @@ getConfiguration = do
         readFile fp >>= \contents' -> do
           case TEnc.decodeUtf8' contents' of
             Right txt -> pure txt
-            Left err -> throwIO err
+            Left err ->
+              throwCallStack $
+                MkArbitraryE (toException err)
       case TOML.decode contents of
         Right cfg -> pure cfg
-        Left tomlErr -> throwCS $ MkExceptionI @TomlDecode tomlErr
+        Left tomlErr -> throwCallStack $ MkTomlDecodeE tomlErr
 
 printIndex ::
   ( MonadFsReader m,
@@ -297,4 +328,4 @@ getTrashHome ::
     MonadUnliftIO m
   ) =>
   m (PathI TrashHome)
-getTrashHome = MkPathI . (</> ".trash") <$> wrapCS Dir.getHomeDirectory
+getTrashHome = MkPathI . (</> ".trash") <$> withStackTracing Dir.getHomeDirectory

@@ -5,7 +5,7 @@
 -- @since 0.1
 module SafeRm.Effects.MonadCallStack
   ( MonadCallStack (..),
-    throwCS,
+    throwCallStack,
   )
 where
 
@@ -35,7 +35,7 @@ instance MonadCallStack m => MonadCallStack (ReaderT e m) where
 -- | 'throwIO' with a 'callStack'.
 --
 -- @since 0.1
-throwCS ::
+throwCallStack ::
   forall m e a.
   ( Exception e,
     HasCallStack,
@@ -44,4 +44,4 @@ throwCS ::
   ) =>
   (CallStack -> e) ->
   m a
-throwCS f = getCallStack >>= throwIO . f
+throwCallStack f = getCallStack >>= throwIO . f

@@ -6,7 +6,6 @@ module SafeRm.Prelude
 
     -- * Text
     showt,
-    displayExceptiont,
   )
 where
 
@@ -115,6 +114,8 @@ import Optics.Core as X
     (^?),
     _1,
     _2,
+    _3,
+    _4,
     _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
@@ -157,7 +158,3 @@ import UnliftIO.IORef as X (IORef, modifyIORef', newIORef, readIORef)
 -- | @since 0.1
 showt :: Show a => a -> Text
 showt = T.pack . show
-
--- | @since 0.1
-displayExceptiont :: Exception e => e -> Text
-displayExceptiont = T.pack . displayException

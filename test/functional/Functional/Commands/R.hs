@@ -7,10 +7,7 @@ module Functional.Commands.R
 where
 
 import Functional.Prelude
-import SafeRm.Exceptions
-  ( ExceptionI,
-    ExceptionIndex (SomeExceptions),
-  )
+import SafeRm.Exceptions (Exceptions)
 
 -- | @since 0.1
 tests :: IO FilePath -> TestTree
@@ -152,7 +149,7 @@ restoreUnknownError args = goldenVsStringDiff desc diff gpath $ do
   let restoreArgList = ["r", "bad file", "-t", trashDir]
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "RESTORE"
       restoreArgList
@@ -191,7 +188,7 @@ restoreCollisionError args = goldenVsStringDiff desc diff gpath $ do
   let restoreArgList = ["r", "f1", "-t", trashDir]
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "RESTORE"
       restoreArgList
@@ -232,7 +229,7 @@ restoresSome args = goldenVsStringDiff desc diff gpath $ do
         ("r" : filesTryRestore) <> ["-t", trashDir]
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "RESTORE"
       restoreArgList

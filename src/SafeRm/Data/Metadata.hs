@@ -21,12 +21,12 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashLog),
   )
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (PathNotFound, TrashIndexSizeMismatch),
+  ( IndexSizeMismatchE (MkIndexSizeMismatchE),
+    PathNotFoundE (MkPathNotFoundE),
   )
 import SafeRm.Prelude
 
@@ -142,8 +142,8 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     -- trash path, this guarantees that the index exactly corresponds to the
     -- trash state.
     when (numEntries /= numIndex) $
-      throwCS $
-        MkExceptionI @TrashIndexSizeMismatch (trashHome, numFiles, numIndex)
+      throwCallStack $
+        MkIndexSizeMismatchE trashHome numFiles numIndex
 
     pure $
       MkMetadata
@@ -184,4 +184,4 @@ getAllFiles fp =
           listDirectory fp
             >>= fmap join
               . traverse (getAllFiles . (fp </>))
-        False -> throwCS $ MkExceptionI @PathNotFound fp
+        False -> throwCallStack $ MkPathNotFoundE fp

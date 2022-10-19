@@ -6,5 +6,3 @@ LOGS EMPTY 1
 LOGS EMPTY 2
 [2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home: <dir>/e2/.trash
 [2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home does not exist.
-
-

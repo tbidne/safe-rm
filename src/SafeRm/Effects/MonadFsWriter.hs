@@ -8,7 +8,7 @@ where
 
 import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString qualified as BS
-import SafeRm.Exceptions (wrapCS)
+import SafeRm.Exceptions (withStackTracing)
 import SafeRm.Prelude
 import System.IO qualified as IO
 import UnliftIO.Directory qualified as Dir
@@ -74,17 +74,17 @@ class Monad m => MonadFsWriter m where
 
 -- | @since 0.1
 instance MonadFsWriter IO where
-  writeFile f = wrapCS . BS.writeFile f
-  appendFile f = wrapCS . BS.appendFile f
-  openFile f = wrapCS . IO.openFile f
-  hPut h = wrapCS . BS.hPut h
-  hClose = wrapCS . IO.hClose
-  hFlush = wrapCS . IO.hFlush
-  renameFile f = wrapCS . Dir.renameFile f
-  renameDirectory f = wrapCS . Dir.renameDirectory f
-  removePathForcibly = wrapCS . Dir.removePathForcibly
-  removeDirectoryRecursive = wrapCS . Dir.removeDirectoryRecursive
-  createDirectoryIfMissing b = wrapCS . Dir.createDirectoryIfMissing b
+  writeFile f = withStackTracing . BS.writeFile f
+  appendFile f = withStackTracing . BS.appendFile f
+  openFile f = withStackTracing . IO.openFile f
+  hPut h = withStackTracing . BS.hPut h
+  hClose = withStackTracing . IO.hClose
+  hFlush = withStackTracing . IO.hFlush
+  renameFile f = withStackTracing . Dir.renameFile f
+  renameDirectory f = withStackTracing . Dir.renameDirectory f
+  removePathForcibly = withStackTracing . Dir.removePathForcibly
+  removeDirectoryRecursive = withStackTracing . Dir.removeDirectoryRecursive
+  createDirectoryIfMissing b = withStackTracing . Dir.createDirectoryIfMissing b
 
 -- | @since 0.1
 instance MonadFsWriter m => MonadFsWriter (ReaderT env m) where

@@ -18,10 +18,7 @@ import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (SomeExceptions),
-  )
+import SafeRm.Exceptions (Exceptions (MkExceptions))
 import SafeRm.Runner.Env
   ( Env (MkEnv),
     LogEnv (MkLogEnv),
@@ -111,10 +108,10 @@ deleteSome mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @(ExceptionI SomeExceptions) $
+          try @_ @Exceptions $
             usingSafeRmT env (SafeRm.delete (USeq.map MkPathI toDelete))
 
-      (MkExceptionI exs _) <-
+      (MkExceptions exs) <-
         either
           pure
           (\_ -> annotate "Expected exceptions, received none" *> failure)
@@ -220,10 +217,10 @@ deleteSomePermanently mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @(ExceptionI SomeExceptions) $
+          try @_ @Exceptions $
             usingSafeRmT env (SafeRm.deletePermanently True toPermDelete)
 
-      (MkExceptionI exs _) <-
+      (MkExceptions exs) <-
         either
           pure
           (\_ -> annotate "Expected exceptions, received none" *> failure)
@@ -327,10 +324,10 @@ restoreSome mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @(ExceptionI SomeExceptions) $
+          try @_ @Exceptions $
             usingSafeRmT env (SafeRm.restore toRestore)
 
-      (MkExceptionI exs _) <-
+      (MkExceptions exs) <-
         either
           pure
           (\_ -> annotate "Expected exceptions, received none" *> failure)

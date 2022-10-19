@@ -215,13 +215,10 @@ replaceDir fp =
     . BSL.fromStrict
 
 runLogging :: [String] -> IO ()
-runLogging argList = do
-  bracket
-    ( do
-        (env, cmd) <- SysEnv.withArgs argList Runner.getEnv
-        (,cmd) <$> transformEnv env
-    )
-    (\(loggerEnv, _) -> loggerEnv ^. #logFinalizer)
-    ( \(loggerEnv, cmd) ->
-        runLoggerT (Runner.runCmd cmd) loggerEnv
-    )
+runLogging argList = bracket mkEnv closeLog run
+  where
+    mkEnv = do
+      (env, cmd) <- SysEnv.withArgs argList Runner.getEnv
+      (,cmd) <$> transformEnv env
+    closeLog = view (_1 % #logFinalizer)
+    run (loggerEnv, cmd) = runLoggerT (Runner.runCmd cmd) loggerEnv

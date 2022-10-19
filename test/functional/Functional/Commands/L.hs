@@ -9,13 +9,10 @@ where
 import Data.ByteString.Char8 qualified as Char8
 import Functional.Prelude
 import SafeRm.Exceptions
-  ( ExceptionI,
-    ExceptionIndex
-      ( DuplicateIndexPath,
-        ReadIndex,
-        TrashIndexSizeMismatch,
-        TrashPathNotFound
-      ),
+  ( DuplicateIndexPathE,
+    IndexSizeMismatchE,
+    ReadIndexE,
+    TrashPathNotFoundE,
   )
 
 -- import Data.ByteString qualified as BS
@@ -56,7 +53,7 @@ readIndexError args = goldenVsStringDiff "Read Index Error" diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", "bad index")]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs @(ExceptionI ReadIndex)
+    captureSafeRmExceptionLogs @ReadIndexE
       tmpDir
       "LIST"
       argList
@@ -88,7 +85,7 @@ indexEntryNonExtantError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs @(ExceptionI TrashPathNotFound)
+    captureSafeRmExceptionLogs @TrashPathNotFoundE
       tmpDir
       "LIST"
       argList
@@ -125,7 +122,7 @@ indexDuplicatesError args = goldenVsStringDiff desc diff gpath $ do
 
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI DuplicateIndexPath)
+      @DuplicateIndexPathE
       tmpDir
       "LIST"
       argList
@@ -161,7 +158,7 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
 
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI TrashIndexSizeMismatch)
+      @IndexSizeMismatchE
       tmpDir
       "LIST"
       argList

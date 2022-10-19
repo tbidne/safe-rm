@@ -51,7 +51,7 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader
   ( MonadFsReader
       ( canonicalizePath,
@@ -69,8 +69,9 @@ import SafeRm.Effects.MonadFsWriter
   )
 import SafeRm.Effects.MonadSystemTime (Timestamp)
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (PathNotFound, RenameDuplicate, RestoreCollision),
+  ( PathNotFoundE (MkPathNotFoundE),
+    RenameDuplicateE (MkRenameDuplicateE),
+    RestoreCollisionE (MkRestoreCollisionE),
   )
 import SafeRm.Prelude
 import System.FilePath qualified as FP
@@ -212,7 +213,7 @@ toPathData currTime trashHome originalPath = do
                 pathType = PathTypeDirectory,
                 created = currTime
               }
-        else throwCS $ MkExceptionI @PathNotFound (origPath ^. #unPathI)
+        else throwCallStack $ MkPathNotFoundE (origPath ^. #unPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -241,8 +242,7 @@ mkUniqPath fp = do
     go :: HasCallStack => Word16 -> m (PathI TrashName)
     go !counter
       | counter == maxBound =
-          throwCS $
-            MkExceptionI @RenameDuplicate fp
+          throwCallStack $ MkRenameDuplicateE fp
       | otherwise = do
           let fp' = fp <> MkPathI (mkSuffix counter)
           b <- Paths.applyPathI doesPathExist fp'
@@ -290,8 +290,8 @@ mvTrashToOriginal ::
 mvTrashToOriginal (MkPathI trashHome) pd = do
   exists <- originalPathExists pd
   when exists $
-    throwCS $
-      MkExceptionI @RestoreCollision (fileName, originalPath)
+    throwCallStack $
+      MkRestoreCollisionE fileName originalPath
   renameFn trashPath (pd ^. #originalPath % #unPathI)
   where
     originalPath = pd ^. #originalPath

@@ -1,11 +1,6 @@
 EXCEPTION LIST
 The path 'foo' was not found in the trash directory '<dir>/l3/.trash' despite being listed in the trash index. This can be fixed by manually deleting the entry from the index or deleting everything (i.e. sr e).
 
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:246:5 in <package>:SafeRm.Data.Index
-  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
-
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l3/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l3/.trash/.index.csv
@@ -13,8 +8,6 @@ LOGS LIST
 [2020-05-31 12:00:00][functional][Error] The path 'foo' was not found in the trash directory '<dir>/l3/.trash' despite being listed in the trash index. This can be fixed by manually deleting the entry from the index or deleting everything (i.e. sr e).
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/Index.hs:246:5 in <package>:SafeRm.Data.Index
-  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:120:7 in <package>:SafeRm.Data.Index
-
-
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/Index.hs:244:5 in <package>:SafeRm.Data.Index
+  throwIfTrashNonExtant, called at src/SafeRm/Data/Index.hs:117:7 in <package>:SafeRm.Data.Index

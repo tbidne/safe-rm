@@ -7,7 +7,7 @@ module Functional.Commands.D
 where
 
 import Functional.Prelude
-import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
+import SafeRm.Exceptions (Exceptions)
 
 -- | @since 0.1
 tests :: IO FilePath -> TestTree
@@ -148,7 +148,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
 
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "DELETE"
       argList

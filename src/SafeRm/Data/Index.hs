@@ -37,7 +37,7 @@ import SafeRm.Data.Paths
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCS)
+import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
 import SafeRm.Effects.MonadFsWriter
   ( MonadFsWriter
@@ -47,12 +47,9 @@ import SafeRm.Effects.MonadFsWriter
   )
 import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex
-      ( DuplicateIndexPath,
-        ReadIndex,
-        TrashPathNotFound
-      ),
+  ( DuplicateIndexPathE (MkDuplicateIndexPathE),
+    ReadIndexE (MkReadIndexE),
+    TrashPathNotFoundE (MkTrashPathNotFoundE),
   )
 import SafeRm.Prelude
 import System.FilePath qualified as FP
@@ -181,10 +178,10 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- End of stream w/ an error.
     runFold _ (Nil (Just err) rest) = do
       $(logError) ("Error end of stream: " <> T.pack err)
-      throwCS $
-        MkExceptionI @ReadIndex
-          ( indexPath,
-            mconcat
+      throwCallStack $
+        MkReadIndexE
+          indexPath
+          ( mconcat
               [ err,
                 " at \"",
                 lbsToStr rest,
@@ -195,13 +192,14 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- but just to cover all cases...
     runFold _ (Nil _ rest) = do
       $(logError) ("Unconsumed input: " <> lbsToTxt rest)
-      throwCS $
-        MkExceptionI @ReadIndex
-          (indexPath, "Unconsumed input: " <> lbsToStr rest)
+      throwCallStack $
+        MkReadIndexE
+          indexPath
+          ("Unconsumed input: " <> lbsToStr rest)
     -- Encountered an error.
     runFold _ (Cons (Left err) _) = do
       $(logError) ("Error reading stream: " <> T.pack err)
-      throwCS $ MkExceptionI @ReadIndex (indexPath, err)
+      throwCallStack $ MkReadIndexE indexPath err
     -- Inductive case, run fold and recurse
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest
 
@@ -223,8 +221,8 @@ throwIfDuplicates ::
   m ()
 throwIfDuplicates indexPath trashMap pd =
   when (fileName `HMap.member` trashMap) $
-    throwCS $
-      MkExceptionI @DuplicateIndexPath (indexPath, fileName)
+    throwCallStack $
+      MkDuplicateIndexPathE indexPath fileName
   where
     fileName = pd ^. #fileName
 
@@ -243,8 +241,8 @@ throwIfTrashNonExtant ::
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
   unless exists $
-    throwCS $
-      MkExceptionI @TrashPathNotFound (trashHome, filePath)
+    throwCallStack $
+      MkTrashPathNotFoundE trashHome filePath
   where
     filePath = pd ^. #fileName
 

@@ -9,11 +9,10 @@ where
 import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString qualified as BS
 import Data.Bytes (Bytes (MkBytes), Size (B))
-import SafeRm.Effects.MonadCallStack (throwCS)
+import SafeRm.Effects.MonadCallStack (throwCallStack)
 import SafeRm.Exceptions
-  ( ExceptionI (MkExceptionI),
-    ExceptionIndex (PathNotFound),
-    wrapCS,
+  ( PathNotFoundE (MkPathNotFoundE),
+    withStackTracing,
   )
 import SafeRm.Prelude
 import UnliftIO.Directory qualified as Dir
@@ -77,18 +76,18 @@ instance MonadFsReader IO where
   readFile f = do
     exists <- doesFileExist f
     unless exists $
-      throwCS @_ @(ExceptionI PathNotFound) $
-        MkExceptionI f
-    wrapCS (BS.readFile f)
+      throwCallStack $
+        MkPathNotFoundE f
+    withStackTracing (BS.readFile f)
 
-  doesFileExist = wrapCS . Dir.doesFileExist
+  doesFileExist = withStackTracing . Dir.doesFileExist
 
-  doesDirectoryExist = wrapCS . Dir.doesDirectoryExist
+  doesDirectoryExist = withStackTracing . Dir.doesDirectoryExist
 
-  doesPathExist = wrapCS . Dir.doesPathExist
+  doesPathExist = withStackTracing . Dir.doesPathExist
 
-  canonicalizePath = wrapCS . Dir.canonicalizePath
-  listDirectory = wrapCS . Dir.listDirectory
+  canonicalizePath = withStackTracing . Dir.canonicalizePath
+  listDirectory = withStackTracing . Dir.listDirectory
 
 -- | @since 0.1
 instance MonadFsReader m => MonadFsReader (ReaderT env m) where

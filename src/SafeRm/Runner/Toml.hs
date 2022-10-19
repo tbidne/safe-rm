@@ -24,7 +24,8 @@ import TOML
 -- @since 0.1
 data TomlConfig = MkTomlConfig
   { trashHome :: !(Maybe (PathI TrashHome)),
-    logLevel :: !(Maybe (Maybe LogLevel))
+    logLevel :: !(Maybe (Maybe LogLevel)),
+    showTrace :: !(Maybe Bool)
   }
   deriving stock
     ( -- | @since 0.1
@@ -39,12 +40,12 @@ makeFieldLabelsNoPrefix ''TomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
-  MkTomlConfig a b <> MkTomlConfig a' b' =
-    MkTomlConfig (a <|> a') (b <|> b')
+  MkTomlConfig a b c <> MkTomlConfig a' b' c' =
+    MkTomlConfig (a <|> a') (b <|> b') (c <|> c')
 
 -- | @since 0.1
 instance Monoid TomlConfig where
-  mempty = MkTomlConfig Nothing Nothing
+  mempty = MkTomlConfig Nothing Nothing Nothing
 
 -- | @since 0.5
 instance DecodeTOML TomlConfig where
@@ -52,11 +53,14 @@ instance DecodeTOML TomlConfig where
     MkTomlConfig
       <$> decodeTrashHome
       <*> decodeLogLevel
+      <*> decodeShowTrace
     where
       decodeTrashHome =
         fmap MkPathI <$> getFieldOptWith tomlDecoder "trash-home"
       decodeLogLevel =
         getFieldOptWith (tomlDecoder >>= readLogLevel) "log-level"
+      decodeShowTrace =
+        getFieldOptWith tomlDecoder "show-trace"
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.
@@ -69,5 +73,11 @@ argsToTomlConfig :: Args -> TomlConfig
 argsToTomlConfig args =
   MkTomlConfig
     { trashHome = args ^. #trashHome,
-      logLevel = args ^. #logLevel
+      logLevel = args ^. #logLevel,
+      showTrace
     }
+  where
+    -- noShowTrace overrides showTrace
+    showTrace
+      | args ^. #noShowTrace = Just False
+      | otherwise = args ^. #showTrace

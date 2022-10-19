@@ -7,7 +7,7 @@ module Functional.Commands.X
 where
 
 import Functional.Prelude
-import SafeRm.Exceptions (ExceptionI, ExceptionIndex (SomeExceptions))
+import SafeRm.Exceptions (Exceptions)
 
 -- | @since 0.1
 tests :: IO FilePath -> TestTree
@@ -153,7 +153,7 @@ deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
         ["x", "bad file", "-f", "-t", trashDir]
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "PERM DELETE"
       permDelArgList
@@ -195,7 +195,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
         ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
   (ex, logs) <-
     captureSafeRmExceptionLogs
-      @(ExceptionI SomeExceptions)
+      @Exceptions
       tmpDir
       "PERM DELETE"
       permDelArgList

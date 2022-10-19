@@ -1,49 +1,26 @@
 EXCEPTION DELETE
-Encountered exception(s)
+Exceptions:
 
 - Path not found: <dir>/d3/bad file
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:104:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:142:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:137:5 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:142:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
 
 LOGS DELETE
 [2020-05-31 12:00:00][functional.delete][Debug] Trash home: <dir>/d3/.trash
 [2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d3/bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:104:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:142:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
 [2020-05-31 12:00:00][functional.delete][Info] Deleted: 
-[2020-05-31 12:00:00][functional][Error] Encountered exception(s)
+[2020-05-31 12:00:00][functional][Error] Exceptions:
 
 - Path not found: <dir>/d3/bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm/Data/PathData.hs:215:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:104:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:142:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:13 in <package>:SafeRm.Effects.MonadCallStack
-  throwCS, called at src/SafeRm.hs:137:5 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:142:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:237:36 in <package>:Functional.Prelude
-
-
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:144:23 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:241:36 in <package>:Functional.Prelude
