@@ -14,7 +14,8 @@ tests args =
   testGroup
     "Empty (e)"
     [ emptyTrash args,
-      emptyTrashTwice args
+      emptyTrashTwice args,
+      emptyNoForce args
     ]
 
 emptyTrash :: IO FilePath -> TestTree
@@ -83,6 +84,49 @@ emptyTrashTwice args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Calling empty twice does not error"
     gpath = goldenPath </> "twice.golden"
+
+emptyNoForce :: IO FilePath -> TestTree
+emptyNoForce args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "e3"
+      trashDir = testDir </> ".trash"
+      fileDeleteNames = show @Int <$> [1 .. 5]
+      fileDeletePaths = (testDir </>) <$> fileDeleteNames
+      delArgList = ["-t", trashDir, "d"] <> fileDeletePaths
+
+  -- setup
+  clearDirectory testDir
+  -- test w/ a file in dir
+  createFiles fileDeletePaths
+  assertFilesExist fileDeletePaths
+
+  runSafeRm tmpDir delArgList
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ".index.csv" : fileDeleteNames)
+  assertFilesDoNotExist fileDeletePaths
+
+  -- EMPTY
+
+  let emptyArgList = ["-t", trashDir, "e"]
+  (emptyResult, emptyLogs) <-
+    captureSafeRmLogs tmpDir "EMPTY" emptyArgList
+
+  -- list output assertions
+  listResult <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+
+  -- file assertions
+  -- First getChar response was 'n', so files should still exist
+  assertFilesExist ((trashDir </>) <$> ".index.csv" : fileDeleteNames)
+  pure $
+    capturedToBs
+      [ emptyResult,
+        emptyLogs,
+        listResult
+      ]
+  where
+    desc = "Empties trash without force"
+    gpath = goldenPath </> "no-force.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/E"

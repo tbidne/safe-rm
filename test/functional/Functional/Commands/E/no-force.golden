@@ -1,0 +1,37 @@
+TERMINAL EMPTY
+Permanently delete all contents (y/n)? 
+
+LOGS EMPTY
+[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs] Trash home: <dir>/e3/.trash
+[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs] Not deleting contents.
+
+
+TERMINAL LIST
+Type:      File
+Name:      1
+Original:  <dir>/e3/1
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      2
+Original:  <dir>/e3/2
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      3
+Original:  <dir>/e3/3
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      4
+Original:  <dir>/e3/4
+Created:   2020-05-31 12:00:00 
+
+Type:      File
+Name:      5
+Original:  <dir>/e3/5
+Created:   2020-05-31 12:00:00 
+Entries:      5
+Total Files:  5
+Log size:     0.00B
+Size:         25.00B 

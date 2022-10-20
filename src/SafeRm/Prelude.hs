@@ -160,7 +160,13 @@ import UnliftIO.Exception as X
     try,
     tryAny,
   )
-import UnliftIO.IORef as X (IORef, modifyIORef', newIORef, readIORef)
+import UnliftIO.IORef as X
+  ( IORef,
+    modifyIORef',
+    newIORef,
+    readIORef,
+    writeIORef,
+  )
 
 -- | @since 0.1
 showt :: Show a => a -> Text

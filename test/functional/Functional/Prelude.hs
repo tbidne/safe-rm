@@ -13,6 +13,8 @@ module Functional.Prelude
     FuncIO (..),
     runFuncIO,
     FuncEnv (..),
+    CharStream,
+    altAnswers,
 
     -- * Running SafeRm
 
@@ -107,6 +109,15 @@ import Test.Tasty.HUnit as X
   )
 import UnliftIO.Environment qualified as SysEnv
 
+-- | Infinite stream of chars.
+data CharStream = Char :> CharStream
+
+infixr 5 :>
+
+-- | Alternating stream ['n', 'y', 'n', ...]
+altAnswers :: CharStream
+altAnswers = 'n' :> 'y' :> altAnswers
+
 -- | Environment for running functional tests.
 data FuncEnv = MkFuncEnv
   { -- | Trash home.
@@ -116,7 +127,9 @@ data FuncEnv = MkFuncEnv
     -- | Saves the terminal output.
     terminalRef :: !(IORef Text),
     -- | Saves the logs output.
-    logsRef :: !(IORef Text)
+    logsRef :: !(IORef Text),
+    -- | Used to alternate responses to getChar.
+    charStream :: !(IORef CharStream)
   }
 
 makeFieldLabelsNoPrefix ''FuncEnv
@@ -150,13 +163,21 @@ instance MonadCallStack (FuncIO env) where
 
 instance
   ( Is k A_Getter,
-    LabelOptic' "terminalRef" k env (IORef Text)
+    LabelOptic' "terminalRef" k env (IORef Text),
+    Is l A_Getter,
+    LabelOptic' "charStream" l env (IORef CharStream)
   ) =>
   MonadTerminal (FuncIO env)
   where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
-  getChar = pure 'y'
+  getChar = do
+    charStream <- asks (view #charStream)
+    c :> cs <- readIORef charStream
+    -- modifyIORef' charStream not
+    writeIORef charStream cs
+    -- pure $ if c then 'y' else 'n'
+    pure c
 
 instance MonadSystemTime (FuncIO env) where
   getSystemTime = pure $ MkTimestamp localTime
@@ -217,8 +238,11 @@ captureSafeRm testDir title = fmap (view _1) . captureSafeRmLogs testDir title
 
 -- | Runs safe-rm and captures (terminal output, logs).
 captureSafeRmLogs ::
+  -- | Test dir. Used to strip dir from output to make paths deterministic.
   FilePath ->
+  -- | Title to add to captured output.
   Builder ->
+  -- Args.
   [String] ->
   IO (CapturedOutput, CapturedOutput)
 captureSafeRmLogs testDir title argList = do
@@ -244,8 +268,11 @@ captureSafeRmLogs testDir title argList = do
 captureSafeRmExceptionLogs ::
   forall e.
   Exception e =>
+  -- | Test dir. Used to strip dir from output to make paths deterministic.
   FilePath ->
+  -- | Title to add to captured output.
   Builder ->
+  -- Args.
   [String] ->
   IO (CapturedOutput, CapturedOutput)
 captureSafeRmExceptionLogs = captureSafeRmMTraceExceptionLogs @e False
@@ -264,9 +291,13 @@ captureSafeRmTraceExceptionLogs = captureSafeRmMTraceExceptionLogs @e True
 captureSafeRmMTraceExceptionLogs ::
   forall e.
   Exception e =>
+  -- | Whether to include stack trace in terminal output.
   Bool ->
+  -- | Test dir. Used to strip dir from output to make paths deterministic.
   FilePath ->
+  -- | Title to add to captured output.
   Builder ->
+  -- Args.
   [String] ->
   IO (CapturedOutput, CapturedOutput)
 captureSafeRmMTraceExceptionLogs withTrace testDir title argList = do
@@ -322,12 +353,14 @@ assertDirectoriesDoNotExist paths =
 mkFuncEnv :: TomlConfig -> IORef Text -> IORef Text -> IO FuncEnv
 mkFuncEnv toml logsRef terminalRef = do
   trashHome <- getTrashHome
+  charStream <- newIORef altAnswers
   pure $
     MkFuncEnv
       { trashHome = trashHome,
         terminalRef,
         logsRef,
-        logNamespace = "functional"
+        logNamespace = "functional",
+        charStream
       }
   where
     getTrashHome = case toml ^. #trashHome of

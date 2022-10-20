@@ -194,7 +194,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
           let pdStr = (renderStrict . layoutCompact . (line <>) . pretty) pd
           putTextLn pdStr
           putStr "Permanently delete (y/n)? "
-          c <- Ch.toLower <$> liftIO getChar
+          c <- Ch.toLower <$> getChar
           if
               | c == 'y' -> deleteFn pd *> putStrLn ""
               | c == 'n' -> putStrLn ""
@@ -340,7 +340,7 @@ emptyTrash force = addNamespace "emptyTrash" $ do
         else do
           noBuffering
           putStr "Permanently delete all contents (y/n)? "
-          c <- Ch.toLower <$> liftIO getChar
+          c <- Ch.toLower <$> getChar
           if
               | c == 'y' -> do
                   $(logDebug) "Deleting contents."

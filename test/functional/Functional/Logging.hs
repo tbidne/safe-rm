@@ -39,7 +39,8 @@ data LoggerEnv = MkLoggerEnv
     logFinalizer :: IO (),
     logLevel :: !LogLevel,
     logNamespace :: !Namespace,
-    terminalRef :: !(IORef Text)
+    terminalRef :: !(IORef Text),
+    charStream :: !(IORef CharStream)
   }
 
 makeFieldLabelsNoPrefix ''LoggerEnv
@@ -133,7 +134,8 @@ goldenPath = "test/functional/Functional/Logging"
 
 transformEnv :: Env -> IO LoggerEnv
 transformEnv env = do
-  ref <- newIORef ""
+  terminalRef <- newIORef ""
+  charStream <- newIORef altAnswers
   (logHandle, logFinalizer, logLevel) <- case env ^. #logEnv % #logFile of
     Nothing -> throwString ""
     Just lf -> pure (lf ^. #handle, lf ^. #finalizer, lf ^. #logLevel)
@@ -144,7 +146,8 @@ transformEnv env = do
         logFinalizer,
         logLevel,
         logNamespace = "logging-tests",
-        terminalRef = ref
+        terminalRef,
+        charStream
       }
 
 -- HACK: See the note on Functional.Prelude.replaceDir. Note that we cannot

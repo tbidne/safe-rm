@@ -18,7 +18,8 @@ tests args =
       deletesMany args,
       deleteUnknownError args,
       deletesSome args,
-      deletesSomeNoTrace args
+      deletesSomeNoTrace args,
+      deletesNoForce args
     ]
 
 deletesOne :: IO FilePath -> TestTree
@@ -106,11 +107,7 @@ deletesMany args = goldenVsStringDiff desc diff gpath $ do
   permDelResult <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
 
   -- file assertions
-  assertFilesDoNotExist
-    ( (trashDir </>)
-        <$> filesToDelete
-          <> filesToDelete
-    )
+  assertFilesDoNotExist ((trashDir </>) <$> filesToDelete)
   assertDirectoriesDoNotExist
     ((testDir </>) <$> ["dir1", "dir2/dir3"] <> dirsToDelete)
   assertFilesExist [trashDir </> "f2", trashDir </> ".index.csv"]
@@ -255,6 +252,45 @@ deletesSomeNoTrace args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Deletes some no trace"
     gpath = goldenPath </> "no-trace.golden"
+
+deletesNoForce :: IO FilePath -> TestTree
+deletesNoForce args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "x6"
+      trashDir = testDir </> ".trash"
+      fileDeleteNames = show @Int <$> [1 .. 5]
+      fileDeletePaths = (testDir </>) <$> fileDeleteNames
+      delArgList = ("d" : fileDeletePaths) <> ["-t", trashDir]
+
+  -- SETUP
+  clearDirectory testDir
+  createFiles fileDeletePaths
+  assertFilesExist fileDeletePaths
+
+  runSafeRm tmpDir delArgList
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ".index.csv" : fileDeleteNames)
+  assertFilesDoNotExist fileDeletePaths
+
+  -- PERMANENT DELETE
+
+  let permDelArgList = ["-t", trashDir, "x"] <> fileDeleteNames
+  (permDelResult, logs) <- captureSafeRmLogs tmpDir "PERM DELETE" permDelArgList
+
+  -- list output assertions
+  listResult <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
+
+  -- file assertions
+  -- Our mock FuncIO alternates returning 'n' and 'y' to getChar, so without
+  -- the force option we should delete 2,4 and leave 1,3,5.
+  assertFilesDoNotExist ((trashDir </>) <$> ["2", "4"])
+  assertFilesExist ((trashDir </>) <$> ["1", "3", "5", ".index.csv"])
+  assertDirectoriesExist [trashDir]
+  pure $ capturedToBs [permDelResult, logs, listResult]
+  where
+    desc = "Permanently deletes several paths without --force"
+    gpath = goldenPath </> "no-force.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/X"
