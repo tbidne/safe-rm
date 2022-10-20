@@ -10,6 +10,7 @@ module SafeRm.Data.Metadata
   )
 where
 
+import System.FilePath qualified as FP
 import Data.Bytes (Bytes, SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
@@ -29,6 +30,7 @@ import SafeRm.Exception
     PathNotFoundE (MkPathNotFoundE),
   )
 import SafeRm.Prelude
+import Data.List qualified as L
 
 -- | Holds trash metadata.
 --
@@ -129,9 +131,9 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
           pure (afromRational 0)
 
     -- Summed size
-    allFiles <- getAllFiles th
+    allFiles <- filter (not . skipFile) <$> getAllFiles th
     allSizes <- toDouble <$> foldl' sumFileSizes (pure zero) allFiles
-    let numFiles = length allFiles - 1
+    let numFiles = length allFiles
         size = Bytes.normalize allSizes
 
     $(logDebug) ("Num all files: " <> showt numFiles)
@@ -164,8 +166,10 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
 
     countFiles :: Int -> FilePath -> Int
     countFiles !acc fp
-      | fp == ".log" || fp == ".index.csv" = acc
+      | skipFile fp = acc
       | otherwise = acc + 1
+
+    skipFile fp = FP.takeFileName fp `L.elem` [".log", ".index.csv"]
 
 getAllFiles ::
   ( MonadFsReader m,

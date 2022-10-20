@@ -16,8 +16,8 @@
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Index size: 3
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num entries: 3
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Log size: MkSomeSize SB (MkBytes 5.0)
-[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 4
-[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 25.0)
+[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 3
+[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 15.0)
 [2020-05-31 12:00:00][logging-tests.getMetadata][Debug][src/SafeRm.hs] Trash home: <dir>/.trash
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/.trash/.index.csv
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
@@ -26,5 +26,5 @@
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Index size: 3
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num entries: 3
 [2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Log size: MkSomeSize SB (MkBytes 5.0)
-[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 4
-[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 25.0)
+[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 3
+[2020-05-31 12:00:00][logging-tests.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 15.0)

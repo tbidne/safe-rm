@@ -13,12 +13,12 @@ tests :: IO FilePath -> TestTree
 tests args =
   testGroup
     "Metadata (m)"
-    [ metadata args
+    [ metadata args,
+      empty args
     ]
 
 metadata :: IO FilePath -> TestTree
 metadata args = goldenVsStringDiff "Prints metadata" diff gpath $ do
-  -- metadata = goldenVsString "Prints metadata" gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "m1"
       trashDir = testDir </> ".trash"
@@ -66,6 +66,23 @@ metadata args = goldenVsStringDiff "Prints metadata" diff gpath $ do
   pure $ capturedToBs [delResult, metadataResult, logs]
   where
     gpath = goldenPath </> "metadata.golden"
+
+empty :: IO FilePath -> TestTree
+empty args = goldenVsStringDiff "Prints empty metadata" diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "m2"
+      trashDir = testDir </> ".trash"
+
+  createDirectories [testDir, trashDir]
+  createFileContents [(trashDir </> ".index.csv", "Type,Name,Original,Created\n")]
+  createFiles [trashDir </> ".log"]
+
+  let metaArgList = ["m", "-t", trashDir]
+  (result, logs) <- captureSafeRmLogs tmpDir "METADATA" metaArgList
+
+  pure $ capturedToBs [result, logs]
+  where
+    gpath = goldenPath </> "empty.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/M"

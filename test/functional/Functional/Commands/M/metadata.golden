@@ -26,14 +26,14 @@ Created:   2020-05-31 12:00:00
 Entries:      5
 Total Files:  4
 Log size:     0.00B
-Size:         25.00B 
+Size:         20.00B 
 
 
 TERMINAL METADATA
 Entries:      5
 Total Files:  4
 Log size:     0.00B
-Size:         25.00B 
+Size:         20.00B 
 
 
 LOGS METADATA
@@ -48,4 +48,4 @@ LOGS METADATA
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num entries: 5
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Log does not exist
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 4
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 25.0)
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 20.0)
