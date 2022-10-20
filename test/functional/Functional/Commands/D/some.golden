@@ -3,7 +3,21 @@ Exceptions:
 
 - Path not found: <dir>/d5/f3
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 - Path not found: <dir>/d5/f4
+
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 LOGS DELETE
 [2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs] Trash home: <dir>/d5/.trash

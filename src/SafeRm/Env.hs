@@ -9,7 +9,6 @@ module SafeRm.Env
   )
 where
 
-import Optics.Core (A_Getter, Is, LabelOptic')
 import SafeRm.Data.Paths
   ( PathI,
     PathIndex (TrashHome, TrashIndex, TrashLog),

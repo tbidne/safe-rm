@@ -43,8 +43,6 @@ import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Builder (Builder)
 import Data.Text.Lazy.Builder qualified as TLB
-import Optics.Core (A_Getter, Optic')
-import Optics.Optic (Is)
 import SafeRm.Data.Paths
   ( PathI,
     PathIndex (OriginalPath, TrashHome, TrashIndex, TrashName),

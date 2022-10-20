@@ -18,7 +18,8 @@ tests args =
       restoreMany args,
       restoreUnknownError args,
       restoreCollisionError args,
-      restoresSome args
+      restoresSome args,
+      restoresSomeNoTrace args
     ]
 
 restoreOne :: IO FilePath -> TestTree
@@ -148,7 +149,7 @@ restoreUnknownError args = goldenVsStringDiff desc diff gpath $ do
   -- RESTORE
   let restoreArgList = ["r", "bad file", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @Exceptions
       tmpDir
       "RESTORE"
@@ -187,7 +188,7 @@ restoreCollisionError args = goldenVsStringDiff desc diff gpath $ do
   -- RESTORE
   let restoreArgList = ["r", "f1", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @Exceptions
       tmpDir
       "RESTORE"
@@ -245,6 +246,53 @@ restoresSome args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Restores some, errors on others"
     gpath = goldenPath </> "some.golden"
+
+restoresSomeNoTrace :: IO FilePath -> TestTree
+restoresSomeNoTrace args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "r5"
+      trashDir = testDir </> ".trash"
+      realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
+      filesTryRestore = ["f1", "f2", "f3", "f4", "f5"]
+      delArgList = ("d" : realFiles) <> ["-t", trashDir]
+
+  -- setup
+  clearDirectory testDir
+  createFiles realFiles
+  assertFilesExist realFiles
+
+  -- delete to trash first
+  runSafeRm tmpDir delArgList
+
+  -- list output assertions
+  delResult <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist realFiles
+  assertDirectoriesExist [trashDir]
+
+  -- RESTORE
+  let restoreArgList =
+        ("r" : filesTryRestore) <> ["-t", trashDir]
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @Exceptions
+      tmpDir
+      "RESTORE"
+      restoreArgList
+
+  -- list output assertions
+  resultList <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
+
+  -- file assertions
+  assertFilesDoNotExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist ((testDir </>) <$> ["f3", "f4"])
+  assertFilesExist ((testDir </>) <$> ["f1", "f2", "f5"])
+  pure $ capturedToBs [delResult, ex, logs, resultList]
+  where
+    desc = "Restores some no trace"
+    gpath = goldenPath </> "no-trace.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/R"

@@ -26,7 +26,8 @@ tests args =
       readIndexError args,
       indexEntryNonExtantError args,
       indexDuplicatesError args,
-      indexSizeMismatchError args
+      indexSizeMismatchError args,
+      readIndexErrorNoTrace args
     ]
 
 emptySucceeds :: IO FilePath -> TestTree
@@ -53,7 +54,8 @@ readIndexError args = goldenVsStringDiff "Read Index Error" diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", "bad index")]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs @ReadIndexE
+    captureSafeRmTraceExceptionLogs
+      @ReadIndexE
       tmpDir
       "LIST"
       argList
@@ -85,7 +87,8 @@ indexEntryNonExtantError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs @TrashPathNotFoundE
+    captureSafeRmTraceExceptionLogs
+      @TrashPathNotFoundE
       tmpDir
       "LIST"
       argList
@@ -121,7 +124,7 @@ indexDuplicatesError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @DuplicateIndexPathE
       tmpDir
       "LIST"
@@ -157,7 +160,7 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @IndexSizeMismatchE
       tmpDir
       "LIST"
@@ -166,6 +169,29 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Index Size Mismatch Error"
     gpath = goldenPath </> "index-size-error.golden"
+
+readIndexErrorNoTrace :: IO FilePath -> TestTree
+readIndexErrorNoTrace args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "l6"
+      trashDir = testDir </> ".trash"
+      argList = ["l", "-t", trashDir]
+
+  -- setup
+  clearDirectory testDir
+  clearDirectory trashDir
+  createFileContents [(trashDir </> ".index.csv", "bad index")]
+
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @ReadIndexE
+      tmpDir
+      "LIST"
+      argList
+  pure $ capturedToBs [ex, logs]
+  where
+    desc = "Read index error no trace"
+    gpath = goldenPath </> "no-trace.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/L"

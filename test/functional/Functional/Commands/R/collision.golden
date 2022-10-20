@@ -14,6 +14,13 @@ Exceptions:
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs] Trash home: <dir>/r4/.trash
 [2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/r4/.trash/.index.csv

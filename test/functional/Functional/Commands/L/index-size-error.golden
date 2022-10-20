@@ -1,6 +1,14 @@
 EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/Metadata.hs:0:0 in <package>:SafeRm.Data.Metadata
+  toMetadata, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  getMetadata, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  printMetadata, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l5/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l5/.trash/.index.csv

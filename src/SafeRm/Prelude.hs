@@ -95,10 +95,17 @@ import GHC.Stack as X
     prettyCallStack,
   )
 import Optics.Core as X
-  ( AffineTraversal',
+  ( A_Getter,
+    A_Lens,
+    A_Setter,
+    AffineTraversal',
+    Is,
     Iso',
+    LabelOptic (labelOptic),
+    LabelOptic',
     Lens,
     Lens',
+    Optic',
     Prism',
     iso,
     lens,

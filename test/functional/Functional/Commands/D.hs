@@ -18,7 +18,8 @@ tests args =
       deletesMany args,
       deleteUnknownError args,
       deleteDuplicateFile args,
-      deletesSome args
+      deletesSome args,
+      deletesNoTrace args
     ]
 
 deletesOne :: IO FilePath -> TestTree
@@ -93,7 +94,12 @@ deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
   -- setup
   clearDirectory testDir
 
-  (ex, logs) <- captureSafeRmExceptionLogs @SomeException tmpDir "DELETE" argList
+  (ex, logs) <-
+    captureSafeRmTraceExceptionLogs
+      @Exceptions
+      tmpDir
+      "DELETE"
+      argList
 
   pure $ capturedToBs [ex, logs]
   where
@@ -147,7 +153,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   assertFilesExist realFiles
 
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @Exceptions
       tmpDir
       "DELETE"
@@ -166,6 +172,37 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   where
     desc = "Deletes some files with errors"
     gpath = goldenPath </> "some.golden"
+
+deletesNoTrace :: IO FilePath -> TestTree
+deletesNoTrace args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "d6"
+      trashDir = testDir </> ".trash"
+      toDeleteNames = ["f1", "f3", "f5"]
+      toDelete = fmap (testDir </>) toDeleteNames
+      argList =
+        ["-t", trashDir]
+          <> ("d" : ((testDir </>) <$> ["f1", "f2", "f3", "f4", "f5"]))
+
+  -- setup
+  clearDirectory testDir
+  createFiles toDelete
+  assertFilesExist toDelete
+
+  (ex, _) <-
+    captureSafeRmExceptionLogs
+      @Exceptions
+      tmpDir
+      "DELETE"
+      argList
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> toDeleteNames)
+  assertFilesDoNotExist toDelete
+  pure $ capturedToBs [ex]
+  where
+    desc = "Delete failures without trace"
+    gpath = goldenPath </> "no-trace.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/D"

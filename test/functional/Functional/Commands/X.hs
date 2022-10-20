@@ -17,7 +17,8 @@ tests args =
     [ deletesOne args,
       deletesMany args,
       deleteUnknownError args,
-      deletesSome args
+      deletesSome args,
+      deletesSomeNoTrace args
     ]
 
 deletesOne :: IO FilePath -> TestTree
@@ -152,7 +153,7 @@ deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
   let permDelArgList =
         ["x", "bad file", "-f", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @Exceptions
       tmpDir
       "PERM DELETE"
@@ -194,7 +195,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   let permDelArgList =
         ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmExceptionLogs
+    captureSafeRmTraceExceptionLogs
       @Exceptions
       tmpDir
       "PERM DELETE"
@@ -208,6 +209,51 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   pure $ capturedToBs [delResult, ex, logs, resultList]
   where
     desc = "Deletes some, errors on others"
+    gpath = goldenPath </> "some.golden"
+
+deletesSomeNoTrace :: IO FilePath -> TestTree
+deletesSomeNoTrace args = goldenVsStringDiff desc diff gpath $ do
+  tmpDir <- args
+  let testDir = tmpDir </> "x5"
+      trashDir = testDir </> ".trash"
+      realFiles = (testDir </>) <$> ["f1", "f2", "f5"]
+      filesTryPermDelete = ["f1", "f2", "f3", "f4", "f5"]
+      delArgList = ("d" : realFiles) <> ["-t", trashDir]
+
+  -- setup
+  clearDirectory testDir
+  createFiles realFiles
+  assertFilesExist realFiles
+
+  -- delete to trash first
+  runSafeRm tmpDir delArgList
+
+  -- list output assertions
+  delResult <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
+
+  -- file assertions
+  assertFilesExist ((trashDir </>) <$> ["f1", "f2", "f5"])
+  assertFilesDoNotExist realFiles
+  assertDirectoriesExist [trashDir]
+
+  -- PERMANENT DELETE
+  let permDelArgList =
+        ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
+  (ex, logs) <-
+    captureSafeRmExceptionLogs
+      @Exceptions
+      tmpDir
+      "PERM DELETE"
+      permDelArgList
+
+  -- list output assertions
+  resultList <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
+
+  -- file assertions
+  assertFilesDoNotExist ((trashDir </>) <$> filesTryPermDelete)
+  pure $ capturedToBs [delResult, ex, logs, resultList]
+  where
+    desc = "Deletes some no trace"
     gpath = goldenPath </> "some.golden"
 
 goldenPath :: FilePath

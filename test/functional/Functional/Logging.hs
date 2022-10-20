@@ -34,12 +34,12 @@ import SafeRm.Effects.MonadFsReader
   )
 import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
 import SafeRm.Effects.MonadLoggerContext
-  ( MonadLoggerContext
+  ( LocStrategy (Stable),
+    MonadLoggerContext
       ( getNamespace,
         localNamespace
       ),
     Namespace,
-    LocStrategy (Stable),
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Effects.MonadSystemTime

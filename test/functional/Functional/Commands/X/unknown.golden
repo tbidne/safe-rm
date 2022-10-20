@@ -14,6 +14,11 @@ Exceptions:
 
 - Path not found: bad file
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs] Trash home: <dir>/x3/.trash
 [2020-05-31 12:00:00][functional.deletePermanently.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/x3/.trash/.index.csv

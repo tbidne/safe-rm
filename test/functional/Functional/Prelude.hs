@@ -10,6 +10,8 @@ module Functional.Prelude
   ( module X,
 
     -- * Types
+    FuncIO (..),
+    runFuncIO,
     FuncEnv (..),
 
     -- * Running SafeRm
@@ -24,6 +26,7 @@ module Functional.Prelude
     captureSafeRm,
     captureSafeRmLogs,
     captureSafeRmExceptionLogs,
+    captureSafeRmTraceExceptionLogs,
 
     -- * Assertions
     assertFilesExist,
@@ -87,6 +90,7 @@ import SafeRm.Effects.MonadTerminal
       ),
   )
 import SafeRm.Env (HasTrashHome)
+import SafeRm.Exception (displayTraceIf)
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
 import SafeRm.Runner qualified as Runner
@@ -120,19 +124,19 @@ makeFieldLabelsNoPrefix ''FuncEnv
 deriving anyclass instance HasTrashHome FuncEnv
 
 -- | Type for running functional tests.
-newtype FuncIO a = MkFuncIO (ReaderT FuncEnv IO a)
+newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
   deriving
     ( Applicative,
       MonadFsWriter,
       Functor,
       Monad,
       MonadIO,
-      MonadReader FuncEnv,
+      MonadReader env,
       MonadUnliftIO
     )
-    via (ReaderT FuncEnv IO)
+    via (ReaderT env IO)
 
-instance MonadFsReader FuncIO where
+instance MonadFsReader (FuncIO env) where
   getFileSize = const (pure $ afromInteger 5)
   readFile = liftIO . readFile
   doesFileExist = liftIO . doesFileExist
@@ -141,31 +145,54 @@ instance MonadFsReader FuncIO where
   canonicalizePath = liftIO . canonicalizePath
   listDirectory = liftIO . listDirectory
 
-instance MonadCallStack FuncIO where
+instance MonadCallStack (FuncIO env) where
   getCallStack = pure $ fixCallStack ?callStack
 
-instance MonadTerminal FuncIO where
+instance
+  ( Is k A_Getter,
+    LabelOptic' "terminalRef" k env (IORef Text)
+  ) =>
+  MonadTerminal (FuncIO env)
+  where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
   putStrLn = putStr
   getChar = pure 'y'
 
-instance MonadSystemTime FuncIO where
+instance MonadSystemTime (FuncIO env) where
   getSystemTime = pure $ MkTimestamp localTime
     where
       localTime = LocalTime (toEnum 59_000) midday
 
-instance MonadLogger FuncIO where
+instance
+  ( Is k A_Getter,
+    Is k A_Setter,
+    Is l A_Getter,
+    Is l A_Setter,
+    LabelOptic' "logsRef" k env (IORef Text),
+    LabelOptic' "logNamespace" l env Namespace
+  ) =>
+  MonadLogger (FuncIO env)
+  where
   monadLoggerLog loc _src lvl msg = do
     formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
 
-instance MonadLoggerContext FuncIO where
+instance
+  ( Is k A_Getter,
+    Is k A_Setter,
+    Is l A_Getter,
+    Is l A_Setter,
+    LabelOptic' "logsRef" k env (IORef Text),
+    LabelOptic' "logNamespace" l env Namespace
+  ) =>
+  MonadLoggerContext (FuncIO env)
+  where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 
-runFuncIO :: FuncIO a -> FuncEnv -> IO a
+runFuncIO :: (FuncIO env) a -> env -> IO a
 runFuncIO (MkFuncIO rdr) = runReaderT rdr
 
 -- | Represents captured input of some kind. Different constructors are
@@ -239,7 +266,28 @@ captureSafeRmExceptionLogs ::
   Builder ->
   [String] ->
   IO (CapturedOutput, CapturedOutput)
-captureSafeRmExceptionLogs testDir title argList = do
+captureSafeRmExceptionLogs = captureSafeRmMTraceExceptionLogs @e False
+
+-- | Runs safe-rm and captures a thrown exception and logs.
+captureSafeRmTraceExceptionLogs ::
+  forall e.
+  Exception e =>
+  FilePath ->
+  Builder ->
+  [String] ->
+  IO (CapturedOutput, CapturedOutput)
+captureSafeRmTraceExceptionLogs = captureSafeRmMTraceExceptionLogs @e True
+
+-- | Runs safe-rm and captures a thrown exception and logs.
+captureSafeRmMTraceExceptionLogs ::
+  forall e.
+  Exception e =>
+  Bool ->
+  FilePath ->
+  Builder ->
+  [String] ->
+  IO (CapturedOutput, CapturedOutput)
+captureSafeRmMTraceExceptionLogs withTrace testDir title argList = do
   terminalRef <- newIORef ""
   logsRef <- newIORef ""
 
@@ -254,7 +302,7 @@ captureSafeRmExceptionLogs testDir title argList = do
         "captureSafeRmExceptionLogs: Expected exception, received none"
     Left ex -> do
       logs <- replaceDir testDir <$> readIORef logsRef
-      let exceptionBs = exToBuilder testDir ex
+      let exceptionBs = exToBuilder withTrace testDir ex
           logsBs = txtToBuilder logs
       pure (Exception title exceptionBs, Logs title logsBs)
   where
@@ -332,8 +380,8 @@ diff ref new = ["diff", "-u", ref, new]
 txtToBuilder :: Text -> Builder
 txtToBuilder = Builder.byteString . TEnc.encodeUtf8
 
-exToBuilder :: Exception e => FilePath -> e -> Builder
-exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException
+exToBuilder :: Exception e => Bool -> FilePath -> e -> Builder
+exToBuilder b fp = txtToBuilder . replaceDir fp . displayTraceIf b
 
 -- | Fixes several fields on the CallStack that are either non-deterministic
 -- (package name) or extremely brittle (line/col numbers). This eases testing.

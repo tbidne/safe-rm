@@ -26,7 +26,7 @@ where
 
 import Data.HashSet qualified as HSet
 import GHC.Exts (IsList (Item, fromList, toList))
-import Optics.Core (A_Getter, LabelOptic (labelOptic), to)
+import Optics.Core (to)
 import SafeRm.Prelude
 
 -- | Like 'Seq' but with the guarantee that all elements are unique.
