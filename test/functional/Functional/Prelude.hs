@@ -163,32 +163,14 @@ instance MonadSystemTime (FuncIO env) where
     where
       localTime = LocalTime (toEnum 59_000) midday
 
-instance
-  ( Is k A_Getter,
-    Is k A_Setter,
-    Is l A_Getter,
-    Is l A_Setter,
-    LabelOptic' "logsRef" k env (IORef Text),
-    LabelOptic' "logNamespace" l env Namespace
-  ) =>
-  MonadLogger (FuncIO env)
-  where
+instance MonadLogger (FuncIO FuncEnv) where
   monadLoggerLog loc _src lvl msg = do
     formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
 
-instance
-  ( Is k A_Getter,
-    Is k A_Setter,
-    Is l A_Getter,
-    Is l A_Setter,
-    LabelOptic' "logsRef" k env (IORef Text),
-    LabelOptic' "logNamespace" l env Namespace
-  ) =>
-  MonadLoggerContext (FuncIO env)
-  where
+instance MonadLoggerContext (FuncIO FuncEnv) where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 

@@ -254,7 +254,7 @@ deletesSomeNoTrace args = goldenVsStringDiff desc diff gpath $ do
   pure $ capturedToBs [delResult, ex, logs, resultList]
   where
     desc = "Deletes some no trace"
-    gpath = goldenPath </> "some.golden"
+    gpath = goldenPath </> "no-trace.golden"
 
 goldenPath :: FilePath
 goldenPath = "test/functional/Functional/Commands/X"

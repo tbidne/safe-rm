@@ -1,4 +1,3 @@
-{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -15,24 +14,8 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.Text.Encoding.Error qualified as TEncError
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLEnc
-import Data.Time (LocalTime (LocalTime))
-import Data.Time.LocalTime (midday)
 import Functional.Prelude
-import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
-import SafeRm.Effects.MonadFsReader
-  ( MonadFsReader
-      ( canonicalizePath,
-        doesDirectoryExist,
-        doesFileExist,
-        doesPathExist,
-        getFileSize,
-        listDirectory,
-        readFile
-      ),
-  )
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
 import SafeRm.Effects.MonadLoggerContext
   ( LocStrategy (Stable),
     MonadLoggerContext
@@ -42,13 +25,8 @@ import SafeRm.Effects.MonadLoggerContext
     Namespace,
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
-import SafeRm.Effects.MonadSystemTime
-  ( MonadSystemTime (getSystemTime),
-    Timestamp (MkTimestamp),
-  )
 import SafeRm.Effects.MonadTerminal
-  ( MonadTerminal (getChar, putStr, putStrLn),
-    print,
+  ( print,
   )
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Runner qualified as Runner
@@ -60,34 +38,15 @@ data LoggerEnv = MkLoggerEnv
     logHandle :: !Handle,
     logFinalizer :: IO (),
     logLevel :: !LogLevel,
-    logNamespace :: !Namespace
+    logNamespace :: !Namespace,
+    terminalRef :: !(IORef Text)
   }
 
 makeFieldLabelsNoPrefix ''LoggerEnv
 
 deriving anyclass instance HasTrashHome LoggerEnv
 
--- We need a new type here because we want real logging (so no FuncIO)
--- but also mocked timing, terminal, etc. (no SafeRmT).
-newtype LoggerT a = MkLoggerT (ReaderT LoggerEnv IO a)
-  deriving
-    ( Applicative,
-      MonadFsWriter,
-      Functor,
-      Monad,
-      MonadIO,
-      MonadReader LoggerEnv,
-      MonadUnliftIO
-    )
-    via (ReaderT LoggerEnv IO)
-
-runLoggerT :: LoggerT a -> LoggerEnv -> IO a
-runLoggerT (MkLoggerT r) = runReaderT r
-
-instance MonadCallStack LoggerT where
-  getCallStack = pure $ fixCallStack ?callStack
-
-instance MonadLogger LoggerT where
+instance MonadLogger (FuncIO LoggerEnv) where
   monadLoggerLog loc _src lvl msg = do
     handle <- asks (view #logHandle)
     logLevel <- asks (view #logLevel)
@@ -97,28 +56,9 @@ instance MonadLogger LoggerT where
       print bs
       liftIO $ BS.hPut handle bs
 
-instance MonadLoggerContext LoggerT where
+instance MonadLoggerContext (FuncIO LoggerEnv) where
   getNamespace = asks (view #logNamespace)
-  localNamespace = local . over' #logNamespace
-
-instance MonadFsReader LoggerT where
-  getFileSize = const (pure $ afromInteger 5)
-  readFile = liftIO . readFile
-  doesFileExist = liftIO . doesFileExist
-  doesDirectoryExist = liftIO . doesDirectoryExist
-  doesPathExist = liftIO . doesPathExist
-  canonicalizePath = liftIO . canonicalizePath
-  listDirectory = liftIO . listDirectory
-
-instance MonadTerminal LoggerT where
-  putStr = const (pure ())
-  putStrLn = putStr
-  getChar = pure 'y'
-
-instance MonadSystemTime LoggerT where
-  getSystemTime = pure $ MkTimestamp localTime
-    where
-      localTime = LocalTime (toEnum 59_000) midday
+  localNamespace f = local (over' #logNamespace f)
 
 -- | @since 0.1
 tests :: IO FilePath -> TestTree
@@ -193,6 +133,7 @@ goldenPath = "test/functional/Functional/Logging"
 
 transformEnv :: Env -> IO LoggerEnv
 transformEnv env = do
+  ref <- newIORef ""
   (logHandle, logFinalizer, logLevel) <- case env ^. #logEnv % #logFile of
     Nothing -> throwString ""
     Just lf -> pure (lf ^. #handle, lf ^. #finalizer, lf ^. #logLevel)
@@ -202,7 +143,8 @@ transformEnv env = do
         logHandle,
         logFinalizer,
         logLevel,
-        logNamespace = "logging-tests"
+        logNamespace = "logging-tests",
+        terminalRef = ref
       }
 
 -- HACK: See the note on Functional.Prelude.replaceDir. Note that we cannot
@@ -222,4 +164,4 @@ runLogging argList = bracket mkEnv closeLog run
       (env, cmd) <- SysEnv.withArgs argList Runner.getEnv
       (,cmd) <$> transformEnv env
     closeLog = view (_1 % #logFinalizer)
-    run (loggerEnv, cmd) = runLoggerT (Runner.runCmd cmd) loggerEnv
+    run (loggerEnv, cmd) = runFuncIO (Runner.runCmd cmd) loggerEnv
