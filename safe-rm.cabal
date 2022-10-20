@@ -102,7 +102,6 @@ library file-utils
     , base
     , bytestring
     , safe-rm
-    , text
 
   hs-source-dirs:   lib/file-utils
   default-language: GHC2021
@@ -156,7 +155,7 @@ test-suite integration
     , file-utils
     , hedgehog
     , safe-rm
-    , tasty                 >=1.1.0.3 && <1.5
+    , tasty
     , tasty-hedgehog
     , unliftio
     , unordered-containers

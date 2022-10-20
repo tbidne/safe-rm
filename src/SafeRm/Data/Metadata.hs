@@ -10,11 +10,11 @@ module SafeRm.Data.Metadata
   )
 where
 
-import System.FilePath qualified as FP
 import Data.Bytes (Bytes, SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
+import Data.List qualified as L
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import Numeric.Literal.Rational (FromRational (afromRational))
 import SafeRm.Data.Index qualified as Index
@@ -30,7 +30,7 @@ import SafeRm.Exception
     PathNotFoundE (MkPathNotFoundE),
   )
 import SafeRm.Prelude
-import Data.List qualified as L
+import System.FilePath qualified as FP
 
 -- | Holds trash metadata.
 --
