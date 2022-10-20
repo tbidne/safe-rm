@@ -14,8 +14,10 @@ module SafeRm.Effects.MonadLoggerContext
     logLevelStrings,
 
     -- * Formatting
+    LocStrategy (..),
     formatLog,
     formatLogNoLoc,
+    formatLogLoc,
 
     -- * LogStr
     logStrToBs,
@@ -106,6 +108,29 @@ readLogLevel other =
 logLevelStrings :: String
 logLevelStrings = "[none|error|warn|info|debug]"
 
+-- | Determines how we log location data.
+--
+-- @since 0.1
+data LocStrategy
+  = -- | Logs the location with filename, line, col.
+    --
+    -- @since 0.1
+    Partial !Loc
+  | -- | Logs the location with filename.
+    --
+    -- @since 0.1
+    Stable !Loc
+  | -- | No location logging.
+    --
+    -- @since 0.1
+    None
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
 -- | Produces a formatted 'LogStr' with code location.
 --
 -- @since 0.1
@@ -117,7 +142,7 @@ formatLog ::
   LogLevel ->
   msg ->
   m LogStr
-formatLog withNewline loc = formatLogLoc withNewline (Just loc)
+formatLog withNewline loc = formatLogLoc withNewline (Partial loc)
 
 -- | Produces a formatted 'LogStr' without code location.
 --
@@ -129,7 +154,7 @@ formatLogNoLoc ::
   LogLevel ->
   msg ->
   m LogStr
-formatLogNoLoc withNewline = formatLogLoc withNewline Nothing
+formatLogNoLoc withNewline = formatLogLoc withNewline None
 
 -- | Produces a formatted 'LogStr'.
 --
@@ -141,14 +166,17 @@ formatLogLoc ::
     ToLogStr msg
   ) =>
   Bool ->
-  Maybe Loc ->
+  LocStrategy ->
   LogLevel ->
   msg ->
   m LogStr
-formatLogLoc withNewline mloc lvl msg = do
+formatLogLoc withNewline locStrat lvl msg = do
   timestampTxt <- toLogStr . MonadSystemTime.toString <$> getSystemTime
   namespace <- getNamespace
-  let locTxt = maybe "" (brackets . toLogStr . partialLoc) mloc
+  let locTxt = case locStrat of
+        Partial loc -> (brackets . toLogStr . partialLoc) loc
+        Stable loc -> (brackets . toLogStr . stableLoc) loc
+        None -> ""
       namespaceTxt = toLogStr $ displayNamespace namespace
       lvlTxt = toLogStr $ showLevel lvl
       msgTxt = toLogStr msg
@@ -177,6 +205,9 @@ partialLoc loc =
   where
     mkLine = fromString . show . view (#loc_start % _1)
     mkChar = fromString . show . view (#loc_start % _2)
+
+stableLoc :: Loc -> Builder
+stableLoc loc = fromString $ view #loc_filename loc
 
 showLevel :: LogLevel -> Text
 showLevel LevelDebug = "Debug"

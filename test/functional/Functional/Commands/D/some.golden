@@ -6,46 +6,46 @@ Exceptions:
 - Path not found: <dir>/d5/f4
 
 LOGS DELETE
-[2020-05-31 12:00:00][functional.delete][Debug] Trash home: <dir>/d5/.trash
-[2020-05-31 12:00:00][functional.delete.deleting][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/d5/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.delete.deleting][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f2"}, originalPath = MkPathI {unPathI = "<dir>/d5/f2"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d5/f3
+[2020-05-31 12:00:00][functional.delete][Debug][src/SafeRm.hs] Trash home: <dir>/d5/.trash
+[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/d5/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f2"}, originalPath = MkPathI {unPathI = "<dir>/d5/f2"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.delete.deleting][Warn][src/SafeRm.hs] Path not found: <dir>/d5/f3
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
-[2020-05-31 12:00:00][functional.delete.deleting][Warn] Path not found: <dir>/d5/f4
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+[2020-05-31 12:00:00][functional.delete.deleting][Warn][src/SafeRm.hs] Path not found: <dir>/d5/f4
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
-[2020-05-31 12:00:00][functional.delete.deleting][Debug] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f5"}, originalPath = MkPathI {unPathI = "<dir>/d5/f5"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.delete][Info] Deleted: <dir>/d5/f5, <dir>/d5/f2, <dir>/d5/f1
-[2020-05-31 12:00:00][functional][Error] Exceptions:
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+[2020-05-31 12:00:00][functional.delete.deleting][Debug][src/SafeRm.hs] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f5"}, originalPath = MkPathI {unPathI = "<dir>/d5/f5"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.delete][Info][src/SafeRm.hs] Deleted: <dir>/d5/f5, <dir>/d5/f2, <dir>/d5/f1
+[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Exceptions:
 
 - Path not found: <dir>/d5/f3
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 - Path not found: <dir>/d5/f4
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:216:14 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:105:15 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:136:23 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 
 TERMINAL LIST

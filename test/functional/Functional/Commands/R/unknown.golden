@@ -15,15 +15,15 @@ Exceptions:
 - Path not found: bad file
 
 LOGS RESTORE
-[2020-05-31 12:00:00][functional.restore][Debug] Trash home: <dir>/r3/.trash
-[2020-05-31 12:00:00][functional.restore.readIndex][Debug] Index path: <dir>/r3/.trash/.index.csv
-[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r3/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
-[2020-05-31 12:00:00][functional.restore][Info] Restored: 
-[2020-05-31 12:00:00][functional][Error] Exceptions:
+[2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs] Trash home: <dir>/r3/.trash
+[2020-05-31 12:00:00][functional.restore.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/r3/.trash/.index.csv
+[2020-05-31 12:00:00][functional.restore.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r3/f1"}, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
+[2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs] Restored: 
+[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Exceptions:
 
 - Path not found: bad file
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:308:9 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:139:24 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude

@@ -2,12 +2,12 @@ EXCEPTION LIST
 Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough input) at ""
 
 LOGS LIST
-[2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l2/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l2/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Error] Error end of stream: parse error (not enough input)
-[2020-05-31 12:00:00][functional][Error] Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough input) at ""
+[2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l2/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l2/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Error][src/SafeRm/Data/Index.hs] Error end of stream: parse error (not enough input)
+[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Error reading index at '<dir>/l2/.trash/.index.csv': parse error (not enough input) at ""
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/Index.hs:181:7 in <package>:SafeRm.Data.Index
-  readIndexWithFold, called at src/SafeRm/Data/Index.hs:110:18 in <package>:SafeRm.Data.Index
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
+  readIndexWithFold, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index

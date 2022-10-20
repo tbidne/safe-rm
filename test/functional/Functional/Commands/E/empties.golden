@@ -30,7 +30,7 @@ Size:         25.00B
 
 
 LOGS EMPTY
-[2020-05-31 12:00:00][functional.emptyTrash][Debug] Trash home: <dir>/e1/.trash
+[2020-05-31 12:00:00][functional.emptyTrash][Debug][src/SafeRm.hs] Trash home: <dir>/e1/.trash
 
 
 TERMINAL LIST 2

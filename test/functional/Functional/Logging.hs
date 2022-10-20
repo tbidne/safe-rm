@@ -39,6 +39,7 @@ import SafeRm.Effects.MonadLoggerContext
         localNamespace
       ),
     Namespace,
+    LocStrategy (Stable),
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Effects.MonadSystemTime
@@ -84,14 +85,14 @@ runLoggerT :: LoggerT a -> LoggerEnv -> IO a
 runLoggerT (MkLoggerT r) = runReaderT r
 
 instance MonadCallStack LoggerT where
-  getCallStack = pure $ fixPackage ?callStack
+  getCallStack = pure $ fixCallStack ?callStack
 
 instance MonadLogger LoggerT where
   monadLoggerLog loc _src lvl msg = do
     handle <- asks (view #logHandle)
     logLevel <- asks (view #logLevel)
     when (logLevel <= lvl) $ do
-      formatted <- Logger.formatLog True loc lvl msg
+      formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
       let bs = Logger.logStrToBs formatted
       print bs
       liftIO $ BS.hPut handle bs

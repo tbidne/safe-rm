@@ -32,7 +32,7 @@ module Functional.Prelude
     assertDirectoriesDoNotExist,
 
     -- * Misc
-    fixPackage,
+    fixCallStack,
   )
 where
 
@@ -46,7 +46,13 @@ import Data.Time (LocalTime (LocalTime))
 import Data.Time.LocalTime (midday)
 import GHC.Stack.Types
   ( CallStack (PushCallStack),
-    SrcLoc (srcLocPackage),
+    SrcLoc
+      ( srcLocEndCol,
+        srcLocEndLine,
+        srcLocPackage,
+        srcLocStartCol,
+        srcLocStartLine
+      ),
   )
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
@@ -64,7 +70,8 @@ import SafeRm.Effects.MonadFsReader
   )
 import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
 import SafeRm.Effects.MonadLoggerContext
-  ( MonadLoggerContext (getNamespace, localNamespace),
+  ( LocStrategy (Stable),
+    MonadLoggerContext (getNamespace, localNamespace),
     Namespace,
   )
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
@@ -135,7 +142,7 @@ instance MonadFsReader FuncIO where
   listDirectory = liftIO . listDirectory
 
 instance MonadCallStack FuncIO where
-  getCallStack = pure $ fixPackage ?callStack
+  getCallStack = pure $ fixCallStack ?callStack
 
 instance MonadTerminal FuncIO where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
@@ -148,8 +155,8 @@ instance MonadSystemTime FuncIO where
       localTime = LocalTime (toEnum 59_000) midday
 
 instance MonadLogger FuncIO where
-  monadLoggerLog _loc _src lvl msg = do
-    formatted <- Logger.formatLogNoLoc True lvl msg
+  monadLoggerLog loc _src lvl msg = do
+    formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
@@ -328,10 +335,19 @@ txtToBuilder = Builder.byteString . TEnc.encodeUtf8
 exToBuilder :: Exception e => FilePath -> e -> Builder
 exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException
 
-fixPackage :: CallStack -> CallStack
-fixPackage (PushCallStack a src cs) =
-  PushCallStack a (fixSrcPackage src) (fixPackage cs)
-fixPackage other = other
+-- | Fixes several fields on the CallStack that are either non-deterministic
+-- (package name) or extremely brittle (line/col numbers). This eases testing.
+fixCallStack :: CallStack -> CallStack
+fixCallStack (PushCallStack a src cs) =
+  PushCallStack a (fixSrcLoc src) (fixCallStack cs)
+fixCallStack other = other
 
-fixSrcPackage :: SrcLoc -> SrcLoc
-fixSrcPackage = set' #srcLocPackage "<package>"
+fixSrcLoc :: SrcLoc -> SrcLoc
+fixSrcLoc loc =
+  loc
+    { srcLocPackage = "<package>",
+      srcLocStartLine = 0,
+      srcLocEndLine = 0,
+      srcLocStartCol = 0,
+      srcLocEndCol = 0
+    }

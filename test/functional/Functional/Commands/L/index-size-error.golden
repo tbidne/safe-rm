@@ -2,23 +2,23 @@ EXCEPTION LIST
 Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 
 LOGS LIST
-[2020-05-31 12:00:00][functional.getIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional.getMetadata][Debug] Trash home: <dir>/l5/.trash
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Index size: 1
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num entries: 2
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Log does not exist
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Num all files: 2
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug] Total size: MkSomeSize SB (MkBytes 15.0)
-[2020-05-31 12:00:00][functional][Error] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
+[2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getMetadata][Debug][src/SafeRm.hs] Trash home: <dir>/l5/.trash
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l5/.trash/.index.csv
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Index size: 1
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num entries: 2
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Log does not exist
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 2
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 15.0)
+[2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
 
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:47:20 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/Metadata.hs:145:7 in <package>:SafeRm.Data.Metadata
-  toMetadata, called at src/SafeRm.hs:257:13 in <package>:SafeRm
-  getMetadata, called at src/SafeRm/Runner.hs:300:17 in <package>:SafeRm.Runner
-  printMetadata, called at src/SafeRm/Runner.hs:140:29 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:242:36 in <package>:Functional.Prelude
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/Metadata.hs:0:0 in <package>:SafeRm.Data.Metadata
+  toMetadata, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  getMetadata, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  printMetadata, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
