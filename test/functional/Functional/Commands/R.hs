@@ -76,7 +76,7 @@ restoreMany args = goldenVsStringDiff desc diff gpath $ do
   -- SETUP
   clearDirectory testDir
   -- test w/ a nested dir
-  createDirectories ((testDir </>) <$> ["dir1", "dir2/dir3"])
+  createDirectories ((testDir </>) <$> ["dir1", "dir2", "dir2/dir3"])
   -- test w/ a file in dir
   createFiles ((testDir </> "dir2/dir3/foo") : filesToDelete)
 
