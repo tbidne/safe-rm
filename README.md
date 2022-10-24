@@ -3,11 +3,11 @@
 # safe-rm
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tbidne/safe-rm?include_prereleases&sort=semver)](https://github.com/tbidne/safe-rm/releases/)
-![haskell](https://img.shields.io/static/v1?label=&message=9.2&logo=haskell&logoColor=655889&labelColor=2f353e&color=655889)
+![haskell](https://img.shields.io/static/v1?label=&message=9.4&logo=haskell&logoColor=655889&labelColor=2f353e&color=655889)
 [![MIT](https://img.shields.io/github/license/tbidne/safe-rm?color=blue)](https://opensource.org/licenses/MIT)
 
 [![nix](https://img.shields.io/github/workflow/status/tbidne/safe-rm/nix/main?label=nix&&logo=nixos&logoColor=85c5e7&labelColor=2f353c)](https://github.com/tbidne/safe-rm/actions/workflows/nix.yaml)
-[![cabal](https://img.shields.io/github/workflow/status/tbidne/safe-rm/cabal/main?label=cabal&logo=haskell&logoColor=655889&labelColor=2f353c)](https://github.com/tbidne/safe-rm/actions/workflows/cabal.yaml)
+[![cabal](https://img.shields.io/github/workflow/status/tbidne/safe-rm/cabal/main?label=cabal&labelColor=2f353c)](https://github.com/tbidne/safe-rm/actions/workflows/cabal.yaml)
 [![stack](https://img.shields.io/github/workflow/status/tbidne/safe-rm/stack/main?label=stack&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/safe-rm/actions/workflows/stack.yaml)
 [![style](https://img.shields.io/github/workflow/status/tbidne/safe-rm/style/main?label=style&logoColor=white&labelColor=2f353c)](https://github.com/tbidne/safe-rm/actions/workflows/style.yaml)
 
@@ -253,7 +253,9 @@ Size:         246.00B
 
 You will need one of:
 
-* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and [ghc 9.2](https://www.haskell.org/ghcup/)
+* [cabal-install 2.4+](https://www.haskell.org/cabal/download.html) and one of
+  * [ghc 9.2](https://www.haskell.org/ghcup/)
+  * [ghc 9.4](https://www.haskell.org/ghcup/)
 * [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
 * [nix](https://nixos.org/download.html)
 

@@ -1,4 +1,4 @@
-resolver: nightly-2022-09-22
+resolver: nightly-2022-10-11
 packages:
 - .
 ghc-options:
@@ -12,8 +12,10 @@ extra-deps:
 - env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
 - package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+  commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
+- git: https://github.com/tbidne/bounds.git
+  commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
 - git: https://github.com/tbidne/byte-types.git
-  commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+  commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
 nix:
   shell-file: nix/stack.nix

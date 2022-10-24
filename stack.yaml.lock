@@ -19,30 +19,41 @@ packages:
   original:
     hackage: package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
 - completed:
-    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+    commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
     git: https://github.com/tbidne/algebra-simple.git
     name: algebra-simple
     pantry-tree:
-      sha256: 31a41c91df1a085c44b05a31f9ba71327f072b2f0f5349c6789650d1849eeba9
-      size: 4142
+      sha256: 35146456af251b3f9726d520aa8caa62b35a4102205a493eab9c5f41697d7b67
+      size: 4285
     version: '0.1'
   original:
-    commit: 23890d31d31c9f42fba4a0ac2b1351360ce902e8
+    commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
     git: https://github.com/tbidne/algebra-simple.git
 - completed:
-    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+    commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+    git: https://github.com/tbidne/bounds.git
+    name: bounds
+    pantry-tree:
+      sha256: 6a960a4a889dde6f76ffdead9abdcbe8ac3efc17f24c4ff7594861c41070a667
+      size: 1474
+    version: '0.1'
+  original:
+    commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+    git: https://github.com/tbidne/bounds.git
+- completed:
+    commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
     name: byte-types
     pantry-tree:
-      sha256: 02fe220d0192a03e7bc499bf396e6c5c6a1c3558e5b3bb35e022b5469f456c55
-      size: 9159
+      sha256: 13c68f816dedfccae0c8a54839325a869de61586636a36d658c34a7b14ffa757
+      size: 9212
     version: '0.1'
   original:
-    commit: 0e642710ef5b8c277c77da8cfad36f0fe7771218
+    commit: cc0e1323b51f1ec3441ddc6578a05e9d7fcdb977
     git: https://github.com/tbidne/byte-types.git
 snapshots:
 - completed:
-    sha256: 0045231024ce03226f53d9a77ca753726436a903c3e4750f1f79e3cb5f3cd906
-    size: 636747
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/9/22.yaml
-  original: nightly-2022-09-22
+    sha256: d3ba2e94c3ccbd3da4949243c83b59667c5eb9ffc7646148661c16741bbad1d4
+    size: 643623
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/10/11.yaml
+  original: nightly-2022-10-11

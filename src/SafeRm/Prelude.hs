@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Custom prelude.
 --
 -- @since 0.1
@@ -77,6 +79,9 @@ import Data.String as X (IsString (fromString), String)
 import Data.Text as X (Text)
 import Data.Text qualified as T
 import Data.Traversable as X (traverse)
+#if MIN_VERSION_base(4, 17, 0)
+import Data.Type.Equality as X (type (~))
+#endif
 import Data.Tuple as X (curry, uncurry)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16)
