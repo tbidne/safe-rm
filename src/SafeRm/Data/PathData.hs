@@ -31,12 +31,14 @@ module SafeRm.Data.PathData
   )
 where
 
+import Data.Bytes (_MkBytes)
 import Data.Csv
   ( DefaultOrdered (headerOrder),
     FromNamedRecord,
     FromRecord,
     ToNamedRecord,
     ToRecord,
+    (.!),
     (.:),
     (.=),
   )
@@ -57,7 +59,8 @@ import SafeRm.Effects.MonadFsReader
       ( canonicalizePath,
         doesDirectoryExist,
         doesFileExist,
-        doesPathExist
+        doesPathExist,
+        getFileSize
       ),
   )
 import SafeRm.Effects.MonadFsWriter
@@ -74,6 +77,7 @@ import SafeRm.Exception
     RestoreCollisionE (MkRestoreCollisionE),
   )
 import SafeRm.Prelude
+import SafeRm.Utils qualified as U
 import System.FilePath qualified as FP
 
 -- | Data for a path.
@@ -92,6 +96,10 @@ data PathData = MkPathData
     --
     -- @since 0.1
     originalPath :: !(PathI OriginalPath),
+    -- | The size of the file or directory.
+    --
+    -- @since 0.1
+    size :: !(Bytes B Natural),
     -- | Time this entry was created.
     --
     -- @since 0.1
@@ -107,16 +115,22 @@ data PathData = MkPathData
     )
   deriving anyclass
     ( -- | @since 0.1
-      FromRecord,
-      -- | @since 0.1
       Hashable,
       -- | @since 0.1
-      NFData,
-      -- | @since 0.1
-      ToRecord
+      NFData
     )
 
 makeFieldLabelsNoPrefix ''PathData
+
+-- | @since 0.1
+instance FromRecord PathData where
+  parseRecord m =
+    MkPathData
+      <$> m .! 0
+      <*> m .! 1
+      <*> m .! 2
+      <*> (MkBytes <$> m .! 3)
+      <*> m .! 4
 
 -- | @since 0.1
 instance FromNamedRecord PathData where
@@ -125,7 +139,18 @@ instance FromNamedRecord PathData where
       <$> m .: "type"
       <*> m .: "fileName"
       <*> m .: "original"
+      <*> (MkBytes <$> m .: "size")
       <*> m .: "created"
+
+-- | @since 0.1
+instance ToRecord PathData where
+  toRecord pd =
+    [ Csv.toField (pd ^. #pathType),
+      Csv.toField (pd ^. #fileName),
+      Csv.toField (pd ^. #originalPath),
+      Csv.toField (pd ^. #size % _MkBytes),
+      Csv.toField (pd ^. #created)
+    ]
 
 -- | @since 0.1
 instance ToNamedRecord PathData where
@@ -135,6 +160,7 @@ instance ToNamedRecord PathData where
         [ \x -> x .= (pd ^. #pathType),
           \x -> x .= (pd ^. #fileName),
           \x -> x .= (pd ^. #originalPath),
+          \x -> x .= (pd ^. #size % _MkBytes),
           \x -> x .= (pd ^. #created)
         ]
 
@@ -151,6 +177,7 @@ instance Pretty PathData where
         [ \x -> x <> ":     " <+> pretty (pd ^. #pathType),
           \x -> x <> ":     " <+> pretty (pd ^. #fileName % #unPathI),
           \x -> x <> ": " <+> pretty (pd ^. #originalPath % #unPathI),
+          \x -> x <> ": " <+> pretty (U.normalizedFormat $ pd ^. #size),
           \x -> x <> ":  " <+> pretty (pd ^. #created)
         ]
 
@@ -158,7 +185,7 @@ instance Pretty PathData where
 --
 -- @since 0.1
 headerNames :: (IsList a, IsString (Exts.Item a)) => a
-headerNames = ["Type", "Name", "Original", "Created"]
+headerNames = ["Type", "Name", "Original", "Size", "Created"]
 
 -- | For a given filepath, attempts to capture the following data:
 --
@@ -177,25 +204,29 @@ toPathData ::
   PathI TrashHome ->
   PathI OriginalPath ->
   m PathData
-toPathData currTime trashHome originalPath = do
-  origPath <- Paths.liftPathIF' canonicalizePath originalPath
+toPathData currTime trashHome origPath = do
+  originalPath <- Paths.liftPathIF' canonicalizePath origPath
   -- NOTE: need to get the file name here because fp could refer to an
   -- absolute path. In this case, </> returns the 2nd arg which is absolutely
   -- not what we want.
   --
   -- This works for directories too because canonicalizePath drops the
   -- trailing slashes.
-  let fileName = Paths.liftPathI' FP.takeFileName origPath
+  let fileName = Paths.liftPathI' FP.takeFileName originalPath
   uniqPath <- mkUniqPath (trashHome <//> fileName)
   let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
-  isFile <- Paths.applyPathI doesFileExist origPath
+  isFile <- Paths.applyPathI doesFileExist originalPath
+  -- TODO: it would be nice if this listed the recursive size of the
+  -- directory
+  size <- getFileSize (originalPath ^. #unPathI)
   if isFile
     then
       pure
         MkPathData
           { fileName = uniqName,
-            originalPath = origPath,
+            originalPath,
             pathType = PathTypeFile,
+            size,
             created = currTime
           }
     else do
@@ -211,6 +242,7 @@ toPathData currTime trashHome originalPath = do
                 originalPath =
                   Paths.liftPathI' FP.dropTrailingPathSeparator origPath,
                 pathType = PathTypeDirectory,
+                size,
                 created = currTime
               }
         else throwCallStack $ MkPathNotFoundE (origPath ^. #unPathI)

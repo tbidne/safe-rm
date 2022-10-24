@@ -10,9 +10,8 @@ module SafeRm.Data.Metadata
   )
 where
 
-import Data.Bytes (Bytes, SomeSize)
+import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
-import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
@@ -30,6 +29,7 @@ import SafeRm.Exception
     PathNotFoundE (MkPathNotFoundE),
   )
 import SafeRm.Prelude
+import SafeRm.Utils qualified as U
 import System.FilePath qualified as FP
 
 -- | Holds trash metadata.
@@ -85,13 +85,9 @@ instance Pretty Metadata where
       strs =
         [ "Entries:     " <+> pretty (stats ^. #numEntries),
           "Total Files: " <+> pretty (stats ^. #numFiles),
-          "Log size:    " <+> pretty (formatSz $ stats ^. #logSize),
-          "Size:        " <+> pretty (formatSz $ stats ^. #size)
+          "Log size:    " <+> pretty (U.formatBytes $ stats ^. #logSize),
+          "Size:        " <+> pretty (U.formatBytes $ stats ^. #size)
         ]
-      formatSz =
-        Bytes.formatSized
-          (MkFloatingFormatter (Just 2))
-          Bytes.sizedFormatterUnix
 
 -- | Returns metadata for the trash directory.
 --

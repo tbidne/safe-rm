@@ -6,10 +6,18 @@ module SafeRm.Utils
     concatMNonEmpty,
     prependMNonEmpty,
     allM1,
+    formatBytes,
+    normalizedFormat,
   )
 where
 
+import Data.Bytes qualified as Bytes
+import Data.Bytes.Class.Wrapper (Unwrapper (Unwrapped))
+import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
+import Data.Bytes.Formatting.Base (BaseFormatter)
+import Data.Bytes.Size (Sized)
 import SafeRm.Prelude
+import Text.Printf (PrintfArg)
 
 -- | Applies the function when we have a Just.
 --
@@ -52,3 +60,31 @@ allM = foldr f (pure True)
       m >>= \case
         True -> acc
         False -> pure False
+
+-- | Normalizes and formats the bytes.
+--
+-- @since 0.1
+normalizedFormat :: Bytes B Natural -> Text
+normalizedFormat =
+  formatBytes
+    . Bytes.normalize
+    . toDouble
+  where
+    toDouble :: Bytes s Natural -> Bytes s Double
+    toDouble = fmap fromIntegral
+
+-- | Formats the bytes.
+--
+-- @since 0.1
+formatBytes ::
+  ( BaseFormatter (Unwrapped a) ~ FloatingFormatter,
+    PrintfArg (Unwrapped a),
+    Sized a,
+    Unwrapper a
+  ) =>
+  a ->
+  Text
+formatBytes =
+  Bytes.formatSized
+    (MkFloatingFormatter (Just 2))
+    Bytes.sizedFormatterUnix

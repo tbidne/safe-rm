@@ -73,11 +73,11 @@ indexEntryNonExtantError args = goldenVsStringDiff desc diff gpath $ do
         mconcat
           [ "file,foo,",
             Char8.pack (trashDir </> "foo"),
-            ",2022-09-28 02:58:33"
+            ",0,2022-09-28 02:58:33"
           ]
       badIndex =
         Char8.unlines
-          [ "type,name,original,created",
+          [ "type,name,original,size,created",
             badFileLine
           ]
 
@@ -108,11 +108,11 @@ indexDuplicatesError args = goldenVsStringDiff desc diff gpath $ do
         mconcat
           [ "file,foo,",
             Char8.pack dupFile,
-            ",2022-09-28 02:58:33"
+            ",0,2022-09-28 02:58:33"
           ]
       badIndex =
         Char8.unlines
-          [ "type,name,original,created",
+          [ "type,name,original,size,created",
             dupFileLine,
             dupFileLine
           ]
@@ -145,11 +145,11 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
         mconcat
           [ "file,foo,",
             Char8.pack file,
-            ",2022-09-28 02:58:33"
+            ",0,2022-09-28 02:58:33"
           ]
       badIndex =
         Char8.unlines
-          [ "type,name,original,created",
+          [ "type,name,original,size,created",
             fileLine
           ]
 

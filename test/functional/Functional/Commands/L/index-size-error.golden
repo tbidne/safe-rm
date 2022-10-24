@@ -12,10 +12,10 @@ CallStack (from HasCallStack):
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l5/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, size = MkBytes 0, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional.getMetadata][Debug][src/SafeRm.hs] Trash home: <dir>/l5/.trash
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l5/.trash/.index.csv
-[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
+[2020-05-31 12:00:00][functional.getMetadata.toMetadata.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l5/.trash/foo"}, size = MkBytes 0, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Index size: 1
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num entries: 2
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Log does not exist
