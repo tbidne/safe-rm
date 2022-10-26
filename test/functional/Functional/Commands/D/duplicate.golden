@@ -11,18 +11,20 @@ LOGS LOGS2
 
 
 TERMINAL LIST
-Type:      File
-Name:      f1
-Original:  <dir>/d4/f1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f1
+Original: <dir>/d4/f1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f1 (1)
-Original:  <dir>/d4/f1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f1 (1)
+Original: <dir>/d4/f1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
+
 Entries:      2
 Total Files:  2
 Log size:     0.00B
 Size:         10.00B 
+

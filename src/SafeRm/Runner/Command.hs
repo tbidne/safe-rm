@@ -1,10 +1,15 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Provides the 'Command' type.
 --
 -- @since 0.1
 module SafeRm.Runner.Command
-  ( Command (..),
+  ( -- * Types
+    Command (..),
+    ListCommand (..),
+
+    -- * Optics
     _Delete,
     _DeletePerm,
     _Empty,
@@ -14,9 +19,47 @@ module SafeRm.Runner.Command
   )
 where
 
+import SafeRm.Data.Index (Sort)
+import SafeRm.Data.PathData (PathDataFormat)
 import SafeRm.Data.Paths (PathI, PathIndex (OriginalPath, TrashName))
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Prelude
+
+-- | Arguments for the list command.
+--
+-- @since 0.1
+data ListCommand = MkListCommand
+  { -- | Format style.
+    --
+    -- @since 0.1
+    format :: !PathDataFormat,
+    -- | How to sort the list.
+    --
+    -- @since 0.1
+    sort :: !Sort,
+    -- | Whether to reverse the sort.
+    --
+    -- @since 0.1
+    revSort :: !Bool
+  }
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
+-- | @since 0.1
+makeFieldLabelsNoPrefix ''ListCommand
+
+-- | @since 0.1
+instance Semigroup ListCommand where
+  MkListCommand a b c <> MkListCommand a' b' c' =
+    MkListCommand (a <> a') (b <> b') (c || c')
+
+-- | @since 0.1
+instance Monoid ListCommand where
+  mempty = MkListCommand mempty mempty False
 
 -- | Action to run.
 --
@@ -43,7 +86,7 @@ data Command
   | -- | List all trash contents.
     --
     -- @since 0.1
-    List
+    List !ListCommand
   | -- | Prints trash metadata.
     --
     -- @since 0.1
@@ -55,4 +98,5 @@ data Command
       Show
     )
 
+-- | @since 0.1
 makePrisms ''Command

@@ -4,6 +4,7 @@
 module Unit.Prelude
   ( module X,
     getDefaultTrash,
+    diff,
   )
 where
 
@@ -24,6 +25,7 @@ import Hedgehog as X
   )
 import SafeRm.Prelude as X
 import Test.Tasty as X (TestTree, askOption, testGroup)
+import Test.Tasty.Golden as X (goldenVsStringDiff)
 import Test.Tasty.HUnit as X
   ( assertBool,
     assertEqual,
@@ -36,3 +38,6 @@ import UnliftIO.Directory qualified as Dir
 
 getDefaultTrash :: IO FilePath
 getDefaultTrash = (</> ".trash") <$> Dir.getHomeDirectory
+
+diff :: FilePath -> FilePath -> [FilePath]
+diff ref new = ["diff", "-u", ref, new]

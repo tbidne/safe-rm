@@ -63,24 +63,26 @@ CallStack (from HasCallStack):
 
 
 TERMINAL LIST
-Type:      File
-Name:      f1
-Original:  <dir>/d5/f1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f1
+Original: <dir>/d5/f1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f2
-Original:  <dir>/d5/f2
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f2
+Original: <dir>/d5/f2
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f5
-Original:  <dir>/d5/f5
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f5
+Original: <dir>/d5/f5
+Size:     5.00B
+Created:  2020-05-31 12:00:00
+
 Entries:      3
 Total Files:  3
 Log size:     0.00B
 Size:         15.00B 
+

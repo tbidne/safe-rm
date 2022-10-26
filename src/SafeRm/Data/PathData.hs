@@ -21,9 +21,24 @@ module SafeRm.Data.PathData
     deletePathData,
 
     -- * Sorting
-    sortDefault,
+
+    -- ** High level
+    sortCreatedName,
+    sortNameCreated,
+    sortSizeName,
+
+    -- ** Low level
+    sortReverse,
     sortCreated,
     sortName,
+    sortSize,
+
+    -- * Formatting
+    PathDataFormat (..),
+    formatPathData,
+    formatMultiLine,
+    formatSingleHeader,
+    formatSingleLine,
 
     -- * Miscellaneous
     headerNames,
@@ -44,6 +59,7 @@ import Data.Csv
   )
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
+import Data.Text qualified as T
 import GHC.Exts (IsList)
 import GHC.Exts qualified as Exts
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
@@ -70,7 +86,7 @@ import SafeRm.Effects.MonadFsWriter
         renameFile
       ),
   )
-import SafeRm.Effects.MonadSystemTime (Timestamp)
+import SafeRm.Effects.MonadSystemTime (Timestamp, toText)
 import SafeRm.Exception
   ( PathNotFoundE (MkPathNotFoundE),
     RenameDuplicateE (MkRenameDuplicateE),
@@ -120,6 +136,7 @@ data PathData = MkPathData
       NFData
     )
 
+-- | @since 0.1
 makeFieldLabelsNoPrefix ''PathData
 
 -- | @since 0.1
@@ -177,7 +194,7 @@ instance Pretty PathData where
         [ \x -> x <> ":     " <+> pretty (pd ^. #pathType),
           \x -> x <> ":     " <+> pretty (pd ^. #fileName % #unPathI),
           \x -> x <> ": " <+> pretty (pd ^. #originalPath % #unPathI),
-          \x -> x <> ": " <+> pretty (U.normalizedFormat $ pd ^. #size),
+          \x -> x <> ":     " <+> pretty (U.normalizedFormat $ pd ^. #size),
           \x -> x <> ":  " <+> pretty (pd ^. #created)
         ]
 
@@ -286,10 +303,26 @@ mkUniqPath fp = do
 -- | Sorts by the created date then the name.
 --
 -- @since 0.1
-sortDefault :: PathData -> PathData -> Ordering
-sortDefault x y = case sortCreated x y of
+sortCreatedName :: PathData -> PathData -> Ordering
+sortCreatedName x y = case sortCreated x y of
   EQ -> sortName x y
   other -> other
+
+sortNameCreated :: PathData -> PathData -> Ordering
+sortNameCreated x y = case sortName x y of
+  EQ -> sortCreated x y
+  other -> other
+
+sortSizeName :: PathData -> PathData -> Ordering
+sortSizeName x y = case sortSize x y of
+  EQ -> sortName x y
+  other -> other
+
+sortReverse :: (a -> b -> Ordering) -> a -> b -> Ordering
+sortReverse f x y = case f x y of
+  EQ -> EQ
+  LT -> GT
+  GT -> LT
 
 -- | Sorts by the created date.
 --
@@ -302,6 +335,12 @@ sortCreated = mapOrd (view #created)
 -- @since 0.1
 sortName :: PathData -> PathData -> Ordering
 sortName = mapOrd (view #fileName)
+
+-- | Sorts by the name.
+--
+-- @since 0.1
+sortSize :: PathData -> PathData -> Ordering
+sortSize = mapOrd (view #size)
 
 mapOrd :: Ord b => (a -> b) -> a -> a -> Ordering
 mapOrd f x y = f x `compare` f y
@@ -396,3 +435,112 @@ originalPathExists pd = existsFn (pd ^. #originalPath % #unPathI)
 -- @since 0.1
 pathDataToTrashPath :: PathI TrashHome -> PathData -> PathI TrashPath
 pathDataToTrashPath trashHome = (trashHome <//>) . view #fileName
+
+-- | Determines how to format a textual 'PathData'.
+--
+-- @since 0.1
+data PathDataFormat
+  = -- | Formats each file on its own line.
+    --
+    -- @since 0.1
+    Multiline
+  | -- | Formats all fields on the same line.
+    --
+    -- @since 0.1
+    Singleline Word8 Word8
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
+-- | @since 0.1
+instance Semigroup PathDataFormat where
+  Multiline <> _ = Multiline
+  _ <> Multiline = Multiline
+  Singleline 10 22 <> r = r
+  l <> Singleline 10 22 = l
+  l <> _ = l
+
+-- | @since 0.1
+instance Monoid PathDataFormat where
+  mempty = Singleline 10 22
+
+-- | Formats the 'PathData'.
+--
+-- @since 0.1
+formatPathData :: PathDataFormat -> PathData -> Text
+formatPathData Multiline pd = formatMultiLine pd
+formatPathData (Singleline nameLen origLen) pd =
+  formatSingleLine nameLen origLen pd
+
+-- | @since 0.1
+formatMultiLine :: PathData -> Text
+formatMultiLine pd = T.intercalate "\n" strs
+  where
+    strs = zipWith (flip ($)) headerNames labelFn
+    labelFn =
+      [ \x -> x <> ":     " <> typeToText (pd ^. #pathType),
+        \x -> x <> ":     " <> T.pack (pd ^. #fileName % #unPathI),
+        \x -> x <> ": " <> T.pack (pd ^. #originalPath % #unPathI),
+        \x -> x <> ":     " <> U.normalizedFormat (pd ^. #size),
+        \x -> x <> ":  " <> toText (pd ^. #created)
+      ]
+
+typeToText :: PathType -> Text
+typeToText PathTypeFile = "File"
+typeToText PathTypeDirectory = "Directory"
+
+-- | @since 0.1
+formatSingleHeader :: Word8 -> Word8 -> Text
+formatSingleHeader nameLen origLen =
+  mconcat
+    [ fixLen nameLen "Name",
+      sep,
+      fixLen 10 "Type",
+      sep,
+      fixLen 7 "Size",
+      sep,
+      fixLen origLen "Original",
+      sep,
+      fixLen 19 "Created",
+      "\n",
+      titleLen
+    ]
+  where
+    -- extra 12 is from the separators
+    totalLen = nameLen + 10 + 7 + origLen + 19 + 12
+    titleLen = T.replicate (fromIntegral totalLen) "-"
+
+-- | @since 0.1
+formatSingleLine :: Word8 -> Word8 -> PathData -> Text
+formatSingleLine nameLen origLen pd =
+  mconcat
+    [ fixLen' nameLen (pd ^. #fileName % #unPathI),
+      sep,
+      paddedType (pd ^. #pathType),
+      sep,
+      fixLen 7 (U.normalizedFormat $ pd ^. #size),
+      sep,
+      fixLen' origLen (pd ^. #originalPath % #unPathI),
+      sep,
+      toText (pd ^. #created)
+    ]
+  where
+    paddedType PathTypeFile = "File      "
+    paddedType PathTypeDirectory = "Directory "
+
+sep :: Text
+sep = " | "
+
+fixLen' :: Word8 -> String -> Text
+fixLen' w s = fixLen w (T.pack s)
+
+-- | @since 0.1
+fixLen :: Word8 -> Text -> Text
+fixLen w t
+  | w' < T.length t = T.take (w' - 3) t <> "..."
+  | otherwise = t <> T.replicate (w' - T.length t) " "
+  where
+    w' = fromIntegral w

@@ -1,37 +1,39 @@
 TERMINAL LIST 1
-Type:      Directory
-Name:      dir1
-Original:  <dir>/e1/dir1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     Directory
+Name:     dir1
+Original: <dir>/e1/dir1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      Directory
-Name:      dir2
-Original:  <dir>/e1/dir2
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     Directory
+Name:     dir2
+Original: <dir>/e1/dir2
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f1
-Original:  <dir>/e1/f1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f1
+Original: <dir>/e1/f1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f2
-Original:  <dir>/e1/f2
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f2
+Original: <dir>/e1/f2
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f3
-Original:  <dir>/e1/f3
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f3
+Original: <dir>/e1/f3
+Size:     5.00B
+Created:  2020-05-31 12:00:00
+
 Entries:      5
 Total Files:  4
 Log size:     0.00B
 Size:         20.00B 
+
 
 
 LOGS EMPTY
@@ -39,7 +41,10 @@ LOGS EMPTY
 
 
 TERMINAL LIST 2
+
+
 Entries:      0
 Total Files:  0
 Log size:     0.00B
 Size:         0.00B 
+

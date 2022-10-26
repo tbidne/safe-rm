@@ -85,9 +85,11 @@ haddock:
 haddockc:
 	nix run github:tbidne/nix-hs-tools/0.7#haddock-cov -- \
 	. \
+	-m SafeRm.Data.PathData 85 \
+	-m SafeRm.Data.Index 90 \
 	-m SafeRm.Prelude 95 \
 	-m SafeRm.Runner.Command 20 \
-	-m SafeRm.Runner.Args 50
+	-m SafeRm.Runner.Args 40
 
 # generate dist and docs suitable for hackage
 hackage:

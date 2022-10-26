@@ -85,7 +85,7 @@ import Data.Type.Equality as X (type (~))
 #endif
 import Data.Tuple as X (curry, uncurry)
 import Data.Vector as X (Vector)
-import Data.Word as X (Word16)
+import Data.Word as X (Word16, Word8)
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
@@ -133,7 +133,8 @@ import Optics.Core as X
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
 import Prettyprinter as X
-  ( Pretty (pretty),
+  ( Doc,
+    Pretty (pretty),
     layoutCompact,
     line,
     vsep,

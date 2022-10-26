@@ -185,10 +185,21 @@ $ sr r foo baz
 **Usage:**
 
 ```
-Usage: sr l
+Usage: sr l [--format ([m]ulti | [s]ingle)] [-n|--name-trunc INT]
+            [-o|--orig-trunc INT] [-s|--sort (name|size)] [-r|--reverse-sort]
   Lists all trash contents and metadata.
 
 Available options:
+  --format ([m]ulti | [s]ingle)
+                           Determines the output format. Defaults to 'single'
+                           i.e. each trash entry is printed in a single line, in
+                           tabular form.
+  -n,--name-trunc INT      Truncates the name to INT chars. Multiline option is
+                           unaffected.
+  -o,--orig-trunc INT      Truncates the original path to INT chars. Multiline
+                           option is unaffected.
+  -s,--sort (name|size)    How to sort the list. Defaults to name.
+  -r,--reverse-sort        Sorts in the reverse order.
   -h,--help                Show this help text
 ```
 
@@ -201,24 +212,16 @@ $ sr d foo bar baz
 # list contents
 $ sr l
 
-Type:      File
-Name:      bar
-Original:  <path>/bar
-Created:   2022-09-28 23:57:10
-
-Type:      Directory
-Name:      baz
-Original:  <path>/baz
-Created:   2022-09-28 23:57:10
-
-Type:      File
-Name:      foo
-Original:  <path>/foo
-Created:   2022-09-28 23:57:10
+Name       | Type       | Size    | Original               | Created
+--------------------------------------------------------------------------------
+bar        | File       | 41.35M  | /home/tommy/Dev/tom... | 2022-10-28 15:33:18
+baz        | File       | 45.61M  | /home/tommy/Dev/tom... | 2022-10-28 15:33:18
+foo        | File       | 24.38M  | /home/tommy/Dev/tom... | 2022-10-28 15:33:18
 
 Entries:      3
-Total Files:  2
-Size:         246.00B
+Total Files:  3
+Log size:     1.65K
+Size:         111.35M
 ```
 
 ### Metadata
@@ -243,8 +246,9 @@ $ sr d foo bar baz
 $ sr m
 
 Entries:      3
-Total Files:  2
-Size:         246.00B
+Total Files:  3
+Log size:     4.89K
+Size:         111.35M
 ```
 
 # Building

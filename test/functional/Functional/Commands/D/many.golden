@@ -9,36 +9,38 @@ LOGS DELETE
 
 
 TERMINAL LIST
-Type:      Directory
-Name:      dir1
-Original:  <dir>/d2/dir1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     Directory
+Name:     dir1
+Original: <dir>/d2/dir1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      Directory
-Name:      dir2
-Original:  <dir>/d2/dir2
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     Directory
+Name:     dir2
+Original: <dir>/d2/dir2
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f1
-Original:  <dir>/d2/f1
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f1
+Original: <dir>/d2/f1
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f2
-Original:  <dir>/d2/f2
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f2
+Original: <dir>/d2/f2
+Size:     5.00B
+Created:  2020-05-31 12:00:00
 
-Type:      File
-Name:      f3
-Original:  <dir>/d2/f3
-Size:  5.00B
-Created:   2020-05-31 12:00:00 
+Type:     File
+Name:     f3
+Original: <dir>/d2/f3
+Size:     5.00B
+Created:  2020-05-31 12:00:00
+
 Entries:      5
 Total Files:  4
 Log size:     0.00B
 Size:         20.00B 
+

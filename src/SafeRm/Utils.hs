@@ -6,6 +6,8 @@ module SafeRm.Utils
     concatMNonEmpty,
     prependMNonEmpty,
     allM1,
+    fromMaybeMonoid,
+    maybeMonoid,
     formatBytes,
     normalizedFormat,
   )
@@ -88,3 +90,15 @@ formatBytes =
   Bytes.formatSized
     (MkFloatingFormatter (Just 2))
     Bytes.sizedFormatterUnix
+
+-- | 'fromMaybe' for 'Monoid'.
+--
+-- @since 0.1
+fromMaybeMonoid :: Monoid a => Maybe a -> a
+fromMaybeMonoid = fromMaybe mempty
+
+-- | 'maybe' for 'Monoid'.
+--
+-- @since 0.1
+maybeMonoid :: Monoid b => (a -> b) -> Maybe a -> b
+maybeMonoid = maybe mempty

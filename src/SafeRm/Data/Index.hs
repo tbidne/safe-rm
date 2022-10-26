@@ -14,6 +14,17 @@ module SafeRm.Data.Index
     -- * Writing
     appendIndex,
     writeIndex,
+
+    -- * Formatting
+    formatIndex,
+    Sort (..),
+    readSort,
+    _Name,
+    _Size,
+
+    -- * Low level utils
+    fromList,
+    insert,
   )
 where
 
@@ -28,7 +39,11 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
-import SafeRm.Data.PathData (PathData, sortDefault)
+import SafeRm.Data.PathData
+  ( PathData,
+    PathDataFormat (Multiline, Singleline),
+    sortCreatedName,
+  )
 import SafeRm.Data.PathData qualified as PathData
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -87,7 +102,7 @@ instance Pretty Index where
   pretty =
     vsep
       . fmap pretty
-      . L.sortBy sortDefault
+      . L.sortBy sortCreatedName
       . HMap.elems
       . view #unIndex
 
@@ -268,3 +283,86 @@ writeIndex (MkPathI indexPath) =
     . Csv.encodeDefaultOrderedByName
     . HMap.elems
     . view #unIndex
+
+-- | How to sort the index list.
+--
+-- @since 0.1
+data Sort
+  = -- | Sort by name.
+    --
+    -- @since 0.1
+    Name
+  | -- | Sort by size.
+    --
+    -- @since 0.1
+    Size
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
+-- | @since 0.1
+makePrisms ''Sort
+
+-- | @since 0.1
+instance Semigroup Sort where
+  l <> Name = l
+  _ <> Size = Size
+
+-- | @since 0.1
+instance Monoid Sort where
+  mempty = Name
+
+-- | @since 0.1
+readSort :: MonadFail m => Text -> m Sort
+readSort "name" = pure Name
+readSort "size" = pure Size
+readSort other = fail $ "Unrecognized sort: " <> T.unpack other
+
+sortFn :: Bool -> Sort -> PathData -> PathData -> Ordering
+sortFn b = \case
+  Name -> rev PathData.sortNameCreated
+  Size -> rev PathData.sortSizeName
+  where
+    rev
+      | b = PathData.sortReverse
+      | otherwise = id
+
+-- | @since 0.1
+formatIndex :: PathDataFormat -> Sort -> Bool -> Index -> Text
+formatIndex style sort revSort idx = case style of
+  Multiline -> multiline (sortFn revSort sort) idx
+  Singleline nameLen origLen ->
+    singleline (sortFn revSort sort) nameLen origLen idx
+
+multiline :: (PathData -> PathData -> Ordering) -> Index -> Text
+multiline sort =
+  T.intercalate "\n\n"
+    . fmap PathData.formatMultiLine
+    . getElems sort
+
+singleline :: (PathData -> PathData -> Ordering) -> Word8 -> Word8 -> Index -> Text
+singleline sort nameLen origLen =
+  ((PathData.formatSingleHeader nameLen origLen <> "\n") <>)
+    . T.intercalate "\n"
+    . fmap (PathData.formatSingleLine nameLen origLen)
+    . getElems sort
+
+getElems :: (PathData -> PathData -> Ordering) -> Index -> [PathData]
+getElems sort =
+  L.sortBy sort
+    . HMap.elems
+    . view #unIndex
+
+-- | @since 0.1
+fromList :: [PathData] -> HashMap (PathI 'TrashName) PathData
+fromList = foldr insert HMap.empty
+
+-- | @since 0.1
+insert ::
+  PathData ->
+  HashMap (PathI 'TrashName) PathData ->
+  HashMap (PathI 'TrashName) PathData
+insert pd = HMap.insert (pd ^. #fileName) pd

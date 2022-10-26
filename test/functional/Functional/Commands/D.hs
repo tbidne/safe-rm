@@ -38,7 +38,7 @@ deletesOne args = goldenVsStringDiff "Deletes a single file" diff gpath $ do
   (_, logs) <- captureSafeRmLogs tmpDir "DELETE" argList
 
   -- list output assertions
-  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  result <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist [trashDir </> "f1", trashDir </> ".index.csv"]
@@ -69,7 +69,7 @@ deletesMany args = goldenVsStringDiff "Deletes many paths" diff gpath $ do
   (_, logs) <- captureSafeRmLogs tmpDir "DELETE" argList
 
   -- list output assertions
-  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  result <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist
@@ -126,7 +126,7 @@ deleteDuplicateFile args = goldenVsStringDiff desc diff gpath $ do
   assertFilesExist [file]
   (_, logs2) <- captureSafeRmLogs tmpDir "LOGS2" argList
 
-  result <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  result <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist
@@ -160,7 +160,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
       argList
 
   -- list output assertions
-  resultList <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  resultList <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist

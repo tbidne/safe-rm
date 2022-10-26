@@ -170,7 +170,7 @@ instance
   MonadTerminal (FuncIO env)
   where
   putStr s = asks (view #terminalRef) >>= \ref -> modifyIORef' ref (<> T.pack s)
-  putStrLn = putStr
+  putStrLn = putStr . (<> "\n")
   getChar = do
     charStream <- asks (view #charStream)
     c :> cs <- readIORef charStream

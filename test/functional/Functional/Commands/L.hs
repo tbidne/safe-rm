@@ -33,7 +33,7 @@ tests args =
 emptySucceeds :: IO FilePath -> TestTree
 emptySucceeds args = goldenVsStringDiff desc diff gpath $ do
   tmpDir <- args
-  let argList = ["l", "-t", tmpDir </> "l1/.trash"]
+  let argList = ["-t", tmpDir </> "l1/.trash", "l", "--format", "m"]
 
   (result, logs) <- captureSafeRmLogs tmpDir "LIST" argList
   pure $ capturedToBs [result, logs]
@@ -46,7 +46,7 @@ readIndexError args = goldenVsStringDiff "Read Index Error" diff gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "l2"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["-t", trashDir, "l", "--format", "m"]
 
   -- setup
   clearDirectory testDir
@@ -68,7 +68,7 @@ indexEntryNonExtantError args = goldenVsStringDiff desc diff gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "l3"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["-t", trashDir, "l", "--format", "m"]
       badFileLine =
         mconcat
           [ "file,foo,",
@@ -102,7 +102,7 @@ indexDuplicatesError args = goldenVsStringDiff desc diff gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "l4"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["-t", trashDir, "l", "--format", "m"]
       dupFile = trashDir </> "foo"
       dupFileLine =
         mconcat
@@ -139,7 +139,7 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "l5"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["-t", trashDir, "l", "--format", "m"]
       file = trashDir </> "foo"
       fileLine =
         mconcat
@@ -175,7 +175,7 @@ readIndexErrorNoTrace args = goldenVsStringDiff desc diff gpath $ do
   tmpDir <- args
   let testDir = tmpDir </> "l6"
       trashDir = testDir </> ".trash"
-      argList = ["l", "-t", trashDir]
+      argList = ["-t", trashDir, "l", "--format", "m"]
 
   -- setup
   clearDirectory testDir

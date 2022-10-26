@@ -38,7 +38,7 @@ metadata args = goldenVsStringDiff "Prints metadata" diff gpath $ do
   runSafeRm tmpDir delArgList
 
   -- list output assertions
-  delResult <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  delResult <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist

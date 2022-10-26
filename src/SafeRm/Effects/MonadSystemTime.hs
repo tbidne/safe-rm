@@ -9,6 +9,7 @@ module SafeRm.Effects.MonadSystemTime
     Timestamp (..),
     toString,
     toText,
+    fromText,
   )
 where
 
@@ -109,6 +110,17 @@ toString =
 -- @since 0.1
 toText :: Timestamp -> Text
 toText = T.pack . toString
+
+-- | @since 0.1
+fromText :: MonadFail f => Text -> f Timestamp
+fromText =
+  fmap MkTimestamp
+    . Format.parseTimeM
+      True
+      -- NOTE: Change if we ever include timezone info.
+      Format.defaultTimeLocale
+      format
+    . T.unpack
 
 format :: String
 format = "%Y-%m-%d %H:%M:%S"

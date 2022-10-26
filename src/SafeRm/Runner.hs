@@ -17,6 +17,9 @@ where
 import Data.Text.Encoding qualified as TEnc
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import SafeRm qualified
+import SafeRm.Data.Index (Sort)
+import SafeRm.Data.Index qualified as Index
+import SafeRm.Data.PathData (PathDataFormat)
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome),
@@ -137,7 +140,10 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       DeletePerm force paths -> SafeRm.deletePermanently force paths
       Empty force -> SafeRm.emptyTrash force
       Restore paths -> SafeRm.restore paths
-      List -> printIndex *> printMetadata
+      List listCmd -> do
+        printIndex (listCmd ^. #format) (listCmd ^. #sort) (listCmd ^. #revSort)
+        putTextLn ""
+        printMetadata
       Metadata -> printMetadata
 
     logEx ex = do
@@ -257,9 +263,8 @@ getConfiguration = do
     -- 4. toml explicitly disabled
     TomlNone -> pure mempty
 
-  -- merge share CLI and toml values
-  let mergedConfig = mergeConfigs args tomlConfig
-  pure (mergedConfig, args ^. #command)
+  -- merge shared CLI and toml values
+  pure $ mergeConfigs args tomlConfig
   where
     readConfig fp = do
       contents <-
@@ -283,8 +288,14 @@ printIndex ::
     MonadReader env m,
     MonadTerminal m
   ) =>
+  PathDataFormat ->
+  Sort ->
+  Bool ->
   m ()
-printIndex = SafeRm.getIndex >>= prettyDel
+printIndex style sort revSort =
+  SafeRm.getIndex
+    >>= putTextLn
+      . Index.formatIndex style sort revSort
 
 printMetadata ::
   ( MonadFsReader m,

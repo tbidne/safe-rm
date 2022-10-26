@@ -7,3 +7,19 @@ log-level = "info"
 # Determines if we print stack traces to the console on errors. Stack traces
 # are always included in file logs regardless of this setting.
 show-trace = true
+
+# Configuration for the List (l) command
+[list]
+# Uses multiple lines for each entry. The default is "single" i.e. tabular
+# output
+format = "multi"
+# Character limit on displayed trash name. Defaults to 10. This option is
+# only used with format = "single".
+name-trunc = 80
+# Character limit on displayed original path. Defaults to 10. This option is
+# only used with format = "single".
+orig-trunc = 100
+# Sorting method. Possible choices are "size", and "name". Defaults to "name".
+sort = "size"
+# Whether to reverse the sort. Defauls to false.
+reverse-sort = true

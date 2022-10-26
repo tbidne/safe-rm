@@ -7,6 +7,13 @@
 module SafeRm.Runner.Args
   ( getArgs,
     Args (..),
+    CommandArg (..),
+    _DeleteArg,
+    _DeletePermArg,
+    _EmptyArg,
+    _RestoreArg,
+    _ListArg,
+    _MetadataArg,
     TomlConfigPath (..),
     _TomlNone,
     _TomlDefault,
@@ -22,6 +29,7 @@ import Options.Applicative
   ( CommandFields,
     InfoMod,
     Mod,
+    OptionFields,
     Parser,
     ParserInfo
       ( ParserInfo,
@@ -38,20 +46,12 @@ import Options.Applicative
 import Options.Applicative qualified as OA
 import Options.Applicative.Help.Chunk (Chunk (Chunk))
 import Options.Applicative.Types (ArgPolicy (Intersperse))
-import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
+import SafeRm.Data.Index (Sort, readSort)
+import SafeRm.Data.Paths (PathI, PathIndex (OriginalPath, TrashHome, TrashName))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Prelude
-import SafeRm.Runner.Command
-  ( Command
-      ( Delete,
-        DeletePerm,
-        Empty,
-        List,
-        Metadata,
-        Restore
-      ),
-  )
+import SafeRm.Runner.Config (CmdListCfg (MkCmdListCfg), ListFormatCfg, parseListFormat)
 
 -- | Toml path config.
 --
@@ -77,6 +77,48 @@ data TomlConfigPath
     )
 
 makePrisms ''TomlConfigPath
+
+-- | Args representing a command. Analagous to SafeRm.Runner.Command,
+-- though we maintain a separate type here as the actual command is derived
+-- from a combination of arguments.
+--
+-- @since 0.1
+data CommandArg
+  = -- | Deletes a path.
+    --
+    -- @since 0.1
+    DeleteArg !(UniqueSeq (PathI OriginalPath))
+  | -- | Permanently deletes a path from the trash.
+    --
+    -- @since 0.1
+    DeletePermArg
+      !Bool
+      !(UniqueSeq (PathI TrashName))
+  | -- | Empties the trash.
+    --
+    -- @since 0.1
+    EmptyArg !Bool
+  | -- | Restores a path.
+    --
+    -- @since 0.1
+    RestoreArg (UniqueSeq (PathI TrashName))
+  | -- | List all trash contents.
+    --
+    -- @since 0.1
+    ListArg !CmdListCfg
+  | -- | Prints trash metadata.
+    --
+    -- @since 0.1
+    MetadataArg
+  deriving stock
+    ( -- | @since 0.1
+      Eq,
+      -- | @since 0.1
+      Show
+    )
+
+-- | @since 0.1
+makePrisms ''CommandArg
 
 -- | CLI args.
 --
@@ -106,7 +148,7 @@ data Args = MkArgs
     -- | Command to run.
     --
     -- @since 0.1
-    command :: !Command
+    command :: !CommandArg
   }
   deriving stock
     ( -- | @since 0.1
@@ -117,6 +159,7 @@ data Args = MkArgs
       Show
     )
 
+-- | @since 0.1
 makeFieldLabelsNoPrefix ''Args
 
 -- | Retrieves CLI args.
@@ -199,7 +242,7 @@ configParser =
         "none" -> pure TomlNone
         path -> pure $ TomlPath path
 
-commandParser :: Parser Command
+commandParser :: Parser CommandArg
 commandParser =
   OA.hsubparser
     ( mconcat
@@ -234,15 +277,90 @@ commandParser =
     listTxt = OA.progDesc "Lists all trash contents and metadata."
     metadataTxt = OA.progDesc "Prints trash metadata."
 
-    delParser = Delete <$> pathsParser
+    delParser = DeleteArg <$> pathsParser
     permDelParser =
-      DeletePerm
+      DeletePermArg
         <$> forceParser
         <*> pathsParser
-    emptyParser = Empty <$> forceParser
-    restoreParser = Restore <$> pathsParser
-    listParser = pure List
-    metadataParser = pure Metadata
+    emptyParser = EmptyArg <$> forceParser
+    restoreParser = RestoreArg <$> pathsParser
+    listParser =
+      fmap ListArg $
+        MkCmdListCfg
+          <$> listFormatParser
+          <*> nameTruncParser
+          <*> origTruncParser
+          <*> sortParser
+          <*> reverseSortParser
+    metadataParser = pure MetadataArg
+
+listFormatParser :: Parser (Maybe ListFormatCfg)
+listFormatParser =
+  A.optional $
+    OA.option (OA.str >>= parseListFormat) $
+      mconcat
+        [ OA.long "format",
+          OA.metavar "([m]ulti | [s]ingle)",
+          OA.help helpTxt
+        ]
+  where
+    helpTxt =
+      mconcat
+        [ "Determines the output format. Defaults to 'single' i.e. each ",
+          "trash entry is printed in a single line, in tabular form."
+        ]
+
+nameTruncParser :: Parser (Maybe Word8)
+nameTruncParser = word8Parser fields
+  where
+    fields =
+      mconcat
+        [ OA.long "name-trunc",
+          OA.short 'n',
+          OA.metavar "INT",
+          OA.help
+            "Truncates the name to INT chars. Multiline option is unaffected."
+        ]
+
+origTruncParser :: Parser (Maybe Word8)
+origTruncParser = word8Parser fields
+  where
+    fields =
+      mconcat
+        [ OA.long "orig-trunc",
+          OA.short 'o',
+          OA.metavar "INT",
+          OA.help $
+            "Truncates the original path to INT chars. Multiline option is "
+              <> "unaffected."
+        ]
+
+word8Parser :: Mod OptionFields Word8 -> Parser (Maybe Word8)
+word8Parser = A.optional . OA.option OA.auto
+
+sortParser :: Parser (Maybe Sort)
+sortParser =
+  A.optional
+    $ OA.option
+      (OA.str >>= readSort)
+    $ mconcat
+      [ OA.long "sort",
+        OA.short 's',
+        OA.metavar "(name|size)",
+        OA.help "How to sort the list. Defaults to name."
+      ]
+
+reverseSortParser :: Parser (Maybe Bool)
+reverseSortParser =
+  A.optional $
+    OA.flag' True $
+      mconcat
+        [ OA.long "reverse-sort",
+          OA.short 'r',
+          OA.help helpTxt
+        ]
+  where
+    helpTxt = "Sorts in the reverse order."
 
 forceParser :: Parser Bool
 forceParser =

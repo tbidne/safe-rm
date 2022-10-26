@@ -39,7 +39,7 @@ emptyTrash args = goldenVsStringDiff "Empties trash" diff gpath $ do
   runSafeRm tmpDir delArgList
 
   -- list output assertions
-  resultDel <- captureSafeRm tmpDir "LIST 1" ["l", "-t", trashDir]
+  resultDel <- captureSafeRm tmpDir "LIST 1" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesExist
@@ -56,7 +56,7 @@ emptyTrash args = goldenVsStringDiff "Empties trash" diff gpath $ do
   (_, logs) <- captureSafeRmLogs tmpDir "EMPTY" emptyArgList
 
   -- list output assertions
-  result <- captureSafeRm tmpDir "LIST 2" ["l", "-t", trashDir]
+  result <- captureSafeRm tmpDir "LIST 2" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   assertFilesDoNotExist
@@ -113,7 +113,7 @@ emptyNoForce args = goldenVsStringDiff desc diff gpath $ do
     captureSafeRmLogs tmpDir "EMPTY" emptyArgList
 
   -- list output assertions
-  listResult <- captureSafeRm tmpDir "LIST" ["l", "-t", trashDir]
+  listResult <- captureSafeRm tmpDir "LIST" ["-t", trashDir, "l", "--format", "m"]
 
   -- file assertions
   -- First getChar response was 'n', so files should still exist
