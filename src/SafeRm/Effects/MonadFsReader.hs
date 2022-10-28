@@ -57,7 +57,7 @@ class Monad m => MonadFsReader m where
 
 -- | @since 0.1
 instance MonadFsReader IO where
-  getFileSize f = MkBytes . natToInt <$> Dir.getFileSize f
+  getFileSize f = withStackTracing $ MkBytes . natToInt <$> Dir.getFileSize f
     where
       natToInt x
         | x < 0 =
