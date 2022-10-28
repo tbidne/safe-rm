@@ -150,7 +150,7 @@ deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
   let permDelArgList =
         ["x", "bad file", "-f", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "PERM DELETE"
@@ -192,7 +192,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   let permDelArgList =
         ("x" : filesTryPermDelete) <> ["-f", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "PERM DELETE"

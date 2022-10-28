@@ -54,7 +54,7 @@ readIndexError args = goldenVsStringDiff "Read Index Error" diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", "bad index")]
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @ReadIndexE
       tmpDir
       "LIST"
@@ -87,7 +87,7 @@ indexEntryNonExtantError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @TrashPathNotFoundE
       tmpDir
       "LIST"
@@ -124,7 +124,7 @@ indexDuplicatesError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @DuplicateIndexPathE
       tmpDir
       "LIST"
@@ -160,7 +160,7 @@ indexSizeMismatchError args = goldenVsStringDiff desc diff gpath $ do
   createFileContents [(trashDir </> ".index.csv", badIndex)]
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @IndexSizeMismatchE
       tmpDir
       "LIST"

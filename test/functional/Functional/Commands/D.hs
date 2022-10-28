@@ -95,7 +95,7 @@ deleteUnknownError args = goldenVsStringDiff desc diff gpath $ do
   clearDirectory testDir
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "DELETE"
@@ -153,7 +153,7 @@ deletesSome args = goldenVsStringDiff desc diff gpath $ do
   assertFilesExist realFiles
 
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "DELETE"

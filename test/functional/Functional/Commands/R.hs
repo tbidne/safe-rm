@@ -149,7 +149,7 @@ restoreUnknownError args = goldenVsStringDiff desc diff gpath $ do
   -- RESTORE
   let restoreArgList = ["r", "bad file", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "RESTORE"
@@ -188,7 +188,7 @@ restoreCollisionError args = goldenVsStringDiff desc diff gpath $ do
   -- RESTORE
   let restoreArgList = ["r", "f1", "-t", trashDir]
   (ex, logs) <-
-    captureSafeRmTraceExceptionLogs
+    captureSafeRmExceptionLogs
       @Exceptions
       tmpDir
       "RESTORE"

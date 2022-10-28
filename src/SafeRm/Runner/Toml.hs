@@ -36,10 +36,6 @@ data TomlConfig = MkTomlConfig
     --
     -- @since 0.1
     logLevel :: !(Maybe (Maybe LogLevel)),
-    -- | Show stack traces in terminal errors.
-    --
-    -- @since 0.1
-    showTrace :: !(Maybe Bool),
     -- | List command configuration.
     --
     -- @since 0.1
@@ -57,20 +53,19 @@ makeFieldLabelsNoPrefix ''TomlConfig
 
 -- | @since 0.1
 instance Semigroup TomlConfig where
-  MkTomlConfig a b c d <> MkTomlConfig a' b' c' d' =
+  MkTomlConfig a b c <> MkTomlConfig a' b' c' =
     MkTomlConfig
       -- Simple args, take the (left-biased) Just.
       (a <|> a')
       (b <|> b')
-      (c <|> c')
       -- For list config, use the semigroup instance because we want decisions
       -- at the _field_ level. The mere fact that the LHS is Just should
       -- _not_ cause it to completely overwrite the RHS.
-      (d <> d')
+      (c <> c')
 
 -- | @since 0.1
 instance Monoid TomlConfig where
-  mempty = MkTomlConfig Nothing Nothing Nothing Nothing
+  mempty = MkTomlConfig Nothing Nothing Nothing
 
 -- | @since 0.5
 instance DecodeTOML TomlConfig where
@@ -78,13 +73,11 @@ instance DecodeTOML TomlConfig where
     MkTomlConfig
       <$> decodeTrashHome
       <*> decodeLogLevel
-      <*> decodeShowTrace
       <*> getFieldOptWith tomlDecoder "list"
     where
       decodeTrashHome = fmap MkPathI <$> getFieldOpt "trash-home"
       decodeLogLevel =
         getFieldOptWith (tomlDecoder >>= readLogLevel) "log-level"
-      decodeShowTrace = getFieldOpt "show-trace"
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.
@@ -104,15 +97,10 @@ argsToTomlConfig args =
   MkTomlConfig
     { trashHome = args ^. #trashHome,
       logLevel = args ^. #logLevel,
-      showTrace,
       listCommand = cmd ^? _ListArg
     }
   where
     cmd = args ^. #command
-    -- noShowTrace overrides showTrace
-    showTrace
-      | args ^. #noShowTrace = Just False
-      | otherwise = args ^. #showTrace
 
 -- Returns the new command after possibly updating the old command from the
 -- toml configuration.

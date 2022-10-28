@@ -54,7 +54,7 @@ format2 =
     toBS . Index.formatIndex Multiline Name True
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Multiline, name, desc"
     gpath = goldenPath </> "multi-name-desc.golden"
 
 format3 :: TestTree
@@ -63,7 +63,7 @@ format3 =
     toBS . Index.formatIndex Multiline Size False
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Multiline, size, asc"
     gpath = goldenPath </> "multi-size-asc.golden"
 
 format4 :: TestTree
@@ -72,7 +72,7 @@ format4 =
     toBS . Index.formatIndex Multiline Size True
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Multiline, size, desc"
     gpath = goldenPath </> "multi-size-desc.golden"
 
 format5 :: TestTree
@@ -81,7 +81,7 @@ format5 =
     toBS . Index.formatIndex (Singleline 10 22) Name False
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Singeline, name, asc"
     gpath = goldenPath </> "single-name-asc.golden"
 
 format6 :: TestTree
@@ -90,7 +90,7 @@ format6 =
     toBS . Index.formatIndex (Singleline 10 22) Name True
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Singeline, name, desc"
     gpath = goldenPath </> "single-name-desc.golden"
 
 format7 :: TestTree
@@ -99,7 +99,7 @@ format7 =
     toBS . Index.formatIndex (Singleline 10 22) Size False
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Singeline, size, asc"
     gpath = goldenPath </> "single-size-asc.golden"
 
 format8 :: TestTree
@@ -108,7 +108,7 @@ format8 =
     toBS . Index.formatIndex (Singleline 10 22) Size True
       <$> mkIndex
   where
-    desc = "Multiline, name, asc"
+    desc = "Singeline, size, desc"
     gpath = goldenPath </> "single-size-desc.golden"
 
 mkIndex :: MonadFail f => f Index

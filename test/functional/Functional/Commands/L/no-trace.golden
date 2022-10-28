@@ -1,6 +1,11 @@
 EXCEPTION LIST
 Error reading index at '<dir>/l6/.trash/.index.csv': parse error (not enough input) at ""
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
+  readIndexWithFold, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
+
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l6/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l6/.trash/.index.csv

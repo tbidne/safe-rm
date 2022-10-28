@@ -28,7 +28,6 @@ module Functional.Prelude
     captureSafeRm,
     captureSafeRmLogs,
     captureSafeRmExceptionLogs,
-    captureSafeRmTraceExceptionLogs,
 
     -- * Assertions
     assertFilesExist,
@@ -92,7 +91,6 @@ import SafeRm.Effects.MonadTerminal
       ),
   )
 import SafeRm.Env (HasTrashHome)
-import SafeRm.Exception (displayTraceIf)
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
 import SafeRm.Runner qualified as Runner
@@ -275,32 +273,7 @@ captureSafeRmExceptionLogs ::
   -- Args.
   [String] ->
   IO (CapturedOutput, CapturedOutput)
-captureSafeRmExceptionLogs = captureSafeRmMTraceExceptionLogs @e False
-
--- | Runs safe-rm and captures a thrown exception and logs.
-captureSafeRmTraceExceptionLogs ::
-  forall e.
-  Exception e =>
-  FilePath ->
-  Builder ->
-  [String] ->
-  IO (CapturedOutput, CapturedOutput)
-captureSafeRmTraceExceptionLogs = captureSafeRmMTraceExceptionLogs @e True
-
--- | Runs safe-rm and captures a thrown exception and logs.
-captureSafeRmMTraceExceptionLogs ::
-  forall e.
-  Exception e =>
-  -- | Whether to include stack trace in terminal output.
-  Bool ->
-  -- | Test dir. Used to strip dir from output to make paths deterministic.
-  FilePath ->
-  -- | Title to add to captured output.
-  Builder ->
-  -- Args.
-  [String] ->
-  IO (CapturedOutput, CapturedOutput)
-captureSafeRmMTraceExceptionLogs withTrace testDir title argList = do
+captureSafeRmExceptionLogs testDir title argList = do
   terminalRef <- newIORef ""
   logsRef <- newIORef ""
 
@@ -315,7 +288,7 @@ captureSafeRmMTraceExceptionLogs withTrace testDir title argList = do
         "captureSafeRmExceptionLogs: Expected exception, received none"
     Left ex -> do
       logs <- replaceDir testDir <$> readIORef logsRef
-      let exceptionBs = exToBuilder withTrace testDir ex
+      let exceptionBs = exToBuilder testDir ex
           logsBs = txtToBuilder logs
       pure (Exception title exceptionBs, Logs title logsBs)
   where
@@ -395,8 +368,8 @@ diff ref new = ["diff", "-u", ref, new]
 txtToBuilder :: Text -> Builder
 txtToBuilder = Builder.byteString . TEnc.encodeUtf8
 
-exToBuilder :: Exception e => Bool -> FilePath -> e -> Builder
-exToBuilder b fp = txtToBuilder . replaceDir fp . displayTraceIf b
+exToBuilder :: Exception e => FilePath -> e -> Builder
+exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException
 
 -- | Fixes several fields on the CallStack that are either non-deterministic
 -- (package name) or extremely brittle (line/col numbers). This eases testing.

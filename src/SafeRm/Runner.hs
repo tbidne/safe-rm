@@ -42,8 +42,6 @@ import SafeRm.Env (HasTrashHome)
 import SafeRm.Exception
   ( ArbitraryE (MkArbitraryE),
     TomlDecodeE (MkTomlDecodeE),
-    displayTrace,
-    displayTraceIf,
     withStackTracing,
   )
 import SafeRm.Prelude
@@ -103,9 +101,7 @@ runSafeRm = do
   -- NOTE: Using setUncaughtExceptionHandler means we do not have to manually
   -- catch exceptions and print ourselves, just to get nicer output from
   -- show.
-  let handleFn :: Exception e => e -> Text
-      handleFn = displayTraceIf (fromMaybe False (config ^. #showTrace))
-  liftIO $ setUncaughtExceptionHandler (putTextLn . handleFn)
+  liftIO $ setUncaughtExceptionHandler (putTextLn . displayExceptiont)
 
   bracket
     (configToEnv config)
@@ -147,7 +143,7 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (displayTrace ex)
+      $(logError) (displayExceptiont ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used

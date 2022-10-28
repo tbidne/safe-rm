@@ -46,8 +46,7 @@
 Safe-rm: A tool for deleting files to a trash directory.
 
 Usage: sr [-c|--config [none|PATH]] [-t|--trash-home PATH]
-          [--log-level [none|error|warn|info|debug]] [--show-trace]
-          [--no-show-trace] COMMAND [--version]
+          [--log-level [none|error|warn|info|debug]] COMMAND [--version]
 
 Safe-rm moves files to a trash directory, so they can later be restored or permanently deleted. It is intended as a safer alternative to rm. See github.com/tbidne/safe-rm#readme for full documentation.
 
@@ -62,11 +61,6 @@ Available options:
                            the xdg home directory e.g. ~/.trash
   --log-level [none|error|warn|info|debug]
                            The file level in which to log. Defaults to none.
-  --show-trace             If enabled, prints the stack trace for any errors.
-                           Defaults to false.
-  --no-show-trace          If enabled, disables the stack trace for any errors.
-                           This overrides --stack-trace, and can be used to
-                           override a value set in the toml config.
   -h,--help                Show this help text
 
 Delete Commands

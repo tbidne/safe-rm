@@ -29,7 +29,17 @@ Exceptions:
 
 - Path not found: f4
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 - Path not found: f3
+
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  deletePermanently, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 LOGS PERM DELETE
 [2020-05-31 12:00:00][functional.deletePermanently][Debug][src/SafeRm.hs] Trash home: <dir>/x5/.trash

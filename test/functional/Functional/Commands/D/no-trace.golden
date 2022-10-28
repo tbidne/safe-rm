@@ -3,4 +3,18 @@ Exceptions:
 
 - Path not found: <dir>/d6/f2
 
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+
 - Path not found: <dir>/d6/f4
+
+CallStack (from HasCallStack):
+  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
+  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
+  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude

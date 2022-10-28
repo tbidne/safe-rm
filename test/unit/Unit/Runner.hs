@@ -169,7 +169,6 @@ parsesExample = testCase "Parses Example" $ do
 
   Just "./tmp" @=? cfg ^. #trashHome
   Just (Just LevelInfo) @=? cfg ^. #logLevel
-  Just True @=? cfg ^. #showTrace
   Just listCfg @=? cfg ^. #listCommand
   where
     argList = ["-c", "examples/config.toml", "d", "foo"]
@@ -198,7 +197,6 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
 
   Just "not-tmp" @=? cfg ^. #trashHome
   Just (Just LevelError) @=? cfg ^. #logLevel
-  Just False @=? cfg ^. #showTrace
   where
     argList =
       [ "-c",
@@ -207,7 +205,6 @@ argsOverridesToml = testCase "Args overrides Toml" $ do
         "not-tmp",
         "--log-level",
         "error",
-        "--no-show-trace",
         "d",
         "foo"
       ]
@@ -239,7 +236,6 @@ defaultConfig = testCase "Default config" $ do
 
   Nothing @=? cfg ^. #trashHome
   Nothing @=? cfg ^. #logLevel
-  Nothing @=? cfg ^. #showTrace
   Nothing @=? cfg ^. #listCommand
   where
     argList =

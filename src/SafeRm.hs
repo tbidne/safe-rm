@@ -63,7 +63,6 @@ import SafeRm.Env
 import SafeRm.Exception
   ( Exceptions (MkExceptions),
     PathNotFoundE (MkPathNotFoundE),
-    displayTrace,
     withStackTracing,
   )
 import SafeRm.Prelude
@@ -108,7 +107,7 @@ delete paths = addNamespace "delete" $ do
         modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (displayTrace ex)
+        $(logWarn) (displayExceptiont ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -173,7 +172,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
             modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            $(logWarn) (displayTrace ex)
+            $(logWarn) (displayExceptiont ex)
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
@@ -295,7 +294,7 @@ restore paths = addNamespace "restore" $ do
         modifyIORef' restoredPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (displayTrace ex)
+        $(logWarn) (displayExceptiont ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index

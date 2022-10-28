@@ -136,15 +136,6 @@ data Args = MkArgs
     --
     -- @since 0.1
     logLevel :: !(Maybe (Maybe LogLevel)),
-    -- | If enabled, prints the stack trace for any errors encountered.
-    --
-    -- @since 0.1
-    showTrace :: !(Maybe Bool),
-    -- | Disables 'showTrace'. This exists because --showTrace false cannot be
-    -- specified on the CLI, as it is a simple switch.
-    --
-    -- @since 0.1
-    noShowTrace :: !Bool,
     -- | Command to run.
     --
     -- @since 0.1
@@ -197,8 +188,6 @@ argsParser =
     <$> configParser
     <*> trashParser
     <*> logLevelParser
-    <*> showTraceParser
-    <*> noShowTraceParser
     <*> commandParser
     <**> OA.helper
     <**> version
@@ -372,34 +361,6 @@ forceParser =
       ]
   where
     helpTxt = "If enabled, will not ask before deleting each path."
-
-showTraceParser :: Parser (Maybe Bool)
-showTraceParser =
-  A.optional $
-    OA.flag' True $
-      mconcat
-        [ OA.long "show-trace",
-          OA.help helpTxt
-        ]
-  where
-    helpTxt =
-      "If enabled, prints the stack trace for any errors. "
-        <> "Defaults to false."
-
-noShowTraceParser :: Parser Bool
-noShowTraceParser =
-  OA.switch $
-    mconcat
-      [ OA.long "no-show-trace",
-        OA.help helpTxt
-      ]
-  where
-    helpTxt =
-      mconcat
-        [ "If enabled, disables the stack trace for any errors. ",
-          "This overrides --stack-trace, and can be used to override ",
-          "a value set in the toml config."
-        ]
 
 trashParser :: Parser (Maybe (PathI TrashHome))
 trashParser =

@@ -8,6 +8,7 @@ module SafeRm.Prelude
 
     -- * Text
     showt,
+    displayExceptiont,
   )
 where
 
@@ -178,3 +179,7 @@ import UnliftIO.IORef as X
 -- | @since 0.1
 showt :: Show a => a -> Text
 showt = T.pack . show
+
+-- | @since 0.1
+displayExceptiont :: Exception e => e -> Text
+displayExceptiont = T.pack . displayException
