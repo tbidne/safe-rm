@@ -83,6 +83,7 @@ library
     , optics-th             ^>=0.4
     , optparse-applicative  >=0.15      && <0.18
     , package-version       >=0.1.0.0   && <0.4
+    , path-size             ^>=0.1
     , prettyprinter         ^>=1.7.1
     , template-haskell      >=2.18.0.0  && <2.20
     , text                  >=1.2.4.0   && <2.1
@@ -156,10 +157,12 @@ test-suite integration
     Integration.SafeRm
 
   build-depends:
+    , algebra-simple
     , base
     , env-guard             ^>=0.2
     , file-utils
     , hedgehog
+    , mtl
     , safe-rm
     , tasty
     , tasty-hedgehog

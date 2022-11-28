@@ -8,6 +8,20 @@ where
 
 import Control.Monad.Trans (MonadTrans (lift))
 import Data.ByteString qualified as BS
+import Data.Sequence (Seq (Empty, (:<|)))
+import PathSize
+  ( Config
+      ( MkConfig,
+        exclude,
+        filesOnly,
+        maxDepth,
+        numPaths,
+        searchAll,
+        strategy
+      ),
+    SubPathData (MkSubPathData),
+    findLargestPaths,
+  )
 import SafeRm.Effects.MonadCallStack (throwCallStack)
 import SafeRm.Exception
   ( PathNotFoundE (MkPathNotFoundE),
@@ -57,19 +71,7 @@ class Monad m => MonadFsReader m where
 
 -- | @since 0.1
 instance MonadFsReader IO where
-  getFileSize f = withStackTracing $ MkBytes . natToInt <$> Dir.getFileSize f
-    where
-      natToInt x
-        | x < 0 =
-            error $
-              mconcat
-                [ "[SafeRm.Effects.MonadFsReader]",
-                  "getFileSize returned ",
-                  show x,
-                  " bytes for file: ",
-                  f
-                ]
-        | otherwise = fromIntegral x
+  getFileSize f = withStackTracing $ MkBytes <$> getPathSize f
 
   readFile :: FilePath -> IO ByteString
   readFile f = do
@@ -86,7 +88,11 @@ instance MonadFsReader IO where
   doesPathExist = withStackTracing . Dir.doesPathExist
 
   canonicalizePath = withStackTracing . Dir.canonicalizePath
+
   listDirectory = withStackTracing . Dir.listDirectory
+
+-- NOTE: The below instance is only used in file-utils. SafeRmT has its
+-- own instance.
 
 -- | @since 0.1
 instance MonadFsReader m => MonadFsReader (ReaderT env m) where
@@ -97,3 +103,22 @@ instance MonadFsReader m => MonadFsReader (ReaderT env m) where
   doesPathExist = lift . doesPathExist
   canonicalizePath = lift . canonicalizePath
   listDirectory = lift . listDirectory
+
+getPathSize :: FilePath -> IO Natural
+getPathSize path =
+  findLargestPaths cfg path >>= \case
+    (Empty, MkSubPathData (x :<| _)) -> pure $ x ^. #size
+    (errs, _) ->
+      throwString $
+        "Error retrieving size: "
+          <> foldl' (\s e -> s <> "\n" <> displayException e) "" errs
+  where
+    cfg =
+      MkConfig
+        { searchAll = True,
+          maxDepth = Just 0,
+          exclude = mempty,
+          filesOnly = False,
+          numPaths = Just 1,
+          strategy = mempty
+        }

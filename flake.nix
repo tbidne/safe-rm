@@ -31,6 +31,16 @@
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
     };
+    path-size = {
+      url = "github:tbidne/path-size";
+      inputs.flake-compat.follows = "flake-compat";
+      inputs.flake-utils.follows = "flake-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
+      inputs.byte-types.follows = "byte-types";
+    };
   };
   outputs =
     { algebra-simple
@@ -39,6 +49,7 @@
     , flake-compat
     , flake-utils
     , nixpkgs
+    , path-size
     , self
     }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -73,6 +84,7 @@
               pkgs.haskell.lib.doJailbreak
                 (final.callCabal2nix "byte-types" byte-types { });
             package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
+            path-size = final.callCabal2nix "path-size" path-size { };
             tasty-hedgehog = prev.tasty-hedgehog_1_3_1_0;
           };
         };

@@ -131,6 +131,41 @@
         "type": "github"
       }
     },
+    "path-size": {
+      "inputs": {
+        "algebra-simple": [
+          "algebra-simple"
+        ],
+        "bounds": [
+          "bounds"
+        ],
+        "byte-types": [
+          "byte-types"
+        ],
+        "flake-compat": [
+          "flake-compat"
+        ],
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1669609766,
+        "narHash": "sha256-erwKfzMQ25aKHyQJ2byD8TndlsBIG1MPHN+Bl1C9khI=",
+        "owner": "tbidne",
+        "repo": "path-size",
+        "rev": "9da95b6efb247d0e7caa0acde1ab4543cbfcafef",
+        "type": "github"
+      },
+      "original": {
+        "owner": "tbidne",
+        "repo": "path-size",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "algebra-simple": "algebra-simple",
@@ -138,7 +173,8 @@
         "byte-types": "byte-types",
         "flake-compat": "flake-compat",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "path-size": "path-size"
       }
     }
   },

@@ -28,3 +28,8 @@ source-repository-package
     type: git
     location: https://github.com/tbidne/byte-types.git
     tag: a7e1cd9824ca72c970a8a33ecd77256863bfc071
+
+source-repository-package
+    type: git
+    location: https://github.com/tbidne/path-size.git
+    tag: 9da95b6efb247d0e7caa0acde1ab4543cbfcafef

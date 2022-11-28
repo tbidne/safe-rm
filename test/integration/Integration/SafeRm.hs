@@ -6,18 +6,27 @@ module Integration.SafeRm
   )
 where
 
+import Control.Monad.Reader (ReaderT (ReaderT))
 import Data.Char qualified as Ch
+import Data.Coerce (coerce)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Integration.Prelude
+import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Data.UniqueSeq qualified as USeq
+import SafeRm.Effects.MonadCallStack (MonadCallStack)
+import SafeRm.Effects.MonadFsReader (MonadFsReader (..))
+import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
+import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
+import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
+import SafeRm.Effects.MonadTerminal (MonadTerminal)
 import SafeRm.Exception (Exceptions (MkExceptions))
 import SafeRm.Runner.Env
   ( Env (MkEnv),
@@ -25,12 +34,42 @@ import SafeRm.Runner.Env
     logEnv,
     trashHome,
   )
-import SafeRm.Runner.SafeRmT (usingSafeRmT)
+import SafeRm.Runner.SafeRmT (SafeRmT (..))
 
--- TODO: Right now we are using runner's SafeRmT to run the tests. This works
--- fine and means we do not have to use our own custom type. But it also
--- means we cannot test the logging, and the may be something we want to do
--- at some point. Consider if we want to do this.
+-- Custom type for running the tests. Fo now, the only reason we do not use
+-- SafeRmT is to override getFileSize so that expected errors in tests
+-- do not spam the console logs (i.e. retrieving the size for a bad path).
+-- We could use this to later verify logs, if we wished.
+
+-- | Type for running integration tests.
+newtype IntIO a = MkIntIO (ReaderT Env IO a)
+  deriving
+    ( Applicative,
+      Functor,
+      Monad,
+      MonadIO,
+      MonadCallStack,
+      MonadFsWriter,
+      MonadLogger,
+      MonadLoggerContext,
+      MonadReader Env,
+      MonadSystemTime,
+      MonadTerminal,
+      MonadUnliftIO
+    )
+    via (SafeRmT Env IO)
+
+instance MonadFsReader IntIO where
+  getFileSize = const (pure $ afromInteger 0)
+  readFile = coerce . readFile @(SafeRmT Env IO)
+  doesFileExist = coerce . doesFileExist @(SafeRmT Env IO)
+  doesDirectoryExist = coerce . doesDirectoryExist @(SafeRmT Env IO)
+  doesPathExist = coerce . doesPathExist @(SafeRmT Env IO)
+  canonicalizePath = coerce . canonicalizePath @(SafeRmT Env IO)
+  listDirectory = coerce . listDirectory @(SafeRmT Env IO)
+
+usingIntIO :: Env -> IntIO a -> IO a
+usingIntIO env (MkIntIO rdr) = runReaderT rdr env
 
 tests :: IO FilePath -> TestTree
 tests testDir =
@@ -66,7 +105,7 @@ delete mtestDir =
       assertFilesExist αTest
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI αTest)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI αTest)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -75,7 +114,7 @@ delete mtestDir =
       assertFilesDoNotExist αTest
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
 
       let indexOrigPaths = HMap.foldl' toOrigPath HSet.empty index
@@ -109,7 +148,7 @@ deleteSome mtestDir =
       caughtEx <-
         liftIO $
           try @_ @Exceptions $
-            usingSafeRmT env (SafeRm.delete (USeq.map MkPathI toDelete))
+            usingIntIO env (SafeRm.delete (USeq.map MkPathI toDelete))
 
       (MkExceptions exs) <-
         either
@@ -129,7 +168,7 @@ deleteSome mtestDir =
       assertFilesDoNotExist (USeq.map (trashDir </>) β)
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
 
       let indexOrigPaths = HMap.foldl' toOrigPath HSet.empty index
@@ -157,7 +196,7 @@ deletePermanently mtestDir =
       assertFilesExist αTest
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI αTest)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI αTest)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -167,10 +206,10 @@ deletePermanently mtestDir =
 
       -- permanently delete files
       let toPermDelete = USeq.map MkPathI α
-      liftIO $ usingSafeRmT env $ SafeRm.deletePermanently True toPermDelete
+      liftIO $ usingIntIO env $ SafeRm.deletePermanently True toPermDelete
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
 
       HMap.empty === index
@@ -202,7 +241,7 @@ deleteSomePermanently mtestDir =
       assertFilesExist toDelete
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI toDelete)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI toDelete)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -218,7 +257,7 @@ deleteSomePermanently mtestDir =
       caughtEx <-
         liftIO $
           try @_ @Exceptions $
-            usingSafeRmT env (SafeRm.deletePermanently True toPermDelete)
+            usingIntIO env (SafeRm.deletePermanently True toPermDelete)
 
       (MkExceptions exs) <-
         either
@@ -229,7 +268,7 @@ deleteSomePermanently mtestDir =
       annotateShow exs
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
       let indexOrigPaths = HMap.foldl' toOrigPath HSet.empty index
 
@@ -263,7 +302,7 @@ restore mtestDir =
       assertFilesExist αTest
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI αTest)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI αTest)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -273,10 +312,10 @@ restore mtestDir =
 
       -- restore files
       let toRestore = USeq.map MkPathI α
-      liftIO $ usingSafeRmT env $ SafeRm.restore toRestore
+      liftIO $ usingIntIO env $ SafeRm.restore toRestore
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
 
       HMap.empty === index
@@ -309,7 +348,7 @@ restoreSome mtestDir =
       assertFilesExist toDelete
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI toDelete)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI toDelete)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -325,7 +364,7 @@ restoreSome mtestDir =
       caughtEx <-
         liftIO $
           try @_ @Exceptions $
-            usingSafeRmT env (SafeRm.restore toRestore)
+            usingIntIO env (SafeRm.restore toRestore)
 
       (MkExceptions exs) <-
         either
@@ -336,7 +375,7 @@ restoreSome mtestDir =
       annotateShow exs
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
       let indexOrigPaths = HMap.foldl' toOrigPath HSet.empty index
 
@@ -371,7 +410,7 @@ emptyTrash mtestDir =
       assertFilesExist aTest
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI aTest)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI aTest)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -380,10 +419,10 @@ emptyTrash mtestDir =
       assertFilesDoNotExist aTest
 
       -- empty trash
-      liftIO $ usingSafeRmT env $ SafeRm.emptyTrash True
+      liftIO $ usingIntIO env $ SafeRm.emptyTrash True
 
       -- get index
-      index <- liftIO $ view #unIndex <$> usingSafeRmT env SafeRm.getIndex
+      index <- liftIO $ view #unIndex <$> usingIntIO env SafeRm.getIndex
       annotateShow index
 
       HMap.empty === index
@@ -411,7 +450,7 @@ metadata mtestDir =
       assertFilesExist aTest
 
       -- delete files
-      liftIO $ usingSafeRmT env $ SafeRm.delete (USeq.map MkPathI aTest)
+      liftIO $ usingIntIO env $ SafeRm.delete (USeq.map MkPathI aTest)
 
       -- assert original files moved to trash
       annotate "Assert files exist"
@@ -420,7 +459,7 @@ metadata mtestDir =
       assertFilesDoNotExist aTest
 
       -- empty trash
-      metadata' <- liftIO $ usingSafeRmT env SafeRm.getMetadata
+      metadata' <- liftIO $ usingIntIO env SafeRm.getMetadata
 
       length α === natToInt (metadata' ^. #numEntries)
       length α === natToInt (metadata' ^. #numFiles)
