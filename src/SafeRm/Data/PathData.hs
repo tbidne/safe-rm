@@ -69,6 +69,7 @@ import SafeRm.Data.Paths
     (<//>),
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.Timestamp (Timestamp, toText)
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader
   ( MonadFsReader
@@ -86,7 +87,6 @@ import SafeRm.Effects.MonadFsWriter
         renameFile
       ),
   )
-import SafeRm.Effects.MonadSystemTime (Timestamp, toText)
 import SafeRm.Exception
   ( PathNotFoundE (MkPathNotFoundE),
     RenameDuplicateE (MkRenameDuplicateE),
@@ -233,8 +233,6 @@ toPathData currTime trashHome origPath = do
   uniqPath <- mkUniqPath (trashHome <//> fileName)
   let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
   isFile <- Paths.applyPathI doesFileExist originalPath
-  -- TODO: it would be nice if this listed the recursive size of the
-  -- directory
   size <- getFileSize (originalPath ^. #unPathI)
   if isFile
     then

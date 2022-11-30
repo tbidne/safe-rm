@@ -46,8 +46,19 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
-import Data.Time (LocalTime (LocalTime))
-import Data.Time.LocalTime (midday)
+import Data.Time (LocalTime (LocalTime), ZonedTime (..))
+import Data.Time.LocalTime (midday, utc)
+import Effects.MonadLoggerNamespace
+  ( LocStrategy (LocStable),
+    LogFormatter (MkLogFormatter, locStrategy, newline, timezone),
+    MonadLoggerNamespace (getNamespace, localNamespace),
+    Namespace,
+  )
+import Effects.MonadLoggerNamespace qualified as Logger
+import Effects.MonadTime
+  ( MonadTime (getSystemTime, getSystemZonedTime, getTimeSpec),
+    TimeSpec (..),
+  )
 import GHC.Stack.Types
   ( CallStack (PushCallStack),
     SrcLoc
@@ -73,16 +84,6 @@ import SafeRm.Effects.MonadFsReader
       ),
   )
 import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
-import SafeRm.Effects.MonadLoggerContext
-  ( LocStrategy (Stable),
-    MonadLoggerContext (getNamespace, localNamespace),
-    Namespace,
-  )
-import SafeRm.Effects.MonadLoggerContext qualified as Logger
-import SafeRm.Effects.MonadSystemTime
-  ( MonadSystemTime (getSystemTime),
-    Timestamp (MkTimestamp),
-  )
 import SafeRm.Effects.MonadTerminal
   ( MonadTerminal
       ( getChar,
@@ -177,19 +178,26 @@ instance
     -- pure $ if c then 'y' else 'n'
     pure c
 
-instance MonadSystemTime (FuncIO env) where
-  getSystemTime = pure $ MkTimestamp localTime
-    where
-      localTime = LocalTime (toEnum 59_000) midday
+instance MonadTime (FuncIO env) where
+  getSystemTime = pure (LocalTime (toEnum 59_000) midday)
+  getSystemZonedTime = pure $ ZonedTime (LocalTime (toEnum 59_000) midday) utc
+  getTimeSpec = pure $ TimeSpec 0 0
 
 instance MonadLogger (FuncIO FuncEnv) where
   monadLoggerLog loc _src lvl msg = do
-    formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
+    formatted <- Logger.formatLog (mkFormatter loc) lvl msg
     let txt = Logger.logStrToText formatted
     logsRef <- asks (view #logsRef)
     modifyIORef' logsRef (<> txt)
+    where
+      mkFormatter l =
+        MkLogFormatter
+          { newline = True,
+            locStrategy = LocStable l,
+            timezone = False
+          }
 
-instance MonadLoggerContext (FuncIO FuncEnv) where
+instance MonadLoggerNamespace (FuncIO FuncEnv) where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 

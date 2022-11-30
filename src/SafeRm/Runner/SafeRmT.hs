@@ -12,6 +12,9 @@ where
 
 import Data.ByteString qualified as BS
 import Data.Sequence (Seq (Empty, (:<|)))
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace, defaultLogFormatter)
+import Effects.MonadLoggerNamespace qualified as Logger
+import Effects.MonadTime (MonadTime)
 import PathSize
   ( Config
       ( MkConfig,
@@ -28,9 +31,6 @@ import PathSize
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader (MonadFsReader (..))
 import SafeRm.Effects.MonadFsWriter (MonadFsWriter (hPut))
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
-import SafeRm.Effects.MonadLoggerContext qualified as Logger
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal (putStrLn))
 import SafeRm.Exception (PathNotFoundE (MkPathNotFoundE), withStackTracing)
 import SafeRm.Prelude
@@ -61,7 +61,7 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       -- | @since 0.1
       MonadTerminal,
       -- | @since 0.1
-      MonadSystemTime,
+      MonadTime,
       -- | @since 0.1
       MonadUnliftIO
     )
@@ -69,7 +69,7 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
 
 -- | @since 0.1
 instance
-  (MonadFsWriter m, MonadSystemTime m) =>
+  (MonadFsWriter m, MonadTime m) =>
   MonadLogger (SafeRmT Env m)
   where
   monadLoggerLog loc _src lvl msg = do
@@ -78,7 +78,7 @@ instance
       Nothing -> pure ()
       Just (handle, logLevel) ->
         when (logLevel <= lvl) $ do
-          formatted <- Logger.formatLog True loc lvl msg
+          formatted <- Logger.formatLog (defaultLogFormatter loc) lvl msg
           let bs = Logger.logStrToBs formatted
           hPut handle bs
     where
@@ -90,8 +90,8 @@ instance
 
 -- | @since 0.1
 instance
-  (MonadFsWriter m, MonadSystemTime m) =>
-  MonadLoggerContext (SafeRmT Env m)
+  (MonadFsWriter m, MonadTime m) =>
+  MonadLoggerNamespace (SafeRmT Env m)
   where
   getNamespace = asks (view (#logEnv % #logNamespace))
   localNamespace = local . over' (#logEnv % #logNamespace)
@@ -100,7 +100,7 @@ instance
 instance
   ( MonadCallStack m,
     MonadFsWriter m,
-    MonadSystemTime m,
+    MonadTime m,
     MonadTerminal m,
     MonadUnliftIO m
   ) =>

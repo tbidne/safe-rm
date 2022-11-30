@@ -52,6 +52,32 @@ packages:
     commit: a7e1cd9824ca72c970a8a33ecd77256863bfc071
     git: https://github.com/tbidne/byte-types.git
 - completed:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-logger-namespace
+    pantry-tree:
+      sha256: 07cf024c9390c5a30a28269c516f40b7962b3d0d2c0edeaffa674e1265e2c08a
+      size: 347
+    subdir: monad-logger-namespace
+    version: '0.1'
+  original:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-logger-namespace
+- completed:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    name: monad-time
+    pantry-tree:
+      sha256: a958a2a9b547d3a84be75cf23ff97af1d18d90632833cd2e46ad275b9984d238
+      size: 324
+    subdir: monad-time
+    version: '0.1'
+  original:
+    commit: 0cf8d27d23c8cd503ff7e9ba1c9aab23c898619a
+    git: https://github.com/tbidne/monad-effects.git
+    subdir: monad-time
+- completed:
     commit: 9da95b6efb247d0e7caa0acde1ab4543cbfcafef
     git: https://github.com/tbidne/path-size.git
     name: path-size

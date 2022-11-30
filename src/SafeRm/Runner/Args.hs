@@ -49,9 +49,9 @@ import Options.Applicative.Types (ArgPolicy (Intersperse))
 import SafeRm.Data.Index (Sort, readSort)
 import SafeRm.Data.Paths (PathI, PathIndex (OriginalPath, TrashHome, TrashName))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
-import SafeRm.Effects.MonadLoggerContext qualified as Logger
 import SafeRm.Prelude
 import SafeRm.Runner.Config (CmdListCfg (MkCmdListCfg), ListFormatCfg, parseListFormat)
+import SafeRm.Utils qualified as Utils
 
 -- | Toml path config.
 --
@@ -384,20 +384,20 @@ trashParser =
 logLevelParser :: Parser (Maybe (Maybe LogLevel))
 logLevelParser =
   A.optional $
-    OA.option (OA.str >>= Logger.readLogLevel) $
+    OA.option (OA.str >>= Utils.readLogLevel) $
       mconcat
         [ OA.long "log-level",
-          OA.metavar Logger.logLevelStrings,
+          OA.metavar Utils.logLevelStrings,
           OA.help "The file level in which to log. Defaults to none."
         ]
 
 consoleLogLevelParser :: Parser (Maybe (Maybe LogLevel))
 consoleLogLevelParser =
   A.optional $
-    OA.option (OA.str >>= Logger.readLogLevel) $
+    OA.option (OA.str >>= Utils.readLogLevel) $
       mconcat
         [ OA.long "console-log",
-          OA.metavar Logger.logLevelStrings,
+          OA.metavar Utils.logLevelStrings,
           OA.help "The console level in which to log. Defaults to error."
         ]
 

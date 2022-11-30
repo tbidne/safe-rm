@@ -11,8 +11,8 @@ module SafeRm.Runner.Env
   )
 where
 
+import Effects.MonadLoggerNamespace (Namespace)
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.MonadLoggerContext (Namespace)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Prelude
 

@@ -14,6 +14,7 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import Numeric.Literal.Rational (FromRational (afromRational))
 import SafeRm.Data.Index qualified as Index
@@ -23,7 +24,6 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
 import SafeRm.Effects.MonadFsReader
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exception
   ( IndexSizeMismatchE (MkIndexSizeMismatchE),
     PathNotFoundE (MkPathNotFoundE),
@@ -95,7 +95,7 @@ instance Pretty Metadata where
 toMetadata ::
   ( MonadFsReader m,
     HasCallStack,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m
   ) =>

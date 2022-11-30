@@ -15,7 +15,7 @@ import SafeRm.Data.PathData
     PathDataFormat (Multiline, Singleline),
   )
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
-import SafeRm.Effects.MonadSystemTime (Timestamp, fromText)
+import SafeRm.Data.Timestamp (Timestamp, fromText)
 import Unit.Prelude
 
 tests :: TestTree

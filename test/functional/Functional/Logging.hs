@@ -14,17 +14,18 @@ import Data.ByteString.Lazy qualified as BSL
 import Data.Text.Encoding.Error qualified as TEncError
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TLEnc
-import Functional.Prelude
-import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.MonadLoggerContext
-  ( LocStrategy (Stable),
-    MonadLoggerContext
+import Effects.MonadLoggerNamespace
+  ( LocStrategy (LocStable),
+    LogFormatter (MkLogFormatter),
+    MonadLoggerNamespace
       ( getNamespace,
         localNamespace
       ),
     Namespace,
   )
-import SafeRm.Effects.MonadLoggerContext qualified as Logger
+import Effects.MonadLoggerNamespace qualified as Logger
+import Functional.Prelude
+import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Effects.MonadTerminal
   ( print,
   )
@@ -52,12 +53,19 @@ instance MonadLogger (FuncIO LoggerEnv) where
     handle <- asks (view #logHandle)
     logLevel <- asks (view #logLevel)
     when (logLevel <= lvl) $ do
-      formatted <- Logger.formatLogLoc True (Stable loc) lvl msg
+      formatted <- Logger.formatLog (mkFormatter loc) lvl msg
       let bs = Logger.logStrToBs formatted
       print bs
       liftIO $ BS.hPut handle bs
+    where
+      mkFormatter l =
+        MkLogFormatter
+          { newline = True,
+            locStrategy = LocStable l,
+            timezone = False
+          }
 
-instance MonadLoggerContext (FuncIO LoggerEnv) where
+instance MonadLoggerNamespace (FuncIO LoggerEnv) where
   getNamespace = asks (view #logNamespace)
   localNamespace f = local (over' #logNamespace f)
 

@@ -39,6 +39,7 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import SafeRm.Data.PathData
   ( PathData,
     PathDataFormat (Multiline, Singleline),
@@ -60,7 +61,6 @@ import SafeRm.Effects.MonadFsWriter
         writeFile
       ),
   )
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
 import SafeRm.Exception
   ( DuplicateIndexPathE (MkDuplicateIndexPathE),
     ReadIndexE (MkReadIndexE),
@@ -114,7 +114,7 @@ instance Pretty Index where
 -- @since 0.1
 readIndex ::
   ( MonadFsReader m,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m
   ) =>
@@ -168,7 +168,7 @@ readIndexWithFold ::
   forall m a.
   ( MonadFsReader m,
     HasCallStack,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m,
     Monoid a

@@ -22,6 +22,8 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
+import Effects.MonadTime (MonadTime (getSystemTime))
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Index (Index (MkIndex))
 import SafeRm.Data.Index qualified as Index
@@ -34,6 +36,7 @@ import SafeRm.Data.Paths
     PathIndex (OriginalPath, TrashName),
   )
 import SafeRm.Data.Paths qualified as Paths
+import SafeRm.Data.Timestamp (Timestamp (MkTimestamp))
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
 import SafeRm.Effects.MonadFsReader
@@ -49,8 +52,6 @@ import SafeRm.Effects.MonadFsWriter
         removeDirectoryRecursive
       ),
   )
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext, addNamespace)
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime (getSystemTime))
 import SafeRm.Effects.MonadTerminal
   ( MonadTerminal (getChar, putStr, putStrLn),
     putTextLn,
@@ -80,11 +81,11 @@ delete ::
     MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
-    MonadSystemTime m
+    MonadTime m
   ) =>
   UniqueSeq (PathI OriginalPath) ->
   m ()
@@ -96,7 +97,7 @@ delete paths = addNamespace "delete" $ do
 
   deletedPathsRef <- newIORef HMap.empty
   exceptionsRef <- newIORef Nothing
-  currTime <- getSystemTime
+  currTime <- MkTimestamp <$> getSystemTime
 
   -- move path to trash, saving any exceptions
   addNamespace "deleting" $ for_ paths $ \fp ->
@@ -146,7 +147,7 @@ deletePermanently ::
     MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
@@ -220,7 +221,7 @@ getIndex ::
   ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m
@@ -243,7 +244,7 @@ getMetadata ::
   ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m
@@ -269,7 +270,7 @@ restore ::
     MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m
@@ -318,7 +319,7 @@ emptyTrash ::
     MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadIO m,
     MonadReader env m,
     MonadTerminal m

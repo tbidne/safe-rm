@@ -15,6 +15,8 @@ module SafeRm.Runner
 where
 
 import Data.Text.Encoding qualified as TEnc
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
+import Effects.MonadTime (MonadTime)
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import SafeRm qualified
 import SafeRm.Data.Index (Sort)
@@ -35,8 +37,6 @@ import SafeRm.Effects.MonadFsWriter
         openFile
       ),
   )
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
 import SafeRm.Exception
@@ -92,7 +92,7 @@ runSafeRm ::
     MonadCallStack m,
     MonadUnliftIO m,
     MonadTerminal m,
-    MonadSystemTime m
+    MonadTime m
   ) =>
   m ()
 runSafeRm = do
@@ -120,12 +120,12 @@ runCmd ::
     MonadFsWriter m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadReader env m,
     MonadUnliftIO m,
     MonadTerminal m,
-    MonadSystemTime m
+    MonadTime m
   ) =>
   Command ->
   m ()
@@ -278,7 +278,7 @@ printIndex ::
   ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m,
@@ -297,7 +297,7 @@ printMetadata ::
   ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerContext m,
+    MonadLoggerNamespace m,
     MonadCallStack m,
     MonadIO m,
     MonadReader env m,

@@ -10,6 +10,8 @@ module SafeRm.Utils
     maybeMonoid,
     formatBytes,
     normalizedFormat,
+    readLogLevel,
+    logLevelStrings,
   )
 where
 
@@ -18,6 +20,7 @@ import Data.Bytes.Class.Wrapper (Unwrapper (Unwrapped))
 import Data.Bytes.Formatting (FloatingFormatter (MkFloatingFormatter))
 import Data.Bytes.Formatting.Base (BaseFormatter)
 import Data.Bytes.Size (Sized)
+import Data.Text qualified as T
 import SafeRm.Prelude
 import Text.Printf (PrintfArg)
 
@@ -102,3 +105,27 @@ fromMaybeMonoid = fromMaybe mempty
 -- @since 0.1
 maybeMonoid :: Monoid b => (a -> b) -> Maybe a -> b
 maybeMonoid = maybe mempty
+
+-- | Reads the 'LogLevel'.
+--
+-- @since 0.1
+readLogLevel :: MonadFail m => Text -> m (Maybe LogLevel)
+readLogLevel "none" = pure Nothing
+readLogLevel "error" = pure $ Just LevelError
+readLogLevel "warn" = pure $ Just LevelWarn
+readLogLevel "info" = pure $ Just LevelInfo
+readLogLevel "debug" = pure $ Just LevelDebug
+readLogLevel other =
+  fail $
+    mconcat
+      [ "Expected log-level ",
+        logLevelStrings,
+        ", received: ",
+        T.unpack other
+      ]
+
+-- | String description of possible log levels parsed by 'readLogLevel'.
+--
+-- @since 0.1
+logLevelStrings :: String
+logLevelStrings = "[none|error|warn|info|debug]"

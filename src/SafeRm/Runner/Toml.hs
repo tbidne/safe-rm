@@ -12,12 +12,12 @@ where
 
 import SafeRm.Data.PathData (PathDataFormat (Multiline, Singleline))
 import SafeRm.Data.Paths (PathI (MkPathI), PathIndex (TrashHome))
-import SafeRm.Effects.MonadLoggerContext (readLogLevel)
 import SafeRm.Prelude
 import SafeRm.Runner.Args (Args, CommandArg (..), _ListArg)
 import SafeRm.Runner.Command
 import SafeRm.Runner.Config (CmdListCfg (..), ListFormatCfg (..))
 import SafeRm.Utils qualified as U
+import SafeRm.Utils qualified as Utils
 import TOML
   ( DecodeTOML (..),
     getFieldOpt,
@@ -77,7 +77,7 @@ instance DecodeTOML TomlConfig where
     where
       decodeTrashHome = fmap MkPathI <$> getFieldOpt "trash-home"
       decodeLogLevel =
-        getFieldOptWith (tomlDecoder >>= readLogLevel) "log-level"
+        getFieldOptWith (tomlDecoder >>= Utils.readLogLevel) "log-level"
 
 -- | Merges the args and toml config into a single toml config. If some field
 -- F is specified by both args and toml config, then args takes precedence.

@@ -12,6 +12,8 @@ import Data.Coerce (coerce)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
+import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
+import Effects.MonadTime (MonadTime)
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Integration.Prelude
@@ -24,8 +26,6 @@ import SafeRm.Data.UniqueSeq qualified as USeq
 import SafeRm.Effects.MonadCallStack (MonadCallStack)
 import SafeRm.Effects.MonadFsReader (MonadFsReader (..))
 import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
-import SafeRm.Effects.MonadLoggerContext (MonadLoggerContext)
-import SafeRm.Effects.MonadSystemTime (MonadSystemTime)
 import SafeRm.Effects.MonadTerminal (MonadTerminal)
 import SafeRm.Exception (Exceptions (MkExceptions))
 import SafeRm.Runner.Env
@@ -51,9 +51,9 @@ newtype IntIO a = MkIntIO (ReaderT Env IO a)
       MonadCallStack,
       MonadFsWriter,
       MonadLogger,
-      MonadLoggerContext,
+      MonadLoggerNamespace,
       MonadReader Env,
-      MonadSystemTime,
+      MonadTime,
       MonadTerminal,
       MonadUnliftIO
     )

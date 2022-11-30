@@ -6,6 +6,7 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
+    flake-parts.url = "github:hercules-ci/flake-parts";
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -31,6 +32,12 @@
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
     };
+    monad-effects = {
+      url = "github:tbidne/monad-effects";
+      inputs.flake-compat.follows = "flake-compat";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     path-size = {
       url = "github:tbidne/path-size";
       inputs.flake-compat.follows = "flake-compat";
@@ -47,50 +54,62 @@
     , bounds
     , byte-types
     , flake-compat
+    , flake-parts
     , flake-utils
+    , monad-effects
     , nixpkgs
     , path-size
     , self
     }:
-    flake-utils.lib.eachDefaultSystem (system:
-    let
-      pkgs = import nixpkgs { inherit system; };
-      buildTools = c: with c; [
-        cabal-install
-        pkgs.gnumake
-        pkgs.zlib
-      ];
-      devTools = c: with c; [
-        ghcid
-        haskell-language-server
-      ];
-      ghc-version = "ghc924";
-      compiler = pkgs.haskell.packages."${ghc-version}";
-      mkPkg = returnShellEnv: withDevTools:
-        compiler.developPackage {
-          inherit returnShellEnv;
-          name = "safe-rm";
-          root = ./.;
-          modifier = drv:
-            pkgs.haskell.lib.addBuildTools drv
-              (buildTools compiler ++
-                (if withDevTools then devTools compiler else [ ]));
-          overrides = final: prev: with compiler; {
-            algebra-simple =
-              final.callCabal2nix "algebra-simple" algebra-simple { };
-            bounds = final.callCabal2nix "bounds" bounds { };
-            byte-types =
-              final.callCabal2nix "byte-types" byte-types { };
-            package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
-            path-size = final.callCabal2nix "path-size" path-size { };
-            tasty-hedgehog = prev.tasty-hedgehog_1_3_1_0;
-          };
-        };
-    in
-    {
-      packages.default = mkPkg false false;
+    flake-parts.lib.mkFlake { inherit self; } {
+      perSystem = { pkgs, ... }:
+        let
+          buildTools = c: with c; [
+            cabal-install
+            pkgs.gnumake
+            pkgs.zlib
+          ];
+          devTools = c: with c; [
+            ghcid
+            haskell-language-server
+          ];
+          ghc-version = "ghc924";
+          compiler = pkgs.haskell.packages."${ghc-version}";
+          mkPkg = returnShellEnv: withDevTools:
+            compiler.developPackage {
+              inherit returnShellEnv;
+              name = "safe-rm";
+              root = ./.;
+              modifier = drv:
+                pkgs.haskell.lib.addBuildTools drv
+                  (buildTools compiler ++
+                    (if withDevTools then devTools compiler else [ ]));
+              overrides = final: prev: with compiler; {
+                algebra-simple =
+                  final.callCabal2nix "algebra-simple" algebra-simple { };
+                bounds = final.callCabal2nix "bounds" bounds { };
+                byte-types =
+                  final.callCabal2nix "byte-types" byte-types { };
+                monad-logger-namespace =
+                  final.callCabal2nix "monad-logger-namespace"
+                    "${monad-effects}/monad-logger-namespace"
+                    { };
+                monad-time =
+                  final.callCabal2nix "monad-time" "${monad-effects}/monad-time" { };
+                package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
+                path-size = final.callCabal2nix "path-size" path-size { };
+                tasty-hedgehog = prev.tasty-hedgehog_1_3_1_0;
+              };
+            };
+        in
+        {
+          packages.default = mkPkg false false;
 
-      devShells.default = mkPkg true true;
-      devShells.ci = mkPkg true false;
-    });
+          devShells.default = mkPkg true true;
+          devShells.ci = mkPkg true false;
+        };
+      systems = [
+        "x86_64-linux"
+      ];
+    };
 }
