@@ -6,6 +6,10 @@
 module SafeRm.Prelude
   ( module X,
 
+    -- * Exceptions
+    catchAny,
+    catchAnyNoCS,
+
     -- * Text
     showt,
     displayExceptiont,
@@ -87,6 +91,18 @@ import Data.Type.Equality as X (type (~))
 import Data.Tuple as X (curry, uncurry)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16, Word8)
+import Effects.MonadCallStack as X
+  ( MonadCallStack
+      ( checkpointCallStack,
+        throwWithCallStack
+      ),
+    catch,
+    prettyAnnotated,
+    try,
+  )
+import Effects.MonadFsReader as X (MonadFsReader)
+import Effects.MonadFsWriter as X (MonadFsWriter)
+import Effects.MonadTerminal as X (MonadTerminal (putStr, putStrLn))
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
 import GHC.Err as X (error, undefined)
 import GHC.Float as X (Double)
@@ -159,15 +175,11 @@ import UnliftIO.Exception as X
     SomeException,
     bracket,
     bracket_,
-    catch,
-    catchAny,
     finally,
-    handleAny,
     throwIO,
     throwString,
-    try,
-    tryAny,
   )
+import UnliftIO.Exception qualified as UE
 import UnliftIO.IORef as X
   ( IORef,
     modifyIORef',
@@ -183,3 +195,15 @@ showt = T.pack . show
 -- | @since 0.1
 displayExceptiont :: Exception e => e -> Text
 displayExceptiont = T.pack . displayException
+
+-- | Like 'catchAny', except it ignores the CallStack (i.e. it behaves like
+-- normal catch). This is useful when we do not want to add a new CallStack
+-- annotation e.g. we are catching an exception for logging purposes only.
+--
+-- @since 0.1
+catchAnyNoCS :: MonadUnliftIO m => m a -> (SomeException -> m a) -> m a
+catchAnyNoCS = UE.catchAny
+
+-- | @since 0.1
+catchAny :: (HasCallStack, MonadUnliftIO m) => m a -> (SomeException -> m a) -> m a
+catchAny = catch @SomeException

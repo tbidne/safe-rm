@@ -48,6 +48,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime), ZonedTime (..))
 import Data.Time.LocalTime (midday, utc)
+import Effects.MonadFsReader (MonadFsReader (..))
 import Effects.MonadLoggerNamespace
   ( LocStrategy (LocStable),
     LogFormatter (MkLogFormatter, locStrategy, newline, timezone),
@@ -55,42 +56,14 @@ import Effects.MonadLoggerNamespace
     Namespace,
   )
 import Effects.MonadLoggerNamespace qualified as Logger
+import Effects.MonadTerminal (MonadTerminal (..))
 import Effects.MonadTime
   ( MonadTime (getSystemTime, getSystemZonedTime, getTimeSpec),
     TimeSpec (..),
   )
-import GHC.Stack.Types
-  ( CallStack (PushCallStack),
-    SrcLoc
-      ( srcLocEndCol,
-        srcLocEndLine,
-        srcLocPackage,
-        srcLocStartCol,
-        srcLocStartLine
-      ),
-  )
+import GHC.Stack.Types (CallStack (PushCallStack), SrcLoc (..))
 import Numeric.Literal.Integer (FromInteger (afromInteger))
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
-import SafeRm.Effects.MonadCallStack (MonadCallStack (getCallStack))
-import SafeRm.Effects.MonadFsReader
-  ( MonadFsReader
-      ( canonicalizePath,
-        doesDirectoryExist,
-        doesFileExist,
-        doesPathExist,
-        getFileSize,
-        listDirectory,
-        readFile
-      ),
-  )
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
-import SafeRm.Effects.MonadTerminal
-  ( MonadTerminal
-      ( getChar,
-        putStr,
-        putStrLn
-      ),
-  )
 import SafeRm.Env (HasTrashHome)
 import SafeRm.FileUtils as X
 import SafeRm.Prelude as X
@@ -142,6 +115,7 @@ newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
       MonadFsWriter,
       Functor,
       Monad,
+      MonadCallStack,
       MonadIO,
       MonadReader env,
       MonadUnliftIO
@@ -150,15 +124,14 @@ newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
 
 instance MonadFsReader (FuncIO env) where
   getFileSize = const (pure $ afromInteger 5)
+  getHomeDirectory = error "getHomeDirectory: unimplemented"
+  getXdgConfig = error "getXdgConfig: unimplemented"
   readFile = liftIO . readFile
   doesFileExist = liftIO . doesFileExist
   doesDirectoryExist = liftIO . doesDirectoryExist
   doesPathExist = liftIO . doesPathExist
   canonicalizePath = liftIO . canonicalizePath
   listDirectory = liftIO . listDirectory
-
-instance MonadCallStack (FuncIO env) where
-  getCallStack = pure $ fixCallStack ?callStack
 
 instance
   ( Is k A_Getter,
@@ -173,10 +146,9 @@ instance
   getChar = do
     charStream <- asks (view #charStream)
     c :> cs <- readIORef charStream
-    -- modifyIORef' charStream not
     writeIORef charStream cs
-    -- pure $ if c then 'y' else 'n'
     pure c
+  getTerminalSize = error "getTerminalSize: unimplemented"
 
 instance MonadTime (FuncIO env) where
   getSystemTime = pure (LocalTime (toEnum 59_000) midday)
@@ -288,7 +260,7 @@ captureSafeRmExceptionLogs testDir title argList = do
   (toml, cmd) <- getConfig
   env <- mkFuncEnv toml logsRef terminalRef
 
-  result <- try @_ @e $ runFuncIO (Runner.runCmd cmd) env
+  result <- try @e $ runFuncIO (Runner.runCmd cmd) env
 
   case result of
     Right _ ->

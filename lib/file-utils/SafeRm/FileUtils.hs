@@ -12,10 +12,10 @@ module SafeRm.FileUtils
 where
 
 import Data.ByteString.Char8 qualified as Char8
-import SafeRm.Effects.MonadFsReader
+import Effects.MonadFsReader
   ( MonadFsReader (doesDirectoryExist),
   )
-import SafeRm.Effects.MonadFsWriter
+import Effects.MonadFsWriter
   ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly,
@@ -23,7 +23,6 @@ import SafeRm.Effects.MonadFsWriter
       ),
   )
 import SafeRm.Prelude
-import System.IO (putStrLn)
 
 -- | Creates empty files at the specified paths.
 --
@@ -64,7 +63,7 @@ createFileContents paths = for_ paths $
               "': ",
               displayException ex
             ]
-        throwIO ex
+        throwWithCallStack ex
 
 -- | Creates empty files at the specified paths.
 --

@@ -10,8 +10,9 @@ module SafeRm.Runner.SafeRmT
   )
 where
 
-import Data.ByteString qualified as BS
 import Data.Sequence (Seq (Empty, (:<|)))
+import Effects.MonadFsReader (MonadFsReader (..))
+import Effects.MonadFsWriter (MonadFsWriter (hPut))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, defaultLogFormatter)
 import Effects.MonadLoggerNamespace qualified as Logger
 import Effects.MonadTime (MonadTime)
@@ -28,14 +29,8 @@ import PathSize
     SubPathData (MkSubPathData),
     findLargestPaths,
   )
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
-import SafeRm.Effects.MonadFsReader (MonadFsReader (..))
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter (hPut))
-import SafeRm.Effects.MonadTerminal (MonadTerminal (putStrLn))
-import SafeRm.Exception (PathNotFoundE (MkPathNotFoundE), withStackTracing)
 import SafeRm.Prelude
 import SafeRm.Runner.Env (Env, LogFile, handle, logLevel)
-import UnliftIO.Directory qualified as Dir
 
 -- | `SafeRmT` is the main application type that runs shell commands.
 --
@@ -48,12 +43,11 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       -- | @since 0.1
       Applicative,
       -- | @since 0.1
-      -- | @since 0.1
-      MonadFsWriter,
-      -- | @since 0.1
       Monad,
       -- | @since 0.1
       MonadCallStack,
+      -- | @since 0.1
+      MonadFsWriter,
       -- | @since 0.1
       MonadReader env,
       -- | @since 0.1
@@ -69,7 +63,7 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
 
 -- | @since 0.1
 instance
-  (MonadFsWriter m, MonadTime m) =>
+  (MonadCallStack m, MonadFsWriter m, MonadTime m) =>
   MonadLogger (SafeRmT Env m)
   where
   monadLoggerLog loc _src lvl msg = do
@@ -90,7 +84,7 @@ instance
 
 -- | @since 0.1
 instance
-  (MonadFsWriter m, MonadTime m) =>
+  (MonadCallStack m, MonadFsWriter m, MonadTime m) =>
   MonadLoggerNamespace (SafeRmT Env m)
   where
   getNamespace = asks (view (#logEnv % #logNamespace))
@@ -100,25 +94,25 @@ instance
 instance
   ( MonadCallStack m,
     MonadFsWriter m,
+    MonadIO m,
     MonadTime m,
-    MonadTerminal m,
-    MonadUnliftIO m
+    MonadTerminal m
   ) =>
   MonadFsReader (SafeRmT Env m)
   where
-  getFileSize path = withStackTracing $ do
+  getFileSize path = checkpointCallStack $ do
     liftIO (findLargestPaths cfg path) >>= \case
-      (Empty, MkSubPathData (x :<| _)) -> pure $ MkBytes $ x ^. #size
+      (Empty, MkSubPathData (x :<| _)) -> pure $ x ^. #size
       (errs@(_ :<| _), MkSubPathData (x :<| _)) -> do
         -- We received a value but had some errors.
         putStrLn "Encountered errors retrieving size. See logs."
         for_ errs $ \e -> $(logError) (displayExceptiont e)
-        pure $ MkBytes $ x ^. #size
+        pure $ x ^. #size
       -- Didn't receive a value; must have encountered errors
       (errs, MkSubPathData Empty) -> do
         putStrLn "Could not retrieve size, defaulting to 0. See logs."
         for_ errs $ \e -> $(logError) (displayExceptiont e)
-        pure $ MkBytes 0
+        pure 0
     where
       cfg =
         MkConfig
@@ -130,18 +124,15 @@ instance
             strategy = mempty
           }
 
-  readFile f = do
-    exists <- doesFileExist f
-    unless exists $
-      throwCallStack $
-        MkPathNotFoundE f
-    withStackTracing (liftIO $ BS.readFile f)
-
-  doesFileExist = withStackTracing . Dir.doesFileExist
-  doesDirectoryExist = withStackTracing . Dir.doesDirectoryExist
-  doesPathExist = withStackTracing . Dir.doesPathExist
-  canonicalizePath = withStackTracing . Dir.canonicalizePath
-  listDirectory = withStackTracing . Dir.listDirectory
+  -- reuse IO's impl
+  readFile = liftIO . readFile
+  getHomeDirectory = liftIO getHomeDirectory
+  getXdgConfig = liftIO . getXdgConfig
+  doesFileExist = liftIO . doesFileExist
+  doesDirectoryExist = liftIO . doesDirectoryExist
+  doesPathExist = liftIO . doesPathExist
+  canonicalizePath = liftIO . canonicalizePath
+  listDirectory = liftIO . listDirectory
 
 -- | Runs a 'SafeRmT' with the given @env@.
 --

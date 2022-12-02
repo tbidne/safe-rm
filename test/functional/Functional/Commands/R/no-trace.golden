@@ -29,17 +29,7 @@ Exceptions:
 
 - Path not found: f4
 
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
-
 - Path not found: f3
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore][Debug][src/SafeRm.hs] Trash home: <dir>/r5/.trash
@@ -55,17 +45,7 @@ LOGS RESTORE
 
 - Path not found: f4
 
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
-
 - Path not found: f3
-
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  restore, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
 
 
 TERMINAL LIST 2

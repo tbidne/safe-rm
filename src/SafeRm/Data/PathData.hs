@@ -60,6 +60,22 @@ import Data.Csv
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
+import Effects.MonadFsReader
+  ( MonadFsReader
+      ( canonicalizePath,
+        doesDirectoryExist,
+        doesFileExist,
+        doesPathExist,
+        getFileSize
+      ),
+  )
+import Effects.MonadFsWriter
+  ( MonadFsWriter
+      ( removePathForcibly,
+        renameDirectory,
+        renameFile
+      ),
+  )
 import GHC.Exts (IsList)
 import GHC.Exts qualified as Exts
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
@@ -70,23 +86,6 @@ import SafeRm.Data.Paths
   )
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.Timestamp (Timestamp, toText)
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
-import SafeRm.Effects.MonadFsReader
-  ( MonadFsReader
-      ( canonicalizePath,
-        doesDirectoryExist,
-        doesFileExist,
-        doesPathExist,
-        getFileSize
-      ),
-  )
-import SafeRm.Effects.MonadFsWriter
-  ( MonadFsWriter
-      ( removePathForcibly,
-        renameDirectory,
-        renameFile
-      ),
-  )
 import SafeRm.Exception
   ( PathNotFoundE (MkPathNotFoundE),
     RenameDuplicateE (MkRenameDuplicateE),
@@ -212,10 +211,9 @@ headerNames = ["Type", "Name", "Original", "Size", "Created"]
 --
 -- @since 0.1
 toPathData ::
-  ( MonadFsReader m,
-    HasCallStack,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m
+    MonadFsReader m
   ) =>
   Timestamp ->
   PathI TrashHome ->
@@ -233,7 +231,7 @@ toPathData currTime trashHome origPath = do
   uniqPath <- mkUniqPath (trashHome <//> fileName)
   let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
   isFile <- Paths.applyPathI doesFileExist originalPath
-  size <- getFileSize (originalPath ^. #unPathI)
+  size <- MkBytes @B <$> getFileSize (originalPath ^. #unPathI)
   if isFile
     then
       pure
@@ -260,7 +258,7 @@ toPathData currTime trashHome origPath = do
                 size,
                 created = currTime
               }
-        else throwCallStack $ MkPathNotFoundE (origPath ^. #unPathI)
+        else throwWithCallStack $ MkPathNotFoundE (origPath ^. #unPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
@@ -273,10 +271,9 @@ toPathData currTime trashHome origPath = do
 -- @since 0.1
 mkUniqPath ::
   forall m.
-  ( MonadFsReader m,
-    HasCallStack,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m
+    MonadFsReader m
   ) =>
   PathI TrashName ->
   m (PathI TrashName)
@@ -289,7 +286,7 @@ mkUniqPath fp = do
     go :: HasCallStack => Word16 -> m (PathI TrashName)
     go !counter
       | counter == maxBound =
-          throwCallStack $ MkRenameDuplicateE fp
+          throwWithCallStack $ MkRenameDuplicateE fp
       | otherwise = do
           let fp' = fp <> MkPathI (mkSuffix counter)
           b <- Paths.applyPathI doesPathExist fp'
@@ -347,11 +344,10 @@ mapOrd f x y = f x `compare` f y
 --
 -- @since 0.1
 mvTrashToOriginal ::
-  ( MonadFsReader m,
-    MonadFsWriter m,
-    HasCallStack,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m
+    MonadFsReader m,
+    MonadFsWriter m
   ) =>
   PathI TrashHome ->
   PathData ->
@@ -359,7 +355,7 @@ mvTrashToOriginal ::
 mvTrashToOriginal (MkPathI trashHome) pd = do
   exists <- originalPathExists pd
   when exists $
-    throwCallStack $
+    throwWithCallStack $
       MkRestoreCollisionE fileName originalPath
   renameFn trashPath (pd ^. #originalPath % #unPathI)
   where

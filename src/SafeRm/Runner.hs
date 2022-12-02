@@ -14,10 +14,22 @@ module SafeRm.Runner
   )
 where
 
+import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
+import Effects.MonadFsReader
+  ( MonadFsReader (doesFileExist, getHomeDirectory, getXdgConfig, readFile),
+  )
+import Effects.MonadFsWriter
+  ( MonadFsWriter
+      ( createDirectoryIfMissing,
+        hClose,
+        hFlush,
+        openFile
+      ),
+  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
+import Effects.MonadTerminal (putTextLn)
 import Effects.MonadTime (MonadTime)
-import GHC.Conc.Sync (setUncaughtExceptionHandler)
 import SafeRm qualified
 import SafeRm.Data.Index (Sort)
 import SafeRm.Data.Index qualified as Index
@@ -27,23 +39,8 @@ import SafeRm.Data.Paths
     PathIndex (TrashHome),
   )
 import SafeRm.Data.Paths qualified as Paths
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
-import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
-import SafeRm.Effects.MonadFsWriter
-  ( MonadFsWriter
-      ( createDirectoryIfMissing,
-        hClose,
-        hFlush,
-        openFile
-      ),
-  )
-import SafeRm.Effects.MonadTerminal (MonadTerminal, putTextLn)
 import SafeRm.Env (HasTrashHome)
-import SafeRm.Exception
-  ( ArbitraryE (MkArbitraryE),
-    TomlDecodeE (MkTomlDecodeE),
-    withStackTracing,
-  )
+import SafeRm.Exception (TomlDecodeE (MkTomlDecodeE))
 import SafeRm.Prelude
 import SafeRm.Runner.Args
   ( TomlConfigPath
@@ -77,8 +74,6 @@ import SafeRm.Runner.Env
 import SafeRm.Runner.SafeRmT (runSafeRmT)
 import SafeRm.Runner.Toml (TomlConfig, mergeConfigs)
 import TOML qualified
-import UnliftIO.Directory (XdgDirectory (XdgConfig))
-import UnliftIO.Directory qualified as Dir
 
 -- | Entry point for running SafeRm. Does everything: reads CLI args,
 -- optional Toml config, and creates the environment before running
@@ -98,11 +93,6 @@ runSafeRm ::
 runSafeRm = do
   (config, cmd) <- getConfiguration
 
-  -- NOTE: Using setUncaughtExceptionHandler means we do not have to manually
-  -- catch exceptions and print ourselves, just to get nicer output from
-  -- show.
-  liftIO $ setUncaughtExceptionHandler (putTextLn . displayExceptiont)
-
   bracket
     (configToEnv config)
     closeLogging
@@ -110,7 +100,7 @@ runSafeRm = do
   where
     closeLogging env = do
       let mFinalizer = env ^? #logEnv % #logFile %? #finalizer
-      liftIO $ withStackTracing $ fromMaybe (pure ()) mFinalizer
+      liftIO $ checkpointCallStack $ fromMaybe (pure ()) mFinalizer
 
 -- | Runs SafeRm in the given environment. This is useful in conjunction with
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
@@ -129,7 +119,7 @@ runCmd ::
   ) =>
   Command ->
   m ()
-runCmd cmd = runCmd' cmd `catchAny` logEx
+runCmd cmd = runCmd' cmd `catchAnyNoCS` logEx
   where
     runCmd' = \case
       Delete paths -> SafeRm.delete paths
@@ -138,12 +128,12 @@ runCmd cmd = runCmd' cmd `catchAny` logEx
       Restore paths -> SafeRm.restore paths
       List listCmd -> do
         printIndex (listCmd ^. #format) (listCmd ^. #sort) (listCmd ^. #revSort)
-        putTextLn ""
+        putStrLn ""
         printMetadata
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (displayExceptiont ex)
+      $(logError) (T.pack $ prettyAnnotated ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
@@ -169,7 +159,7 @@ getEnv = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- withStackTracing $ openFile logPath AppendMode
+      h <- openFile logPath AppendMode
       pure $
         Just $
           MkLogFile
@@ -191,8 +181,8 @@ getEnv = do
 configToEnv ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsWriter m,
-    MonadUnliftIO m
+    MonadFsReader m,
+    MonadFsWriter m
   ) =>
   TomlConfig ->
   m Env
@@ -205,7 +195,7 @@ configToEnv mergedConfig = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- withStackTracing $ openFile logPath AppendMode
+      h <- openFile logPath AppendMode
       pure $
         Just $
           MkLogFile
@@ -248,9 +238,9 @@ getConfiguration = do
     TomlPath tomlPath -> readConfig tomlPath
     -- no toml config path given...
     TomlDefault -> do
-      xdgConfig <- withStackTracing $ Dir.getXdgDirectory XdgConfig "safe-rm"
+      xdgConfig <- getXdgConfig "safe-rm"
       let defPath = xdgConfig </> "config.toml"
-      exists <- withStackTracing $ Dir.doesFileExist defPath
+      exists <- doesFileExist defPath
       if exists
         then -- 2. config exists at default path: read
           readConfig defPath
@@ -267,20 +257,17 @@ getConfiguration = do
         readFile fp >>= \contents' -> do
           case TEnc.decodeUtf8' contents' of
             Right txt -> pure txt
-            Left err ->
-              throwCallStack $
-                MkArbitraryE (toException err)
+            Left err -> throwWithCallStack err
       case TOML.decode contents of
         Right cfg -> pure cfg
-        Left tomlErr -> throwCallStack $ MkTomlDecodeE tomlErr
+        Left tomlErr -> throwWithCallStack $ MkTomlDecodeE tomlErr
 
 printIndex ::
-  ( MonadFsReader m,
-    HasCallStack,
+  ( HasCallStack,
     HasTrashHome env,
-    MonadLoggerNamespace m,
     MonadCallStack m,
-    MonadIO m,
+    MonadFsReader m,
+    MonadLoggerNamespace m,
     MonadReader env m,
     MonadTerminal m
   ) =>
@@ -297,8 +284,8 @@ printMetadata ::
   ( MonadFsReader m,
     HasCallStack,
     HasTrashHome env,
-    MonadLoggerNamespace m,
     MonadCallStack m,
+    MonadLoggerNamespace m,
     MonadIO m,
     MonadReader env m,
     MonadTerminal m
@@ -306,7 +293,7 @@ printMetadata ::
   m ()
 printMetadata = SafeRm.getMetadata >>= prettyDel
 
-prettyDel :: (HasCallStack, Pretty a, MonadTerminal m) => a -> m ()
+prettyDel :: (Pretty a, MonadTerminal m) => a -> m ()
 prettyDel =
   putTextLn
     . renderStrict
@@ -319,8 +306,7 @@ prettyDel =
 -- @since 0.1
 trashOrDefault ::
   ( HasCallStack,
-    MonadCallStack m,
-    MonadUnliftIO m
+    MonadFsReader m
   ) =>
   Maybe (PathI TrashHome) ->
   m (PathI TrashHome)
@@ -331,8 +317,7 @@ trashOrDefault = maybe getTrashHome pure
 -- @since 0.1
 getTrashHome ::
   ( HasCallStack,
-    MonadCallStack m,
-    MonadUnliftIO m
+    MonadFsReader m
   ) =>
   m (PathI TrashHome)
-getTrashHome = MkPathI . (</> ".trash") <$> withStackTracing Dir.getHomeDirectory
+getTrashHome = MkPathI . (</> ".trash") <$> getHomeDirectory

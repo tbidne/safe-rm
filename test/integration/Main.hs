@@ -3,15 +3,14 @@
 -- @since 0.1
 module Main (main) where
 
-import Integration.Prelude
-import Integration.SafeRm qualified as SafeRm
-import SafeRm.Effects.MonadFsWriter
+import Effects.MonadFsWriter
   ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly
       ),
   )
-import SafeRm.Effects.MonadTerminal (MonadTerminal (putStrLn))
+import Integration.Prelude
+import Integration.SafeRm qualified as SafeRm
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')
 import Test.Tasty qualified as T
 import Test.Tasty qualified as Tasty

@@ -1,19 +1,19 @@
 EXCEPTION LIST
 Trash paths should be unique, but found multiple entries in the trash index '<dir>/l4/.trash/.index.csv' for the following path: foo
 
-CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
-  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
-
 LOGS LIST
 [2020-05-31 12:00:00][functional.getIndex][Debug][src/SafeRm.hs] Index path: <dir>/l4/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex][Debug][src/SafeRm/Data/Index.hs] Index path: <dir>/l4/.trash/.index.csv
 [2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, size = MkBytes 0, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional.getIndex.readIndex.readIndexWithFold][Debug][src/SafeRm/Data/Index.hs] Found: MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "foo"}, originalPath = MkPathI {unPathI = "<dir>/l4/.trash/foo"}, size = MkBytes 0, created = MkTimestamp {unTimestamp = 2022-09-28 02:58:33}}
 [2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Trash paths should be unique, but found multiple entries in the trash index '<dir>/l4/.trash/.index.csv' for the following path: foo
-
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
-  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:0:0 in <package>:SafeRm.Data.Index
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
+  throwWithCallStack, called at src/SafeRm/Data/Index.hs:236:5 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  throwIfDuplicates, called at src/SafeRm/Data/Index.hs:130:7 in safe-rm-0.1-inplace:SafeRm.Data.Index
+  readIndex, called at src/SafeRm.hs:230:13 in safe-rm-0.1-inplace:SafeRm
+  getIndex, called at src/SafeRm/Runner.hs:279:3 in safe-rm-0.1-inplace:SafeRm.Runner
+  printIndex, called at src/SafeRm/Runner.hs:130:9 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude

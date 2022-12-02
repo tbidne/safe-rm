@@ -39,6 +39,13 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
+import Effects.MonadFsReader (MonadFsReader (readFile))
+import Effects.MonadFsWriter
+  ( MonadFsWriter
+      ( appendFile,
+        writeFile
+      ),
+  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import SafeRm.Data.PathData
   ( PathData,
@@ -53,14 +60,6 @@ import SafeRm.Data.Paths
 import SafeRm.Data.Paths qualified as Paths
 import SafeRm.Data.UniqueSeq (UniqueSeq)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
-import SafeRm.Effects.MonadFsReader (MonadFsReader (readFile))
-import SafeRm.Effects.MonadFsWriter
-  ( MonadFsWriter
-      ( appendFile,
-        writeFile
-      ),
-  )
 import SafeRm.Exception
   ( DuplicateIndexPathE (MkDuplicateIndexPathE),
     ReadIndexE (MkReadIndexE),
@@ -113,10 +112,10 @@ instance Pretty Index where
 --
 -- @since 0.1
 readIndex ::
-  ( MonadFsReader m,
-    MonadLoggerNamespace m,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m
+    MonadFsReader m,
+    MonadLoggerNamespace m
   ) =>
   PathI TrashIndex ->
   m Index
@@ -166,11 +165,10 @@ searchIndex keys (MkIndex index) =
 -- @since 0.1
 readIndexWithFold ::
   forall m a.
-  ( MonadFsReader m,
-    HasCallStack,
-    MonadLoggerNamespace m,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m,
+    MonadFsReader m,
+    MonadLoggerNamespace m,
     Monoid a
   ) =>
   -- | Fold function.
@@ -193,7 +191,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- End of stream w/ an error.
     runFold _ (Nil (Just err) rest) = do
       $(logError) ("Error end of stream: " <> T.pack err)
-      throwCallStack $
+      throwWithCallStack $
         MkReadIndexE
           indexPath
           ( mconcat
@@ -207,14 +205,14 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     -- but just to cover all cases...
     runFold _ (Nil _ rest) = do
       $(logError) ("Unconsumed input: " <> lbsToTxt rest)
-      throwCallStack $
+      throwWithCallStack $
         MkReadIndexE
           indexPath
           ("Unconsumed input: " <> lbsToStr rest)
     -- Encountered an error.
     runFold _ (Cons (Left err) _) = do
       $(logError) ("Error reading stream: " <> T.pack err)
-      throwCallStack $ MkReadIndexE indexPath err
+      throwWithCallStack $ MkReadIndexE indexPath err
     -- Inductive case, run fold and recurse
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest
 
@@ -227,8 +225,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
 -- @since 0.1
 throwIfDuplicates ::
   ( HasCallStack,
-    MonadCallStack m,
-    MonadIO m
+    MonadCallStack m
   ) =>
   PathI TrashIndex ->
   HashMap (PathI TrashName) PathData ->
@@ -236,7 +233,7 @@ throwIfDuplicates ::
   m ()
 throwIfDuplicates indexPath trashMap pd =
   when (fileName `HMap.member` trashMap) $
-    throwCallStack $
+    throwWithCallStack $
       MkDuplicateIndexPathE indexPath fileName
   where
     fileName = pd ^. #fileName
@@ -245,10 +242,9 @@ throwIfDuplicates indexPath trashMap pd =
 --
 -- @since 0.1
 throwIfTrashNonExtant ::
-  ( MonadFsReader m,
-    HasCallStack,
+  ( HasCallStack,
     MonadCallStack m,
-    MonadIO m
+    MonadFsReader m
   ) =>
   PathI TrashHome ->
   PathData ->
@@ -256,7 +252,7 @@ throwIfTrashNonExtant ::
 throwIfTrashNonExtant trashHome pd = do
   exists <- PathData.trashPathExists trashHome pd
   unless exists $
-    throwCallStack $
+    throwWithCallStack $
       MkTrashPathNotFoundE trashHome filePath
   where
     filePath = pd ^. #fileName

@@ -48,10 +48,6 @@ library
     SafeRm.Data.PathType
     SafeRm.Data.Timestamp
     SafeRm.Data.UniqueSeq
-    SafeRm.Effects.MonadCallStack
-    SafeRm.Effects.MonadFsReader
-    SafeRm.Effects.MonadFsWriter
-    SafeRm.Effects.MonadTerminal
     SafeRm.Env
     SafeRm.Exception
     SafeRm.Prelude
@@ -75,8 +71,12 @@ library
     , filepath                ^>=1.4.2.1
     , gitrev                  >=1.2.0     && <1.4
     , hashable                ^>=1.4.0.2
+    , monad-callstack         ^>=0.1
+    , monad-fs-reader         ^>=0.1
+    , monad-fs-writer         ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1
+    , monad-terminal          ^>=0.1
     , monad-time              ^>=0.1
     , mtl                     >=2.2.1     && <2.4
     , optics-core             ^>=0.4
@@ -99,8 +99,9 @@ library file-utils
   import:           common-exts
   exposed-modules:  SafeRm.FileUtils
   build-depends:
-    , base
     , bytestring
+    , monad-fs-reader
+    , monad-fs-writer
     , safe-rm
 
   hs-source-dirs:   lib/file-utils
@@ -160,7 +161,10 @@ test-suite integration
     , env-guard               ^>=0.2
     , file-utils
     , hedgehog
+    , monad-fs-reader
+    , monad-fs-writer
     , monad-logger-namespace
+    , monad-terminal
     , monad-time
     , mtl
     , safe-rm
@@ -192,7 +196,10 @@ test-suite functional
     , bytestring
     , env-guard               ^>=0.2
     , file-utils
+    , monad-fs-reader
+    , monad-fs-writer
     , monad-logger-namespace
+    , monad-terminal
     , monad-time
     , safe-rm
     , tasty

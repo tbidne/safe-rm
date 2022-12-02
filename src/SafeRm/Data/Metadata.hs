@@ -14,6 +14,14 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
+import Effects.MonadFsReader
+  ( MonadFsReader
+      ( doesDirectoryExist,
+        doesFileExist,
+        getFileSize,
+        listDirectory
+      ),
+  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import Numeric.Literal.Rational (FromRational (afromRational))
@@ -22,8 +30,6 @@ import SafeRm.Data.Paths
   ( PathI (MkPathI),
     PathIndex (TrashHome, TrashIndex, TrashLog),
   )
-import SafeRm.Effects.MonadCallStack (MonadCallStack, throwCallStack)
-import SafeRm.Effects.MonadFsReader
 import SafeRm.Exception
   ( IndexSizeMismatchE (MkIndexSizeMismatchE),
     PathNotFoundE (MkPathNotFoundE),
@@ -93,10 +99,10 @@ instance Pretty Metadata where
 --
 -- @since 0.1
 toMetadata ::
-  ( MonadFsReader m,
-    HasCallStack,
-    MonadLoggerNamespace m,
+  ( HasCallStack,
     MonadCallStack m,
+    MonadFsReader m,
+    MonadLoggerNamespace m,
     MonadIO m
   ) =>
   (PathI TrashHome, PathI TrashIndex, PathI TrashLog) ->
@@ -119,7 +125,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
       if logExists
         then do
           logSize' <-
-            Bytes.normalize . toDouble <$> getFileSize logPath
+            Bytes.normalize . toDouble . (MkBytes @B) <$> getFileSize logPath
           $(logDebug) ("Log size: " <> showt logSize')
           pure logSize'
         else do
@@ -140,7 +146,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     -- trash path, this guarantees that the index exactly corresponds to the
     -- trash state.
     when (numEntries /= numIndex) $
-      throwCallStack $
+      throwWithCallStack $
         MkIndexSizeMismatchE trashHome numFiles numIndex
 
     pure $
@@ -153,7 +159,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
   where
     sumFileSizes macc f = do
       !acc <- macc
-      sz <- getFileSize f
+      sz <- (MkBytes @B) <$> getFileSize f
       pure $ acc .+. sz
     toDouble :: Bytes s Natural -> Bytes s Double
     toDouble = fmap fromIntegral
@@ -184,4 +190,4 @@ getAllFiles fp =
           listDirectory fp
             >>= fmap join
               . traverse (getAllFiles . (fp </>))
-        False -> throwCallStack $ MkPathNotFoundE fp
+        False -> throwWithCallStack $ MkPathNotFoundE fp

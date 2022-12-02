@@ -12,6 +12,7 @@ import Data.Coerce (coerce)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
+import Effects.MonadFsReader (MonadFsReader (..))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
 import Effects.MonadTime (MonadTime)
 import Hedgehog.Gen qualified as Gen
@@ -23,10 +24,6 @@ import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
 import SafeRm.Data.UniqueSeq (UniqueSeq, fromFoldable)
 import SafeRm.Data.UniqueSeq qualified as USeq
-import SafeRm.Effects.MonadCallStack (MonadCallStack)
-import SafeRm.Effects.MonadFsReader (MonadFsReader (..))
-import SafeRm.Effects.MonadFsWriter (MonadFsWriter)
-import SafeRm.Effects.MonadTerminal (MonadTerminal)
 import SafeRm.Exception (Exceptions (MkExceptions))
 import SafeRm.Runner.Env
   ( Env (MkEnv),
@@ -61,6 +58,8 @@ newtype IntIO a = MkIntIO (ReaderT Env IO a)
 
 instance MonadFsReader IntIO where
   getFileSize = const (pure $ afromInteger 0)
+  getHomeDirectory = coerce (getHomeDirectory @(SafeRmT Env IO))
+  getXdgConfig = coerce (getXdgConfig @(SafeRmT Env IO))
   readFile = coerce . readFile @(SafeRmT Env IO)
   doesFileExist = coerce . doesFileExist @(SafeRmT Env IO)
   doesDirectoryExist = coerce . doesDirectoryExist @(SafeRmT Env IO)
@@ -147,7 +146,7 @@ deleteSome mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @Exceptions $
+          try @Exceptions $
             usingIntIO env (SafeRm.delete (USeq.map MkPathI toDelete))
 
       (MkExceptions exs) <-
@@ -256,7 +255,7 @@ deleteSomePermanently mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @Exceptions $
+          try @Exceptions $
             usingIntIO env (SafeRm.deletePermanently True toPermDelete)
 
       (MkExceptions exs) <-
@@ -363,7 +362,7 @@ restoreSome mtestDir =
 
       caughtEx <-
         liftIO $
-          try @_ @Exceptions $
+          try @Exceptions $
             usingIntIO env (SafeRm.restore toRestore)
 
       (MkExceptions exs) <-

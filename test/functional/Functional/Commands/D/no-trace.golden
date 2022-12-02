@@ -2,19 +2,21 @@ EXCEPTION DELETE
 Exceptions:
 
 - Path not found: <dir>/d6/f2
-
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
+  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:261:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:103:15 in safe-rm-0.1-inplace:SafeRm
+  delete, called at src/SafeRm/Runner.hs:125:23 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude
 
 - Path not found: <dir>/d6/f4
-
 CallStack (from HasCallStack):
-  getCallStack, called at src/SafeRm/Effects/MonadCallStack.hs:0:0 in <package>:SafeRm.Effects.MonadCallStack
-  throwCallStack, called at src/SafeRm/Data/PathData.hs:0:0 in <package>:SafeRm.Data.PathData
-  toPathData, called at src/SafeRm.hs:0:0 in <package>:SafeRm
-  delete, called at src/SafeRm/Runner.hs:0:0 in <package>:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:0:0 in <package>:Functional.Prelude
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
+  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:261:14 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+  toPathData, called at src/SafeRm.hs:103:15 in safe-rm-0.1-inplace:SafeRm
+  delete, called at src/SafeRm/Runner.hs:125:23 in safe-rm-0.1-inplace:SafeRm.Runner
+  runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude
