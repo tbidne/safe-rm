@@ -192,6 +192,7 @@ test-suite functional
     , bytestring
     , env-guard               ^>=0.2
     , file-utils
+    , monad-callstack
     , monad-fs
     , monad-logger-namespace
     , monad-terminal

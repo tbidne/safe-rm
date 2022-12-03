@@ -80,6 +80,7 @@ import Test.Tasty.HUnit as X
     (@=?),
   )
 import UnliftIO.Environment qualified as SysEnv
+import Effects.MonadCallStack (MonadCallStack(getCallStack))
 
 -- | Infinite stream of chars.
 data CharStream = Char :> CharStream
@@ -115,12 +116,16 @@ newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
       MonadFsWriter,
       Functor,
       Monad,
-      MonadCallStack,
       MonadIO,
       MonadReader env,
       MonadUnliftIO
     )
     via (ReaderT env IO)
+
+instance MonadCallStack (FuncIO env) where
+  getCallStack = liftIO getCallStack
+  throwWithCallStack = throwIO
+  checkpointCallStack = id
 
 instance MonadFsReader (FuncIO env) where
   getFileSize = const (pure $ afromInteger 5)

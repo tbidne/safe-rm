@@ -14,12 +14,3 @@ LOGS LIST
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Num all files: 2
 [2020-05-31 12:00:00][functional.getMetadata.toMetadata][Debug][src/SafeRm/Data/Metadata.hs] Total size: MkSomeSize SB (MkBytes 10.0)
 [2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Size mismatch between index size (1) and number of entries (2) in trash: <dir>/l5/.trash
-CallStack (from HasCallStack):
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
-  throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
-  throwWithCallStack, called at src/SafeRm/Data/Metadata.hs:149:7 in safe-rm-0.1-inplace:SafeRm.Data.Metadata
-  toMetadata, called at src/SafeRm.hs:251:13 in safe-rm-0.1-inplace:SafeRm
-  getMetadata, called at src/SafeRm/Runner.hs:292:17 in safe-rm-0.1-inplace:SafeRm.Runner
-  printMetadata, called at src/SafeRm/Runner.hs:130:9 in safe-rm-0.1-inplace:SafeRm.Runner
-  runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude
