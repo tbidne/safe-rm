@@ -12,11 +12,9 @@ module SafeRm.FileUtils
 where
 
 import Data.ByteString.Char8 qualified as Char8
-import Effects.MonadFsReader
+import Effects.MonadFs
   ( MonadFsReader (doesDirectoryExist),
-  )
-import Effects.MonadFsWriter
-  ( MonadFsWriter
+    MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly,
         writeFile

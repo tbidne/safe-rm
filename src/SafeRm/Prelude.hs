@@ -100,8 +100,7 @@ import Effects.MonadCallStack as X
     prettyAnnotated,
     try,
   )
-import Effects.MonadFsReader as X (MonadFsReader)
-import Effects.MonadFsWriter as X (MonadFsWriter)
+import Effects.MonadFs as X (MonadFsReader, MonadFsWriter)
 import Effects.MonadTerminal as X (MonadTerminal (putStr, putStrLn))
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
 import GHC.Err as X (error, undefined)

@@ -72,8 +72,7 @@ library
     , gitrev                  >=1.2.0     && <1.4
     , hashable                ^>=1.4.0.2
     , monad-callstack         ^>=0.1
-    , monad-fs-reader         ^>=0.1
-    , monad-fs-writer         ^>=0.1
+    , monad-fs                ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1
     , monad-terminal          ^>=0.1
@@ -100,8 +99,7 @@ library file-utils
   exposed-modules:  SafeRm.FileUtils
   build-depends:
     , bytestring
-    , monad-fs-reader
-    , monad-fs-writer
+    , monad-fs
     , safe-rm
 
   hs-source-dirs:   lib/file-utils
@@ -161,10 +159,8 @@ test-suite integration
     , env-guard               ^>=0.2
     , file-utils
     , hedgehog
-    , monad-fs-reader
-    , monad-fs-writer
+    , monad-fs
     , monad-logger-namespace
-    , monad-terminal
     , monad-time
     , mtl
     , safe-rm
@@ -196,8 +192,7 @@ test-suite functional
     , bytestring
     , env-guard               ^>=0.2
     , file-utils
-    , monad-fs-reader
-    , monad-fs-writer
+    , monad-fs
     , monad-logger-namespace
     , monad-terminal
     , monad-time

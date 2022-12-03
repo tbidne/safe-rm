@@ -11,8 +11,7 @@ module SafeRm.Runner.SafeRmT
 where
 
 import Data.Sequence (Seq (Empty, (:<|)))
-import Effects.MonadFsReader (MonadFsReader (..))
-import Effects.MonadFsWriter (MonadFsWriter (hPut))
+import Effects.MonadFs (MonadFsReader (..), MonadFsWriter (hPut))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, defaultLogFormatter)
 import Effects.MonadLoggerNamespace qualified as Logger
 import Effects.MonadTime (MonadTime)

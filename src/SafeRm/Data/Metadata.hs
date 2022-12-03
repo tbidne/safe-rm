@@ -14,7 +14,7 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
-import Effects.MonadFsReader
+import Effects.MonadFs
   ( MonadFsReader
       ( doesDirectoryExist,
         doesFileExist,

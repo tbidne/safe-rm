@@ -60,7 +60,7 @@ import Data.Csv
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
-import Effects.MonadFsReader
+import Effects.MonadFs
   ( MonadFsReader
       ( canonicalizePath,
         doesDirectoryExist,
@@ -68,9 +68,7 @@ import Effects.MonadFsReader
         doesPathExist,
         getFileSize
       ),
-  )
-import Effects.MonadFsWriter
-  ( MonadFsWriter
+    MonadFsWriter
       ( removePathForcibly,
         renameDirectory,
         renameFile

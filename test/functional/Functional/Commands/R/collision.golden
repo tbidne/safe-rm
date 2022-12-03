@@ -17,12 +17,12 @@ Exceptions:
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
   throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
-  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:358:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:128:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:356:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:288:9 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:126:24 in safe-rm-0.1-inplace:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude
 
 LOGS RESTORE
@@ -32,22 +32,22 @@ LOGS RESTORE
 [2020-05-31 12:00:00][functional.restore.restoring][Debug][src/SafeRm.hs] MkPathData {pathType = PathTypeFile, fileName = MkPathI {unPathI = "f1"}, originalPath = MkPathI {unPathI = "<dir>/r4/f1"}, size = MkBytes 5, created = MkTimestamp {unTimestamp = 2020-05-31 12:00:00}}
 [2020-05-31 12:00:00][functional.restore.restoring][Warn][src/SafeRm.hs] Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
   throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
-  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:358:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:128:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:356:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:288:9 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:126:24 in safe-rm-0.1-inplace:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude
 [2020-05-31 12:00:00][functional.restore][Info][src/SafeRm.hs] Restored: 
 [2020-05-31 12:00:00][functional][Error][src/SafeRm/Runner.hs] Exceptions:
 
 - Cannot restore the trash file 'f1' as one exists at the original location: <dir>/r4/f1
 CallStack (from HasCallStack):
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
-  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-e615dfec3911c18fa010e1ad03d4acb9d70c3611c1d0a4ac7db26fb06a6ab4e9:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:58:24 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
+  throwWithCallStack, called at src/Effects/MonadCallStack.hs:64:31 in monad-callstack-0.1-355c1912b13997a642d8ac625ae4f0e465c44901986b053b9777ef85d2a01329:Effects.MonadCallStack
   throwWithCallStack, called at test/functional/Functional/Prelude.hs:118:7 in main:Functional.Prelude
-  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:358:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
-  mvTrashToOriginal, called at src/SafeRm.hs:290:9 in safe-rm-0.1-inplace:SafeRm
-  restore, called at src/SafeRm/Runner.hs:128:24 in safe-rm-0.1-inplace:SafeRm.Runner
+  throwWithCallStack, called at src/SafeRm/Data/PathData.hs:356:5 in safe-rm-0.1-inplace:SafeRm.Data.PathData
+  mvTrashToOriginal, called at src/SafeRm.hs:288:9 in safe-rm-0.1-inplace:SafeRm
+  restore, called at src/SafeRm/Runner.hs:126:24 in safe-rm-0.1-inplace:SafeRm.Runner
   runCmd, called at test/functional/Functional/Prelude.hs:263:33 in main:Functional.Prelude

@@ -146,11 +146,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1669945230,
-        "narHash": "sha256-j/IuvOItffqZ5uXT6cdMZvD61xdqkX14pbxtxg/fdEg=",
+        "lastModified": 1670034057,
+        "narHash": "sha256-gGm/CnIeOF1bHZ60Phn25H5lV8aj5y8f9zJaqeSnOxo=",
         "owner": "tbidne",
         "repo": "monad-effects",
-        "rev": "d84b8a0c1790dca9f52a4e9641cc7874daaa196e",
+        "rev": "2d70f54ed06fcaa94d696fc99ff3848e35f7e97b",
         "type": "github"
       },
       "original": {

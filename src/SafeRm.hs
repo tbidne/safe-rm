@@ -22,15 +22,13 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
-import Effects.MonadFsReader
+import Effects.MonadFs
   ( MonadFsReader
       ( doesDirectoryExist,
         doesFileExist,
         getFileSize
       ),
-  )
-import Effects.MonadFsWriter
-  ( MonadFsWriter
+    MonadFsWriter
       ( createDirectoryIfMissing,
         removeDirectoryRecursive
       ),

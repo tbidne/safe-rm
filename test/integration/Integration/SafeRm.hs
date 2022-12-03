@@ -12,7 +12,7 @@ import Data.Coerce (coerce)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
-import Effects.MonadFsReader (MonadFsReader (..))
+import Effects.MonadFs (MonadFsReader (..))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
 import Effects.MonadTime (MonadTime)
 import Hedgehog.Gen qualified as Gen

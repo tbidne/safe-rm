@@ -16,11 +16,9 @@ where
 
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
-import Effects.MonadFsReader
+import Effects.MonadFs
   ( MonadFsReader (doesFileExist, getHomeDirectory, getXdgConfig, readFile),
-  )
-import Effects.MonadFsWriter
-  ( MonadFsWriter
+    MonadFsWriter
       ( createDirectoryIfMissing,
         hClose,
         hFlush,

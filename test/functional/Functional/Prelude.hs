@@ -48,7 +48,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime), ZonedTime (..))
 import Data.Time.LocalTime (midday, utc)
-import Effects.MonadFsReader (MonadFsReader (..))
+import Effects.MonadFs (MonadFsReader (..))
 import Effects.MonadLoggerNamespace
   ( LocStrategy (LocStable),
     LogFormatter (MkLogFormatter, locStrategy, newline, timezone),

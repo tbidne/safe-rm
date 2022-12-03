@@ -94,13 +94,9 @@
                   final.callCabal2nix
                     "monad-callstack" "${monad-effects}/monad-callstack"
                     { };
-                monad-fs-reader =
+                monad-fs =
                   final.callCabal2nix
-                    "monad-fs-reader" "${monad-effects}/monad-fs-reader"
-                    { };
-                monad-fs-writer =
-                  final.callCabal2nix
-                    "monad-fs-writer" "${monad-effects}/monad-fs-writer"
+                    "monad-fs" "${monad-effects}/monad-fs"
                     { };
                 monad-logger-namespace =
                   final.callCabal2nix "monad-logger-namespace"

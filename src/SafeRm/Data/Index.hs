@@ -39,9 +39,9 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Text.Encoding.Error qualified as TEncError
-import Effects.MonadFsReader (MonadFsReader (readFile))
-import Effects.MonadFsWriter
-  ( MonadFsWriter
+import Effects.MonadFs
+  ( MonadFsReader (readFile),
+    MonadFsWriter
       ( appendFile,
         writeFile
       ),

@@ -3,7 +3,7 @@
 -- @since 0.1
 module Main (main) where
 
-import Effects.MonadFsWriter
+import Effects.MonadFs
   ( MonadFsWriter
       ( createDirectoryIfMissing,
         removePathForcibly
