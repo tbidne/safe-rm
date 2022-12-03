@@ -11,6 +11,7 @@ module SafeRm.Runner.SafeRmT
 where
 
 import Data.Sequence (Seq (Empty, (:<|)))
+import Data.Text qualified as T
 import Effects.MonadFs (MonadFsReader (..), MonadFsWriter (hPut))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, defaultLogFormatter)
 import Effects.MonadLoggerNamespace qualified as Logger
@@ -105,12 +106,12 @@ instance
       (errs@(_ :<| _), MkSubPathData (x :<| _)) -> do
         -- We received a value but had some errors.
         putStrLn "Encountered errors retrieving size. See logs."
-        for_ errs $ \e -> $(logError) (displayExceptiont e)
+        for_ errs $ \e -> $(logError) (T.pack $ prettyAnnotated e)
         pure $ x ^. #size
       -- Didn't receive a value; must have encountered errors
       (errs, MkSubPathData Empty) -> do
         putStrLn "Could not retrieve size, defaulting to 0. See logs."
-        for_ errs $ \e -> $(logError) (displayExceptiont e)
+        for_ errs $ \e -> $(logError) (T.pack $ prettyAnnotated e)
         pure 0
     where
       cfg =

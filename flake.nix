@@ -41,12 +41,14 @@
     path-size = {
       url = "github:tbidne/path-size";
       inputs.flake-compat.follows = "flake-compat";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
       inputs.bounds.follows = "bounds";
       inputs.byte-types.follows = "byte-types";
+      inputs.monad-effects.follows = "monad-effects";
     };
   };
   outputs =

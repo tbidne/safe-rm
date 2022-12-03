@@ -354,7 +354,7 @@ txtToBuilder :: Text -> Builder
 txtToBuilder = Builder.byteString . TEnc.encodeUtf8
 
 exToBuilder :: Exception e => FilePath -> e -> Builder
-exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayException
+exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . prettyAnnotated
 
 -- | Fixes several fields on the CallStack that are either non-deterministic
 -- (package name) or extremely brittle (line/col numbers). This eases testing.

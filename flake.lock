@@ -207,19 +207,25 @@
         "flake-compat": [
           "flake-compat"
         ],
+        "flake-parts": [
+          "flake-parts"
+        ],
         "flake-utils": [
           "flake-utils"
+        ],
+        "monad-effects": [
+          "monad-effects"
         ],
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1669609766,
-        "narHash": "sha256-erwKfzMQ25aKHyQJ2byD8TndlsBIG1MPHN+Bl1C9khI=",
+        "lastModified": 1670099307,
+        "narHash": "sha256-Rn/zjl5zrPpyIFdHJqxJQHjmXayLLCEn5lKUccyzNp0=",
         "owner": "tbidne",
         "repo": "path-size",
-        "rev": "9da95b6efb247d0e7caa0acde1ab4543cbfcafef",
+        "rev": "78646dbea5678ad0dcf8e3e070e91eafaa4be055",
         "type": "github"
       },
       "original": {
