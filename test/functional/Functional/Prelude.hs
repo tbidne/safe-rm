@@ -48,6 +48,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime), ZonedTime (..))
 import Data.Time.LocalTime (midday, utc)
+import Effects.MonadCallStack (MonadCallStack (getCallStack))
 import Effects.MonadFs (MonadFsReader (..))
 import Effects.MonadLoggerNamespace
   ( LocStrategy (LocStable),
@@ -80,7 +81,6 @@ import Test.Tasty.HUnit as X
     (@=?),
   )
 import UnliftIO.Environment qualified as SysEnv
-import Effects.MonadCallStack (MonadCallStack(getCallStack))
 
 -- | Infinite stream of chars.
 data CharStream = Char :> CharStream
