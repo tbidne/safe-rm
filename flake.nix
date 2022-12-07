@@ -7,26 +7,25 @@
       flake = false;
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     #haskell
     algebra-simple = {
       url = "github:tbidne/algebra-simple";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     bounds = {
       url = "github:tbidne/bounds";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     byte-types = {
       url = "github:tbidne/byte-types";
       inputs.flake-compat.follows = "flake-compat";
-      inputs.flake-utils.follows = "flake-utils";
+      inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
@@ -42,7 +41,6 @@
       url = "github:tbidne/path-size";
       inputs.flake-compat.follows = "flake-compat";
       inputs.flake-parts.follows = "flake-parts";
-      inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
 
       inputs.algebra-simple.follows = "algebra-simple";
@@ -57,7 +55,6 @@
     , byte-types
     , flake-compat
     , flake-parts
-    , flake-utils
     , monad-effects
     , nixpkgs
     , path-size
@@ -75,8 +72,14 @@
             ghcid
             haskell-language-server
           ];
-          ghc-version = "ghc924";
-          compiler = pkgs.haskell.packages."${ghc-version}";
+          ghc-version = "ghc925";
+          compiler = pkgs.haskell.packages."${ghc-version}".override {
+            overrides = final: prev: {
+              # https://github.com/ddssff/listlike/issues/23
+              ListLike = hlib.dontCheck prev.ListLike;
+            };
+          };
+          hlib = pkgs.haskell.lib;
           mkPkg = returnShellEnv: withDevTools:
             compiler.developPackage {
               inherit returnShellEnv;
@@ -92,6 +95,7 @@
                 bounds = final.callCabal2nix "bounds" bounds { };
                 byte-types =
                   final.callCabal2nix "byte-types" byte-types { };
+                hedgehog = prev.hedgehog_1_2;
                 monad-callstack =
                   final.callCabal2nix
                     "monad-callstack" "${monad-effects}/monad-callstack"
@@ -114,13 +118,12 @@
                     { };
                 package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
                 path-size = final.callCabal2nix "path-size" path-size { };
-                tasty-hedgehog = prev.tasty-hedgehog_1_3_1_0;
+                tasty-hedgehog = prev.tasty-hedgehog_1_4_0_0;
               };
             };
         in
         {
           packages.default = mkPkg false false;
-
           devShells.default = mkPkg true true;
           devShells.ci = mkPkg true false;
         };

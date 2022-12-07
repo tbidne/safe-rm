@@ -12,11 +12,11 @@ extra-deps:
 - env-guard-0.2@sha256:feaecb437c597537dbef656300068c50a97e28ae83a8b63426ee14a1413207f5,1312
 - package-version-0.2@sha256:b326d1af39fb3960846fcb3e4dc73d8f51c3bedbf1c08ca97c086462de829519,2781
 - git: https://github.com/tbidne/algebra-simple.git
-  commit: c8aaa4495964ecea9bb898c4fcb8b1c718ecc813
+  commit: 2c8a79e8d3bf67c99e4851c557bf68a44c512307
 - git: https://github.com/tbidne/bounds.git
-  commit: 7a8832ef4a55d565e72fab553a4d485329235bf7
+  commit: 004f03aec46f29069fd0bf5115a384cd2b3141b3
 - git: https://github.com/tbidne/byte-types.git
-  commit: a7e1cd9824ca72c970a8a33ecd77256863bfc071
+  commit: be3e764d76c530fd3641c133ed2d53adfc8f046d
 - git: https://github.com/tbidne/monad-effects.git
   commit: b3d1b6b414d9a0561da5ed529a9ff663a0345270
   subdirs:
@@ -26,6 +26,6 @@ extra-deps:
   - monad-terminal
   - monad-time
 - git: https://github.com/tbidne/path-size.git
-  commit: 78646dbea5678ad0dcf8e3e070e91eafaa4be055
+  commit: bb97af19afd1b2bbf7a0cc6ba52fac6a86d32071
 nix:
   shell-file: nix/stack.nix
