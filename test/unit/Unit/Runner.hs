@@ -158,6 +158,7 @@ tomlTests =
     "Toml"
     [ parsesExample,
       usesListCfg,
+      usesListCfgSingle,
       argsOverridesToml,
       argsOverridesTomlList,
       defaultConfig
@@ -190,6 +191,14 @@ usesListCfg = testCase "Toml config copied into list cmd" $ do
   Just True @=? cmd ^? (_List % #revSort)
   where
     argList = ["-c", "examples/config.toml", "l"]
+
+usesListCfgSingle :: TestTree
+usesListCfgSingle = testCase "Toml singleline config copied into list cmd" $ do
+  (_, cmd) <- SysEnv.withArgs argList getConfiguration
+
+  Just (Singleline 25 75) @=? cmd ^? (_List % #format)
+  where
+    argList = ["-c", "test/unit/config.toml", "l"]
 
 argsOverridesToml :: TestTree
 argsOverridesToml = testCase "Args overrides Toml" $ do

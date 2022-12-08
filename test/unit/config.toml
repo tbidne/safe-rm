@@ -1,0 +1,8 @@
+# Configuration for the List (l) command
+[list]
+# Character limit on displayed trash name. Defaults to 10. This option is
+# only used with format = "single".
+name-trunc = 25
+# Character limit on displayed original path. Defaults to 10. This option is
+# only used with format = "single".
+orig-trunc = 75
