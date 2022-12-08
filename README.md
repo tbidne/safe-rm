@@ -179,8 +179,8 @@ $ sr r foo baz
 **Usage:**
 
 ```
-Usage: sr l [--format ([m]ulti | [s]ingle)] [-n|--name-trunc INT]
-            [-o|--orig-trunc INT] [-s|--sort (name|size)] [-r|--reverse-sort]
+Usage: sr l [--format ([m]ulti | [s]ingle)] [-n|--name-trunc NAT]
+            [-o|--orig-trunc NAT] [-s|--sort (name|size)] [-r|--reverse-sort]
   Lists all trash contents and metadata.
 
 Available options:
@@ -188,9 +188,9 @@ Available options:
                            Determines the output format. Defaults to 'single'
                            i.e. each trash entry is printed in a single line, in
                            tabular form.
-  -n,--name-trunc INT      Truncates the name to INT chars. Multiline option is
+  -n,--name-trunc NAT      Truncates the name to NAT chars. Multiline option is
                            unaffected.
-  -o,--orig-trunc INT      Truncates the original path to INT chars. Multiline
+  -o,--orig-trunc NAT      Truncates the original path to NAT chars. Multiline
                            option is unaffected.
   -s,--sort (name|size)    How to sort the list. Defaults to name.
   -r,--reverse-sort        Sorts in the reverse order.

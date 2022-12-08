@@ -1,12 +1,9 @@
 # Path to the trash home. Overridden by the CLI -t option.
 trash-home = "./tmp"
 
-# File log level
+# File log level. Can be one of none, error, warn, info, or debug.
+# Defaults to none.
 log-level = "info"
-
-# Determines if we print stack traces to the console on errors. Stack traces
-# are always included in file logs regardless of this setting.
-show-trace = true
 
 # Configuration for the List (l) command
 [list]
@@ -21,5 +18,5 @@ name-trunc = 80
 orig-trunc = 100
 # Sorting method. Possible choices are "size", and "name". Defaults to "name".
 sort = "size"
-# Whether to reverse the sort. Defauls to false.
+# Whether to reverse the sort. Defaults to false.
 reverse-sort = true

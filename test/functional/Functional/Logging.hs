@@ -30,7 +30,6 @@ import SafeRm.Env (HasTrashHome)
 import SafeRm.Runner qualified as Runner
 import SafeRm.Runner.Env (Env)
 import System.Environment qualified as SysEnv
-import System.IO qualified as IO
 
 data LoggerEnv = MkLoggerEnv
   { trashHome :: !(PathI TrashHome),
@@ -53,7 +52,6 @@ instance MonadLogger (FuncIO LoggerEnv) where
     when (logLevel <= lvl) $ do
       formatted <- Logger.formatLog (mkFormatter loc) lvl msg
       let bs = Logger.logStrToBs formatted
-      liftIO $ IO.print bs
       liftIO $ BS.hPut handle bs
     where
       mkFormatter l =

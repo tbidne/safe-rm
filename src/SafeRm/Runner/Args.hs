@@ -306,9 +306,9 @@ nameTruncParser = word8Parser fields
       mconcat
         [ OA.long "name-trunc",
           OA.short 'n',
-          OA.metavar "INT",
+          OA.metavar "NAT",
           OA.help
-            "Truncates the name to INT chars. Multiline option is unaffected."
+            "Truncates the name to NAT chars. Multiline option is unaffected."
         ]
 
 origTruncParser :: Parser (Maybe Word8)
@@ -318,9 +318,9 @@ origTruncParser = word8Parser fields
       mconcat
         [ OA.long "orig-trunc",
           OA.short 'o',
-          OA.metavar "INT",
+          OA.metavar "NAT",
           OA.help $
-            "Truncates the original path to INT chars. Multiline option is "
+            "Truncates the original path to NAT chars. Multiline option is "
               <> "unaffected."
         ]
 

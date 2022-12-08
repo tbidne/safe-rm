@@ -97,10 +97,8 @@ argsToTomlConfig args =
   MkTomlConfig
     { trashHome = args ^. #trashHome,
       logLevel = args ^. #logLevel,
-      listCommand = cmd ^? _ListArg
+      listCommand = args ^? (#command % _ListArg)
     }
-  where
-    cmd = args ^. #command
 
 -- Returns the new command after possibly updating the old command from the
 -- toml configuration.
