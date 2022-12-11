@@ -100,18 +100,18 @@ instance
   ) =>
   MonadFsReader (SafeRmT Env m)
   where
-  getFileSize path = checkpointCallStack $ do
+  getFileSize path = addCallStack $ do
     liftIO (findLargestPaths cfg path) >>= \case
       (Empty, MkSubPathData (x :<| _)) -> pure $ x ^. #size
       (errs@(_ :<| _), MkSubPathData (x :<| _)) -> do
         -- We received a value but had some errors.
         putStrLn "Encountered errors retrieving size. See logs."
-        for_ errs $ \e -> $(logError) (T.pack $ prettyAnnotated e)
+        for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
         pure $ x ^. #size
       -- Didn't receive a value; must have encountered errors
       (errs, MkSubPathData Empty) -> do
         putStrLn "Could not retrieve size, defaulting to 0. See logs."
-        for_ errs $ \e -> $(logError) (T.pack $ prettyAnnotated e)
+        for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
         pure 0
     where
       cfg =

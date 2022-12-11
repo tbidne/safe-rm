@@ -36,6 +36,9 @@
       inputs.flake-compat.follows = "flake-compat";
       inputs.flake-parts.follows = "flake-parts";
       inputs.nixpkgs.follows = "nixpkgs";
+
+      inputs.algebra-simple.follows = "algebra-simple";
+      inputs.bounds.follows = "bounds";
     };
     path-size = {
       url = "github:tbidne/path-size";

@@ -15,9 +15,8 @@ module SafeRm.Runner
 where
 
 import Data.Text qualified as T
-import Data.Text.Encoding qualified as TEnc
 import Effects.MonadFs
-  ( MonadFsReader (doesFileExist, getHomeDirectory, getXdgConfig, readFile),
+  ( MonadFsReader (doesFileExist, getHomeDirectory, getXdgConfig),
     MonadFsWriter
       ( createDirectoryIfMissing,
         hClose,
@@ -98,7 +97,7 @@ runSafeRm = do
   where
     closeLogging env = do
       let mFinalizer = env ^? #logEnv % #logFile %? #finalizer
-      liftIO $ checkpointCallStack $ fromMaybe (pure ()) mFinalizer
+      liftIO $ addCallStack $ fromMaybe (pure ()) mFinalizer
 
 -- | Runs SafeRm in the given environment. This is useful in conjunction with
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
@@ -131,7 +130,7 @@ runCmd cmd = runCmd' cmd `catchAnyNoCS` logEx
       Metadata -> printMetadata
 
     logEx ex = do
-      $(logError) (T.pack $ prettyAnnotated ex)
+      $(logError) (T.pack $ displayCallStack ex)
       throwIO ex
 
 -- | Parses CLI 'Args' and optional 'TomlConfig' to produce the final Env used
@@ -251,11 +250,7 @@ getConfiguration = do
   pure $ mergeConfigs args tomlConfig
   where
     readConfig fp = do
-      contents <-
-        readFile fp >>= \contents' -> do
-          case TEnc.decodeUtf8' contents' of
-            Right txt -> pure txt
-            Left err -> throwWithCallStack err
+      contents <- readFileUtf8ThrowM fp
       case TOML.decode contents of
         Right cfg -> pure cfg
         Left tomlErr -> throwWithCallStack $ MkTomlDecodeE tomlErr

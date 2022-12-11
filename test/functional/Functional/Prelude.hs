@@ -45,11 +45,10 @@ import Data.ByteString.Builder qualified as Builder
 import Data.ByteString.Lazy qualified as BSL
 import Data.List qualified as L
 import Data.Text qualified as T
-import Data.Text.Encoding qualified as TEnc
 import Data.Time (LocalTime (LocalTime), ZonedTime (..))
 import Data.Time.LocalTime (midday, utc)
 import Effects.MonadCallStack (MonadCallStack (getCallStack))
-import Effects.MonadFs (MonadFsReader (..))
+import Effects.MonadFs (MonadFsReader (..), encodeUtf8)
 import Effects.MonadLoggerNamespace
   ( LocStrategy (LocStable),
     LogFormatter (MkLogFormatter, locStrategy, newline, timezone),
@@ -59,8 +58,7 @@ import Effects.MonadLoggerNamespace
 import Effects.MonadLoggerNamespace qualified as Logger
 import Effects.MonadTerminal (MonadTerminal (..))
 import Effects.MonadTime
-  ( MonadTime (getSystemTime, getSystemZonedTime, getTimeSpec),
-    TimeSpec (..),
+  ( MonadTime (getMonotonicTime, getSystemTime, getSystemZonedTime),
   )
 import GHC.Stack.Types (CallStack (PushCallStack), SrcLoc (..))
 import Numeric.Literal.Integer (FromInteger (afromInteger))
@@ -125,7 +123,7 @@ newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
 instance MonadCallStack (FuncIO env) where
   getCallStack = liftIO getCallStack
   throwWithCallStack = throwIO
-  checkpointCallStack = id
+  addCallStack = id
 
 instance MonadFsReader (FuncIO env) where
   getFileSize = const (pure $ afromInteger 5)
@@ -158,7 +156,7 @@ instance
 instance MonadTime (FuncIO env) where
   getSystemTime = pure (LocalTime (toEnum 59_000) midday)
   getSystemZonedTime = pure $ ZonedTime (LocalTime (toEnum 59_000) midday) utc
-  getTimeSpec = pure $ TimeSpec 0 0
+  getMonotonicTime = pure 0
 
 instance MonadLogger (FuncIO FuncEnv) where
   monadLoggerLog loc _src lvl msg = do
@@ -239,8 +237,8 @@ captureSafeRmLogs testDir title argList = do
 
   terminal <- replaceDir testDir <$> readIORef terminalRef
   logs <- replaceDir testDir <$> readIORef logsRef
-  let terminalBs = Builder.byteString $ TEnc.encodeUtf8 terminal
-      logsBs = Builder.byteString $ TEnc.encodeUtf8 logs
+  let terminalBs = Builder.byteString $ encodeUtf8 terminal
+      logsBs = Builder.byteString $ encodeUtf8 logs
 
   pure (MonadTerminal title terminalBs, Logs title logsBs)
   where
@@ -351,10 +349,10 @@ diff :: FilePath -> FilePath -> [FilePath]
 diff ref new = ["diff", "-u", ref, new]
 
 txtToBuilder :: Text -> Builder
-txtToBuilder = Builder.byteString . TEnc.encodeUtf8
+txtToBuilder = Builder.byteString . encodeUtf8
 
 exToBuilder :: Exception e => FilePath -> e -> Builder
-exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . prettyAnnotated
+exToBuilder fp = txtToBuilder . replaceDir fp . T.pack . displayCallStack
 
 -- | Fixes several fields on the CallStack that are either non-deterministic
 -- (package name) or extremely brittle (line/col numbers). This eases testing.

@@ -47,13 +47,13 @@ setup testDir = do
     setupRead dir files = do
       clearDirectory dir
       clearDirectory trashDir
-      BS.appendFile indexPath header
+      appendFile indexPath header
 
       for_ files $ \filename -> do
         let filepath = trashDir </> show filename
         clearDirectory trashDir
-        BS.writeFile filepath ""
-        BS.appendFile indexPath (Char8.pack $ mkEntry dir filename)
+        writeFile filepath ""
+        ppendFile indexPath (Char8.pack $ mkEntry dir filename)
       where
         trashDir = dir </> ".trash/"
         indexPath = trashDir </> ".index.csv"

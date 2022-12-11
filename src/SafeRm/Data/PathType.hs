@@ -12,8 +12,6 @@ import Data.Csv
   )
 import Data.Csv qualified as Csv
 import Data.Text qualified as T
-import Data.Text.Encoding qualified as TEnc
-import Data.Text.Encoding.Error qualified as TEncError
 import SafeRm.Prelude
 
 -- | Path type.
@@ -64,4 +62,4 @@ instance ToField PathType where
 --
 -- @since 0.1
 bsToStr :: ByteString -> String
-bsToStr = T.unpack . TEnc.decodeUtf8With TEncError.lenientDecode
+bsToStr = T.unpack . decodeUtf8Lenient

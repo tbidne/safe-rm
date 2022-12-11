@@ -219,4 +219,4 @@ instance Exception Exceptions where
         foldl' foldExs "" es
       ]
     where
-      foldExs acc ex = ("\n\n- " <> prettyAnnotated ex) <> acc
+      foldExs acc ex = ("\n\n- " <> displayCallStack ex) <> acc

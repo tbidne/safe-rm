@@ -93,14 +93,19 @@ import Data.Vector as X (Vector)
 import Data.Word as X (Word16, Word8)
 import Effects.MonadCallStack as X
   ( MonadCallStack
-      ( checkpointCallStack,
+      ( addCallStack,
         throwWithCallStack
       ),
     catch,
-    prettyAnnotated,
+    displayCallStack,
     try,
   )
-import Effects.MonadFs as X (MonadFsReader, MonadFsWriter)
+import Effects.MonadFs as X
+  ( MonadFsReader,
+    MonadFsWriter,
+    decodeUtf8Lenient,
+    readFileUtf8ThrowM,
+  )
 import Effects.MonadTerminal as X (MonadTerminal (putStr, putStrLn))
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
 import GHC.Err as X (error, undefined)

@@ -59,7 +59,7 @@ createFileContents paths = for_ paths $
               "' and contents '",
               Char8.unpack c,
               "': ",
-              prettyAnnotated ex
+              displayCallStack ex
             ]
         throwWithCallStack ex
 

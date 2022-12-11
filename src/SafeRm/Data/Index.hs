@@ -37,8 +37,6 @@ import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as HMap
 import Data.List qualified as L
 import Data.Text qualified as T
-import Data.Text.Encoding qualified as TEnc
-import Data.Text.Encoding.Error qualified as TEncError
 import Effects.MonadFs
   ( MonadFsReader (readFile),
     MonadFsWriter
@@ -217,7 +215,7 @@ readIndexWithFold foldFn indexPath@(MkPathI fp) =
     runFold macc (Cons (Right x) rest) = runFold (foldFn macc x) rest
 
     lbsToStr = Char8.unpack . BSL.toStrict
-    lbsToTxt = TEnc.decodeUtf8With TEncError.lenientDecode . BSL.toStrict
+    lbsToTxt = decodeUtf8Lenient . BSL.toStrict
 
 -- | Verifies that the 'PathData'\'s @fileName@ does not exist in the
 -- hashmap.

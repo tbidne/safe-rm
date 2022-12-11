@@ -4,10 +4,10 @@
 module Main (main) where
 
 import GHC.Conc.Sync (setUncaughtExceptionHandler)
-import SafeRm.Prelude (prettyAnnotated)
+import SafeRm.Prelude (displayCallStack)
 import SafeRm.Runner (runSafeRm)
 
 main :: IO ()
 main = do
-  setUncaughtExceptionHandler (putStrLn . prettyAnnotated)
+  setUncaughtExceptionHandler (putStrLn . displayCallStack)
   runSafeRm

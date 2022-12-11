@@ -104,7 +104,7 @@ delete paths = addNamespace "delete" $ do
         modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (T.pack $ prettyAnnotated ex)
+        $(logWarn) (T.pack $ displayCallStack ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -169,7 +169,7 @@ deletePermanently force paths = addNamespace "deletePermanently" $ do
             modifyIORef' deletedPathsRef (HMap.insert (pd ^. #fileName) pd)
         )
           `catchAny` \ex -> do
-            $(logWarn) (T.pack $ prettyAnnotated ex)
+            $(logWarn) (T.pack $ displayCallStack ex)
             modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- permanently delete paths
@@ -289,7 +289,7 @@ restore paths = addNamespace "restore" $ do
         modifyIORef' restoredPathsRef (HMap.insert (pd ^. #fileName) pd)
     )
       `catchAny` \ex -> do
-        $(logWarn) (T.pack $ prettyAnnotated ex)
+        $(logWarn) (T.pack $ displayCallStack ex)
         modifyIORef' exceptionsRef (Utils.prependMNonEmpty ex)
 
   -- override old index
@@ -358,7 +358,7 @@ showMapElems toPathI =
     . HMap.elems
 
 noBuffering :: (HasCallStack, MonadIO m) => m ()
-noBuffering = liftIO $ checkpointCallStack $ buffOff IO.stdin *> buffOff IO.stdout
+noBuffering = liftIO $ addCallStack $ buffOff IO.stdin *> buffOff IO.stdout
   where
     buffOff h = IO.hSetBuffering h NoBuffering
 
