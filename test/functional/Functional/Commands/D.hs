@@ -9,6 +9,11 @@ where
 import Functional.Prelude
 import SafeRm.Exception (Exceptions)
 
+-- TODO: It would be nice if we could verify that the original location
+-- is correct. Recently a bug was fixed as directories were using relative
+-- paths. Evidently the tests did not catch this, presumably because
+-- relative paths are sufficient here.
+
 -- | @since 0.1
 tests :: IO FilePath -> TestTree
 tests args =

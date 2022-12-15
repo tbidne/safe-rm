@@ -241,7 +241,7 @@ toPathData currTime trashHome origPath = do
             created = currTime
           }
     else do
-      isDir <- Paths.applyPathI doesDirectoryExist origPath
+      isDir <- Paths.applyPathI doesDirectoryExist originalPath
       if isDir
         then
           pure
@@ -251,12 +251,12 @@ toPathData currTime trashHome origPath = do
               { fileName =
                   Paths.liftPathI' FP.dropTrailingPathSeparator uniqName,
                 originalPath =
-                  Paths.liftPathI' FP.dropTrailingPathSeparator origPath,
+                  Paths.liftPathI' FP.dropTrailingPathSeparator originalPath,
                 pathType = PathTypeDirectory,
                 size,
                 created = currTime
               }
-        else throwWithCallStack $ MkPathNotFoundE (origPath ^. #unPathI)
+        else throwWithCallStack $ MkPathNotFoundE (originalPath ^. #unPathI)
 
 -- | Ensures the filepath @p@ is unique. If @p@ collides with another path,
 -- we iteratively try appending numbers, stopping once we find a unique path.
