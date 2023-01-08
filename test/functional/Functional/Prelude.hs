@@ -113,6 +113,7 @@ newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
     ( Applicative,
       MonadFileReader,
       MonadFileWriter,
+      MonadHandleWriter,
       MonadPathReader,
       MonadPathWriter,
       Functor,

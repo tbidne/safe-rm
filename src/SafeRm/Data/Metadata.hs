@@ -14,9 +14,11 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
+import Data.Text qualified as T
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import Numeric.Literal.Rational (FromRational (afromRational))
+import PathSize (PathSizeResult (..), pathSizeRecursive)
 import SafeRm.Data.Index qualified as Index
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -95,8 +97,9 @@ toMetadata ::
     MonadCallStack m,
     MonadFileReader m,
     MonadPathReader m,
+    MonadPathSize m,
     MonadLoggerNamespace m,
-    MonadIO m
+    MonadTerminal m
   ) =>
   (PathI TrashHome, PathI TrashIndex, PathI TrashLog) ->
   m Metadata
@@ -117,10 +120,19 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     logSize <-
       if logExists
         then do
-          logSize' <-
-            Bytes.normalize . toDouble . (MkBytes @B) <$> getFileSize logPath
-          $(logDebug) ("Log size: " <> showt logSize')
-          pure logSize'
+          fmap (Bytes.normalize . toDouble . MkBytes @B) $
+            pathSizeRecursive logPath >>= \case
+              PathSizeSuccess n -> pure n
+              PathSizePartial errs n -> do
+                -- We received a value but had some errors.
+                putStrLn "Encountered errors retrieving size. See logs."
+                for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
+                pure n
+              PathSizeFailure errs -> do
+                -- Received error, no value.
+                putStrLn "Could not retrieve size, defaulting to 0. See logs."
+                for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
+                pure 0
         else do
           $(logDebug) "Log does not exist"
           pure (afromRational 0)
@@ -169,8 +181,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
 getAllFiles ::
   ( MonadPathReader m,
     HasCallStack,
-    MonadCallStack m,
-    MonadIO m
+    MonadCallStack m
   ) =>
   FilePath ->
   m [FilePath]

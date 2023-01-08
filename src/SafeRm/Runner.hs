@@ -104,6 +104,7 @@ runCmd ::
     MonadLoggerNamespace m,
     MonadFileReader m,
     MonadFileWriter m,
+    MonadHandleWriter m,
     MonadPathReader m,
     MonadPathSize m,
     MonadPathWriter m,
@@ -283,7 +284,7 @@ printMetadata ::
     MonadCallStack m,
     MonadFileReader m,
     MonadLoggerNamespace m,
-    MonadIO m,
+    MonadPathSize m,
     MonadReader env m,
     MonadTerminal m
   ) =>

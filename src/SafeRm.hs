@@ -22,6 +22,7 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
+import Effects.FileSystem.MonadHandleWriter (MonadHandleWriter (..))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Effects.MonadTerminal
   ( MonadTerminal (getChar),
@@ -136,6 +137,7 @@ deletePermanently ::
     MonadCallStack m,
     MonadFileReader m,
     MonadFileWriter m,
+    MonadHandleWriter m,
     MonadPathReader m,
     MonadPathWriter m,
     MonadLoggerNamespace m,
@@ -236,8 +238,9 @@ getMetadata ::
     MonadFileReader m,
     MonadLoggerNamespace m,
     MonadPathReader m,
-    MonadIO m,
-    MonadReader env m
+    MonadPathSize m,
+    MonadReader env m,
+    MonadTerminal m
   ) =>
   m Metadata
 getMetadata = addNamespace "getMetadata" $ do
@@ -309,10 +312,10 @@ emptyTrash ::
   ( HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
+    MonadHandleWriter m,
     MonadPathReader m,
     MonadPathWriter m,
     MonadLoggerNamespace m,
-    MonadIO m,
     MonadReader env m,
     MonadTerminal m
   ) =>
@@ -355,10 +358,10 @@ showMapElems toPathI =
     . fmap (T.pack . view (toPathI % #unPathI))
     . HMap.elems
 
-noBuffering :: (HasCallStack, MonadIO m) => m ()
-noBuffering = liftIO $ addCallStack $ buffOff IO.stdin *> buffOff IO.stdout
+noBuffering :: (HasCallStack, MonadCallStack m, MonadHandleWriter m) => m ()
+noBuffering = addCallStack $ buffOff IO.stdin *> buffOff IO.stdout
   where
-    buffOff h = IO.hSetBuffering h NoBuffering
+    buffOff h = hSetBuffering h NoBuffering
 
 pathsToException ::
   Foldable t =>

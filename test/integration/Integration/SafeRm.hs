@@ -47,6 +47,7 @@ newtype IntIO a = MkIntIO (ReaderT Env IO a)
       MonadCallStack,
       MonadFileReader,
       MonadFileWriter,
+      MonadHandleWriter,
       MonadPathReader,
       MonadPathWriter,
       MonadLogger,
