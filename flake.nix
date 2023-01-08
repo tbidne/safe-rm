@@ -9,7 +9,7 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    #haskell
+    # haskell
     algebra-simple = {
       url = "github:tbidne/algebra-simple";
       inputs.flake-compat.follows = "flake-compat";
@@ -115,9 +115,9 @@
                   final.callCabal2nix
                     "monad-terminal" "${monad-effects}/monad-terminal"
                     { };
-                monad-time =
+                monad-system-time =
                   final.callCabal2nix
-                    "monad-time" "${monad-effects}/monad-time"
+                    "monad-system-time" "${monad-effects}/monad-system-time"
                     { };
                 package-version = pkgs.haskell.lib.doJailbreak prev.package-version;
                 path-size = final.callCabal2nix "path-size" path-size { };

@@ -12,14 +12,6 @@ module SafeRm.FileUtils
 where
 
 import Data.ByteString.Char8 qualified as Char8
-import Effects.MonadFs
-  ( MonadFsReader (doesDirectoryExist),
-    MonadFsWriter
-      ( createDirectoryIfMissing,
-        removePathForcibly,
-        writeFile
-      ),
-  )
 import SafeRm.Prelude
 
 -- | Creates empty files at the specified paths.
@@ -50,7 +42,7 @@ createFileContents ::
   IO ()
 createFileContents paths = for_ paths $
   \(p, c) ->
-    writeFile p c
+    writeBinaryFile p c
       `catchAny` \ex -> do
         putStrLn $
           mconcat

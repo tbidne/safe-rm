@@ -8,17 +8,16 @@ where
 
 import Control.Monad.Reader (ReaderT (ReaderT))
 import Data.Char qualified as Ch
-import Data.Coerce (coerce)
 import Data.HashMap.Strict qualified as HMap
 import Data.HashSet qualified as HSet
 import Data.List qualified as L
-import Effects.MonadFs (MonadFsReader (..))
+import Data.Sequence.NonEmpty qualified as NESeq
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
 import Effects.MonadTime (MonadTime)
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range qualified as Range
 import Integration.Prelude
-import Numeric.Literal.Integer (FromInteger (afromInteger))
+import PathSize qualified
 import SafeRm qualified
 import SafeRm.Data.PathData (PathData)
 import SafeRm.Data.Paths (PathI (MkPathI))
@@ -46,7 +45,10 @@ newtype IntIO a = MkIntIO (ReaderT Env IO a)
       Monad,
       MonadIO,
       MonadCallStack,
-      MonadFsWriter,
+      MonadFileReader,
+      MonadFileWriter,
+      MonadPathReader,
+      MonadPathWriter,
       MonadLogger,
       MonadLoggerNamespace,
       MonadReader Env,
@@ -56,16 +58,18 @@ newtype IntIO a = MkIntIO (ReaderT Env IO a)
     )
     via (SafeRmT Env IO)
 
-instance MonadFsReader IntIO where
-  getFileSize = const (pure $ afromInteger 0)
-  getHomeDirectory = coerce (getHomeDirectory @(SafeRmT Env IO))
-  getXdgConfig = coerce (getXdgConfig @(SafeRmT Env IO))
-  readFile = coerce . readFile @(SafeRmT Env IO)
-  doesFileExist = coerce . doesFileExist @(SafeRmT Env IO)
-  doesDirectoryExist = coerce . doesDirectoryExist @(SafeRmT Env IO)
-  doesPathExist = coerce . doesPathExist @(SafeRmT Env IO)
-  canonicalizePath = coerce . canonicalizePath @(SafeRmT Env IO)
-  listDirectory = coerce . listDirectory @(SafeRmT Env IO)
+instance MonadPathSize IntIO where
+  findLargestPaths _ _ =
+    pure $
+      PathSize.PathSizeSuccess $
+        PathSize.MkSubPathData $
+          NESeq.singleton $
+            PathSize.MkPathData
+              { PathSize.path = "",
+                PathSize.size = 5,
+                PathSize.numFiles = 10,
+                PathSize.numDirectories = 20
+              }
 
 usingIntIO :: Env -> IntIO a -> IO a
 usingIntIO env (MkIntIO rdr) = runReaderT rdr env

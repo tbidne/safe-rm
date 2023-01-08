@@ -44,11 +44,11 @@ import Data.ByteString.Builder (Builder)
 import Data.ByteString.Builder qualified as Builder
 import Data.ByteString.Lazy qualified as BSL
 import Data.List qualified as L
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as T
 import Data.Time (LocalTime (LocalTime), ZonedTime (..))
 import Data.Time.LocalTime (midday, utc)
 import Effects.MonadCallStack (MonadCallStack (getCallStack))
-import Effects.MonadFs (MonadFsReader (..), encodeUtf8)
 import Effects.MonadLoggerNamespace
   ( LocStrategy (LocStable),
     LogFormatter (MkLogFormatter, locStrategy, newline, timezone),
@@ -61,7 +61,7 @@ import Effects.MonadTime
   ( MonadTime (getMonotonicTime, getSystemTime, getSystemZonedTime),
   )
 import GHC.Stack.Types (CallStack (PushCallStack), SrcLoc (..))
-import Numeric.Literal.Integer (FromInteger (afromInteger))
+import PathSize qualified
 import SafeRm.Data.Paths (PathI, PathIndex (TrashHome))
 import SafeRm.Env (HasTrashHome)
 import SafeRm.FileUtils as X
@@ -111,7 +111,10 @@ deriving anyclass instance HasTrashHome FuncEnv
 newtype FuncIO env a = MkFuncIO (ReaderT env IO a)
   deriving
     ( Applicative,
-      MonadFsWriter,
+      MonadFileReader,
+      MonadFileWriter,
+      MonadPathReader,
+      MonadPathWriter,
       Functor,
       Monad,
       MonadIO,
@@ -125,16 +128,18 @@ instance MonadCallStack (FuncIO env) where
   throwWithCallStack = throwIO
   addCallStack = id
 
-instance MonadFsReader (FuncIO env) where
-  getFileSize = const (pure $ afromInteger 5)
-  getHomeDirectory = error "getHomeDirectory: unimplemented"
-  getXdgConfig = error "getXdgConfig: unimplemented"
-  readFile = liftIO . readFile
-  doesFileExist = liftIO . doesFileExist
-  doesDirectoryExist = liftIO . doesDirectoryExist
-  doesPathExist = liftIO . doesPathExist
-  canonicalizePath = liftIO . canonicalizePath
-  listDirectory = liftIO . listDirectory
+instance MonadPathSize (FuncIO env) where
+  findLargestPaths _ _ =
+    pure $
+      PathSize.PathSizeSuccess $
+        PathSize.MkSubPathData $
+          NESeq.singleton $
+            PathSize.MkPathData
+              { PathSize.path = "",
+                PathSize.size = 5,
+                PathSize.numFiles = 10,
+                PathSize.numDirectories = 20
+              }
 
 instance
   ( Is k A_Getter,
@@ -152,6 +157,8 @@ instance
     writeIORef charStream cs
     pure c
   getTerminalSize = error "getTerminalSize: unimplemented"
+  getLine = error "getLine unimplemented"
+  getContents' = error "getContents unimplemented"
 
 instance MonadTime (FuncIO env) where
   getSystemTime = pure (LocalTime (toEnum 59_000) midday)

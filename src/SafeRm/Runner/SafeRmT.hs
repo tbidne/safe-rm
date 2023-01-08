@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Provides the 'SafeRmT' type for running SafeRm.
 --
 -- @since 0.1
@@ -10,25 +8,9 @@ module SafeRm.Runner.SafeRmT
   )
 where
 
-import Data.Sequence (Seq (Empty, (:<|)))
-import Data.Text qualified as T
-import Effects.MonadFs (MonadFsReader (..), MonadFsWriter (hPut))
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, defaultLogFormatter)
 import Effects.MonadLoggerNamespace qualified as Logger
 import Effects.MonadTime (MonadTime)
-import PathSize
-  ( Config
-      ( MkConfig,
-        exclude,
-        filesOnly,
-        maxDepth,
-        numPaths,
-        searchAll,
-        strategy
-      ),
-    SubPathData (MkSubPathData),
-    findLargestPaths,
-  )
 import SafeRm.Prelude
 import SafeRm.Runner.Env (Env, LogFile, handle, logLevel)
 
@@ -47,7 +29,17 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
       -- | @since 0.1
       MonadCallStack,
       -- | @since 0.1
-      MonadFsWriter,
+      MonadFileReader,
+      -- | @since 0.1
+      MonadFileWriter,
+      -- | @since 0.1
+      MonadHandleWriter,
+      -- | @since 0.1
+      MonadPathReader,
+      -- | @since 0.1
+      MonadPathSize,
+      -- | @since 0.1
+      MonadPathWriter,
       -- | @since 0.1
       MonadReader env,
       -- | @since 0.1
@@ -63,7 +55,7 @@ newtype SafeRmT env m a = MkSafeRmT (ReaderT env m a)
 
 -- | @since 0.1
 instance
-  (MonadCallStack m, MonadFsWriter m, MonadTime m) =>
+  (MonadCallStack m, MonadHandleWriter m, MonadTime m) =>
   MonadLogger (SafeRmT Env m)
   where
   monadLoggerLog loc _src lvl msg = do
@@ -84,55 +76,11 @@ instance
 
 -- | @since 0.1
 instance
-  (MonadCallStack m, MonadFsWriter m, MonadTime m) =>
+  (MonadCallStack m, MonadHandleWriter m, MonadTime m) =>
   MonadLoggerNamespace (SafeRmT Env m)
   where
   getNamespace = asks (view (#logEnv % #logNamespace))
   localNamespace = local . over' (#logEnv % #logNamespace)
-
--- | @since 0.1
-instance
-  ( MonadCallStack m,
-    MonadFsWriter m,
-    MonadIO m,
-    MonadTime m,
-    MonadTerminal m
-  ) =>
-  MonadFsReader (SafeRmT Env m)
-  where
-  getFileSize path = addCallStack $ do
-    liftIO (findLargestPaths cfg path) >>= \case
-      (Empty, MkSubPathData (x :<| _)) -> pure $ x ^. #size
-      (errs@(_ :<| _), MkSubPathData (x :<| _)) -> do
-        -- We received a value but had some errors.
-        putStrLn "Encountered errors retrieving size. See logs."
-        for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
-        pure $ x ^. #size
-      -- Didn't receive a value; must have encountered errors
-      (errs, MkSubPathData Empty) -> do
-        putStrLn "Could not retrieve size, defaulting to 0. See logs."
-        for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
-        pure 0
-    where
-      cfg =
-        MkConfig
-          { searchAll = True,
-            maxDepth = Just 0,
-            exclude = mempty,
-            filesOnly = False,
-            numPaths = Just 1,
-            strategy = mempty
-          }
-
-  -- reuse IO's impl
-  readFile = liftIO . readFile
-  getHomeDirectory = liftIO getHomeDirectory
-  getXdgConfig = liftIO . getXdgConfig
-  doesFileExist = liftIO . doesFileExist
-  doesDirectoryExist = liftIO . doesDirectoryExist
-  doesPathExist = liftIO . doesPathExist
-  canonicalizePath = liftIO . canonicalizePath
-  listDirectory = liftIO . listDirectory
 
 -- | Runs a 'SafeRmT' with the given @env@.
 --

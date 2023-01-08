@@ -37,13 +37,6 @@ import Data.Csv.Streaming qualified as Csv.Streaming
 import Data.HashMap.Strict qualified as HMap
 import Data.List qualified as L
 import Data.Text qualified as T
-import Effects.MonadFs
-  ( MonadFsReader (readFile),
-    MonadFsWriter
-      ( appendFile,
-        writeFile
-      ),
-  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import SafeRm.Data.PathData
   ( PathData,
@@ -112,7 +105,8 @@ instance Pretty Index where
 readIndex ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
+    MonadFileReader m,
+    MonadPathReader m,
     MonadLoggerNamespace m
   ) =>
   PathI TrashIndex ->
@@ -165,7 +159,7 @@ readIndexWithFold ::
   forall m a.
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
+    MonadFileReader m,
     MonadLoggerNamespace m,
     Monoid a
   ) =>
@@ -176,7 +170,7 @@ readIndexWithFold ::
   m a
 readIndexWithFold foldFn indexPath@(MkPathI fp) =
   addNamespace "readIndexWithFold" $
-    (readFile >=> runFold (pure mempty) . decode) fp
+    (readBinaryFile >=> runFold (pure mempty) . decode) fp
   where
     decode = Csv.Streaming.decode HasHeader . BSL.fromStrict
     -- NOTE: We fold over the Records manually because its Foldable instance
@@ -242,7 +236,7 @@ throwIfDuplicates indexPath trashMap pd =
 throwIfTrashNonExtant ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m
+    MonadPathReader m
   ) =>
   PathI TrashHome ->
   PathData ->
@@ -258,9 +252,9 @@ throwIfTrashNonExtant trashHome pd = do
 -- | Appends the path data to the trash index. The header is not included.
 --
 -- @since 0.1
-appendIndex :: MonadFsWriter m => PathI TrashIndex -> Index -> m ()
+appendIndex :: MonadFileWriter m => PathI TrashIndex -> Index -> m ()
 appendIndex (MkPathI indexPath) =
-  appendFile indexPath
+  appendBinaryFile indexPath
     . BSL.toStrict
     . Csv.encode
     . HMap.elems
@@ -270,9 +264,9 @@ appendIndex (MkPathI indexPath) =
 -- exists. The header is included.
 --
 -- @since 0.1
-writeIndex :: MonadFsWriter m => PathI TrashIndex -> Index -> m ()
+writeIndex :: MonadFileWriter m => PathI TrashIndex -> Index -> m ()
 writeIndex (MkPathI indexPath) =
-  writeFile indexPath
+  writeBinaryFile indexPath
     . BSL.toStrict
     . Csv.encodeDefaultOrderedByName
     . HMap.elems

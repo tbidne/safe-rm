@@ -15,15 +15,6 @@ module SafeRm.Runner
 where
 
 import Data.Text qualified as T
-import Effects.MonadFs
-  ( MonadFsReader (doesFileExist, getHomeDirectory, getXdgConfig),
-    MonadFsWriter
-      ( createDirectoryIfMissing,
-        hClose,
-        hFlush,
-        openFile
-      ),
-  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace)
 import Effects.MonadTerminal (putTextLn)
 import Effects.MonadTime (MonadTime)
@@ -78,8 +69,12 @@ import TOML qualified
 --
 -- @since 0.1
 runSafeRm ::
-  ( MonadFsReader m,
-    MonadFsWriter m,
+  ( MonadFileReader m,
+    MonadFileWriter m,
+    MonadHandleWriter m,
+    MonadPathReader m,
+    MonadPathSize m,
+    MonadPathWriter m,
     HasCallStack,
     MonadCallStack m,
     MonadUnliftIO m,
@@ -103,12 +98,15 @@ runSafeRm = do
 -- 'getConfiguration' as an alternative 'runSafeRm', when we want to use a
 -- custom env.
 runCmd ::
-  ( MonadFsReader m,
-    MonadFsWriter m,
-    HasCallStack,
+  ( HasCallStack,
     HasTrashHome env,
-    MonadLoggerNamespace m,
     MonadCallStack m,
+    MonadLoggerNamespace m,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadPathReader m,
+    MonadPathSize m,
+    MonadPathWriter m,
     MonadReader env m,
     MonadUnliftIO m,
     MonadTerminal m,
@@ -139,8 +137,10 @@ runCmd cmd = runCmd' cmd `catchAnyNoCS` logEx
 -- @since 0.1
 getEnv ::
   ( HasCallStack,
-    MonadFsReader m,
-    MonadFsWriter m,
+    MonadFileReader m,
+    MonadHandleWriter m,
+    MonadPathReader m,
+    MonadPathWriter m,
     MonadCallStack m,
     MonadUnliftIO m
   ) =>
@@ -156,7 +156,7 @@ getEnv = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- openFile logPath AppendMode
+      h <- openBinaryFile logPath AppendMode
       pure $
         Just $
           MkLogFile
@@ -178,8 +178,9 @@ getEnv = do
 configToEnv ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
-    MonadFsWriter m
+    MonadHandleWriter m,
+    MonadPathReader m,
+    MonadPathWriter m
   ) =>
   TomlConfig ->
   m Env
@@ -192,7 +193,7 @@ configToEnv mergedConfig = do
     Nothing -> pure Nothing
     Just lvl -> do
       let logPath = trashHome ^. #unPathI </> ".log"
-      h <- openFile logPath AppendMode
+      h <- openBinaryFile logPath AppendMode
       pure $
         Just $
           MkLogFile
@@ -220,7 +221,8 @@ configToEnv mergedConfig = do
 -- @since 0.1
 getConfiguration ::
   ( HasCallStack,
-    MonadFsReader m,
+    MonadFileReader m,
+    MonadPathReader m,
     MonadCallStack m,
     MonadUnliftIO m
   ) =>
@@ -259,7 +261,8 @@ printIndex ::
   ( HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
-    MonadFsReader m,
+    MonadFileReader m,
+    MonadPathReader m,
     MonadLoggerNamespace m,
     MonadReader env m,
     MonadTerminal m
@@ -274,10 +277,11 @@ printIndex style sort revSort =
       . Index.formatIndex style sort revSort
 
 printMetadata ::
-  ( MonadFsReader m,
+  ( MonadPathReader m,
     HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
+    MonadFileReader m,
     MonadLoggerNamespace m,
     MonadIO m,
     MonadReader env m,
@@ -299,7 +303,7 @@ prettyDel =
 -- @since 0.1
 trashOrDefault ::
   ( HasCallStack,
-    MonadFsReader m
+    MonadPathReader m
   ) =>
   Maybe (PathI TrashHome) ->
   m (PathI TrashHome)
@@ -310,7 +314,7 @@ trashOrDefault = maybe getTrashHome pure
 -- @since 0.1
 getTrashHome ::
   ( HasCallStack,
-    MonadFsReader m
+    MonadPathReader m
   ) =>
   m (PathI TrashHome)
 getTrashHome = MkPathI . (</> ".trash") <$> getHomeDirectory

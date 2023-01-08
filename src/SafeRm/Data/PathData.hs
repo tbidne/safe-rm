@@ -60,22 +60,9 @@ import Data.Csv
 import Data.Csv qualified as Csv
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
-import Effects.MonadFs
-  ( MonadFsReader
-      ( canonicalizePath,
-        doesDirectoryExist,
-        doesFileExist,
-        doesPathExist,
-        getFileSize
-      ),
-    MonadFsWriter
-      ( removePathForcibly,
-        renameDirectory,
-        renameFile
-      ),
-  )
 import GHC.Exts (IsList)
 import GHC.Exts qualified as Exts
+import PathSize (PathSizeResult (..), pathSizeRecursive)
 import SafeRm.Data.PathType (PathType (PathTypeDirectory, PathTypeFile))
 import SafeRm.Data.Paths
   ( PathI (MkPathI),
@@ -211,7 +198,10 @@ headerNames = ["Type", "Name", "Original", "Size", "Created"]
 toPathData ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m
+    MonadLogger m,
+    MonadPathReader m,
+    MonadPathSize m,
+    MonadTerminal m
   ) =>
   Timestamp ->
   PathI TrashHome ->
@@ -229,7 +219,21 @@ toPathData currTime trashHome origPath = do
   uniqPath <- mkUniqPath (trashHome <//> fileName)
   let uniqName = Paths.liftPathI' FP.takeFileName uniqPath
   isFile <- Paths.applyPathI doesFileExist originalPath
-  size <- MkBytes @B <$> getFileSize (originalPath ^. #unPathI)
+  size <-
+    fmap (MkBytes @B) $
+      pathSizeRecursive (originalPath ^. #unPathI) >>= \case
+        PathSizeSuccess n -> pure n
+        PathSizePartial errs n -> do
+          -- We received a value but had some errors.
+          putStrLn "Encountered errors retrieving size. See logs."
+          for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
+          pure n
+        PathSizeFailure errs -> do
+          -- Received error, no value.
+          putStrLn "Could not retrieve size, defaulting to 0. See logs."
+          for_ errs $ \e -> $(logError) (T.pack $ displayCallStack e)
+          pure 0
+
   if isFile
     then
       pure
@@ -271,7 +275,7 @@ mkUniqPath ::
   forall m.
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m
+    MonadPathReader m
   ) =>
   PathI TrashName ->
   m (PathI TrashName)
@@ -344,8 +348,8 @@ mapOrd f x y = f x `compare` f y
 mvTrashToOriginal ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
-    MonadFsWriter m
+    MonadPathReader m,
+    MonadPathWriter m
   ) =>
   PathI TrashHome ->
   PathData ->
@@ -368,7 +372,7 @@ mvTrashToOriginal (MkPathI trashHome) pd = do
 --
 -- @since 0.1
 deletePathData ::
-  MonadFsWriter m =>
+  MonadPathWriter m =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -380,7 +384,7 @@ deletePathData (MkPathI trashHome) pd = removePathForcibly trashPath
 --
 -- @since 0.1
 mvOriginalToTrash ::
-  (MonadFsWriter m, HasCallStack) =>
+  (MonadPathWriter m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m ()
@@ -397,7 +401,7 @@ mvOriginalToTrash trashHome pd =
 --
 -- @since 0.1
 trashPathExists ::
-  (MonadFsReader m, HasCallStack) =>
+  (MonadPathReader m, HasCallStack) =>
   PathI TrashHome ->
   PathData ->
   m Bool
@@ -413,7 +417,7 @@ trashPathExists (MkPathI trashHome) pd = existsFn trashPath
 --
 -- @since 0.1
 originalPathExists ::
-  (MonadFsReader m, HasCallStack) =>
+  (MonadPathReader m, HasCallStack) =>
   PathData ->
   m Bool
 originalPathExists pd = existsFn (pd ^. #originalPath % #unPathI)

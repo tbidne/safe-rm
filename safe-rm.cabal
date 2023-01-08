@@ -75,8 +75,8 @@ library
     , monad-fs                ^>=0.1
     , monad-logger            ^>=0.3.30
     , monad-logger-namespace  ^>=0.1
+    , monad-system-time       ^>=0.1
     , monad-terminal          ^>=0.1
-    , monad-time              ^>=0.1
     , mtl                     >=2.2.1     && <2.4
     , optics-core             ^>=0.4
     , optics-th               ^>=0.4
@@ -99,7 +99,6 @@ library file-utils
   exposed-modules:  SafeRm.FileUtils
   build-depends:
     , bytestring
-    , monad-fs
     , safe-rm
 
   hs-source-dirs:   lib/file-utils
@@ -154,15 +153,15 @@ test-suite integration
     Integration.SafeRm
 
   build-depends:
-    , algebra-simple
     , base
     , env-guard               ^>=0.2
     , file-utils
     , hedgehog
-    , monad-fs
     , monad-logger-namespace
-    , monad-time
+    , monad-system-time
     , mtl
+    , nonempty-containers     >=0.3.4.2 && <0.4
+    , path-size
     , safe-rm
     , tasty
     , tasty-hedgehog
@@ -187,16 +186,16 @@ test-suite functional
     Functional.Prelude
 
   build-depends:
-    , algebra-simple
     , base
     , bytestring
     , env-guard               ^>=0.2
     , file-utils
     , monad-callstack
-    , monad-fs
     , monad-logger-namespace
+    , monad-system-time
     , monad-terminal
-    , monad-time
+    , nonempty-containers
+    , path-size
     , safe-rm
     , tasty
     , tasty-golden

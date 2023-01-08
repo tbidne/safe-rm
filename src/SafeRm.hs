@@ -22,17 +22,6 @@ where
 import Data.Char qualified as Ch
 import Data.HashMap.Strict qualified as HMap
 import Data.Text qualified as T
-import Effects.MonadFs
-  ( MonadFsReader
-      ( doesDirectoryExist,
-        doesFileExist,
-        getFileSize
-      ),
-    MonadFsWriter
-      ( createDirectoryIfMissing,
-        removeDirectoryRecursive
-      ),
-  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Effects.MonadTerminal
   ( MonadTerminal (getChar),
@@ -73,13 +62,16 @@ import System.IO qualified as IO
 -- @since 0.1
 delete ::
   forall env m.
-  ( MonadFsReader m,
-    MonadFsWriter m,
-    HasCallStack,
+  ( HasCallStack,
     HasTrashHome env,
-    MonadLoggerNamespace m,
     MonadCallStack m,
+    MonadFileWriter m,
+    MonadLoggerNamespace m,
+    MonadPathReader m,
+    MonadPathSize m,
+    MonadPathWriter m,
     MonadReader env m,
+    MonadTerminal m,
     MonadUnliftIO m,
     MonadTime m
   ) =>
@@ -142,8 +134,10 @@ deletePermanently ::
   ( HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
-    MonadFsReader m,
-    MonadFsWriter m,
+    MonadFileReader m,
+    MonadFileWriter m,
+    MonadPathReader m,
+    MonadPathWriter m,
     MonadLoggerNamespace m,
     MonadReader env m,
     MonadTerminal m,
@@ -215,7 +209,8 @@ getIndex ::
   forall env m.
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
+    MonadFileReader m,
+    MonadPathReader m,
     HasTrashHome env,
     MonadLoggerNamespace m,
     MonadReader env m
@@ -238,8 +233,9 @@ getMetadata ::
   ( HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
+    MonadFileReader m,
     MonadLoggerNamespace m,
-    MonadFsReader m,
+    MonadPathReader m,
     MonadIO m,
     MonadReader env m
   ) =>
@@ -260,12 +256,14 @@ getMetadata = addNamespace "getMetadata" $ do
 -- @since 0.1
 restore ::
   forall env m.
-  ( MonadFsReader m,
-    MonadFsWriter m,
+  ( MonadPathReader m,
+    MonadPathWriter m,
     HasCallStack,
     HasTrashHome env,
     MonadLoggerNamespace m,
     MonadCallStack m,
+    MonadFileReader m,
+    MonadFileWriter m,
     MonadReader env m,
     MonadUnliftIO m
   ) =>
@@ -311,8 +309,8 @@ emptyTrash ::
   ( HasCallStack,
     HasTrashHome env,
     MonadCallStack m,
-    MonadFsReader m,
-    MonadFsWriter m,
+    MonadPathReader m,
+    MonadPathWriter m,
     MonadLoggerNamespace m,
     MonadIO m,
     MonadReader env m,

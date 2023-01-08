@@ -3,12 +3,6 @@
 -- @since 0.1
 module Main (main) where
 
-import Effects.MonadFs
-  ( MonadFsWriter
-      ( createDirectoryIfMissing,
-        removePathForcibly
-      ),
-  )
 import Integration.Prelude
 import Integration.SafeRm qualified as SafeRm
 import System.Environment.Guard (ExpectEnv (ExpectEnvSet), guardOrElse')

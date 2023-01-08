@@ -14,14 +14,6 @@ import Data.Bytes (SomeSize)
 import Data.Bytes qualified as Bytes
 import Data.HashMap.Strict qualified as Map
 import Data.List qualified as L
-import Effects.MonadFs
-  ( MonadFsReader
-      ( doesDirectoryExist,
-        doesFileExist,
-        getFileSize,
-        listDirectory
-      ),
-  )
 import Effects.MonadLoggerNamespace (MonadLoggerNamespace, addNamespace)
 import Numeric.Algebra (AMonoid (zero), ASemigroup ((.+.)))
 import Numeric.Literal.Rational (FromRational (afromRational))
@@ -101,7 +93,8 @@ instance Pretty Metadata where
 toMetadata ::
   ( HasCallStack,
     MonadCallStack m,
-    MonadFsReader m,
+    MonadFileReader m,
+    MonadPathReader m,
     MonadLoggerNamespace m,
     MonadIO m
   ) =>
@@ -174,7 +167,7 @@ toMetadata (trashHome@(MkPathI th), trashIndex, trashLog) =
     skipFile fp = FP.takeFileName fp `L.elem` [".log", ".index.csv"]
 
 getAllFiles ::
-  ( MonadFsReader m,
+  ( MonadPathReader m,
     HasCallStack,
     MonadCallStack m,
     MonadIO m

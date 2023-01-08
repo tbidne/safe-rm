@@ -91,6 +91,44 @@ import Data.Type.Equality as X (type (~))
 import Data.Tuple as X (curry, uncurry)
 import Data.Vector as X (Vector)
 import Data.Word as X (Word16, Word8)
+import Effects.FileSystem.MonadFileReader as X
+  ( MonadFileReader (readBinaryFile),
+    decodeUtf8Lenient,
+    readFileUtf8ThrowM,
+  )
+import Effects.FileSystem.MonadFileWriter as X
+  ( MonadFileWriter (appendBinaryFile, writeBinaryFile),
+    encodeUtf8,
+  )
+import Effects.FileSystem.MonadHandleWriter as X
+  ( MonadHandleWriter
+      ( hClose,
+        hFlush,
+        hPut,
+        openBinaryFile
+      ),
+  )
+import Effects.FileSystem.MonadPathReader as X
+  ( MonadPathReader
+      ( canonicalizePath,
+        doesDirectoryExist,
+        doesFileExist,
+        doesPathExist,
+        getFileSize,
+        getHomeDirectory,
+        listDirectory
+      ),
+    getXdgConfig,
+  )
+import Effects.FileSystem.MonadPathWriter as X
+  ( MonadPathWriter
+      ( createDirectoryIfMissing,
+        removeDirectoryRecursive,
+        removePathForcibly,
+        renameDirectory,
+        renameFile
+      ),
+  )
 import Effects.MonadCallStack as X
   ( MonadCallStack
       ( addCallStack,
@@ -99,12 +137,6 @@ import Effects.MonadCallStack as X
     catch,
     displayCallStack,
     try,
-  )
-import Effects.MonadFs as X
-  ( MonadFsReader,
-    MonadFsWriter,
-    decodeUtf8Lenient,
-    readFileUtf8ThrowM,
   )
 import Effects.MonadTerminal as X (MonadTerminal (putStr, putStrLn))
 import GHC.Enum as X (Bounded (maxBound, minBound), Enum (toEnum))
@@ -153,6 +185,7 @@ import Optics.Core as X
     _Just,
   )
 import Optics.TH as X (makeFieldLabelsNoPrefix, makePrisms)
+import PathSize as X (MonadPathSize (findLargestPaths))
 import Prettyprinter as X
   ( Doc,
     Pretty (pretty),

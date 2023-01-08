@@ -3,12 +3,6 @@
 -- @since 0.1
 module Main (main) where
 
-import Effects.MonadFs
-  ( MonadFsWriter
-      ( createDirectoryIfMissing,
-        removePathForcibly
-      ),
-  )
 import Functional.Commands.D qualified as D
 import Functional.Commands.E qualified as E
 import Functional.Commands.L qualified as L
